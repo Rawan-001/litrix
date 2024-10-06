@@ -1,0 +1,128 @@
+/* الصفحة الرئيسية */
+.layout {
+    background-color: #f0f2f5;
+  }
+  
+  .navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    transition: background-color 0.3s ease;
+  }
+  
+  .hero-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 90vh;
+    text-align: center;
+    background-color: #fff; /* خلفية بيضاء */
+    color: #000; /* لون النص الداكن */
+    padding: 60px 20px;
+  }
+  
+  .hero-title {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #000; /* لون النص الأسود */
+  }
+  
+  .hero-subtitle {
+    font-size: 18px;
+    max-width: 700px;
+    margin: 0 auto 30px;
+    color: #555; /* لون رمادي داكن للنص الثانوي */
+  }
+  
+  .hero-section button {
+    font-size: 18px;
+    padding: 10px 20px;
+    color: #fff;
+    background-color: #506d94; /* لون الزر */
+    border-color: #8baddb;
+  }
+  
+  .hero-section button:hover {
+    background-color: #506d94;
+    border-color: #506d94;
+  }
+  
+  /* أقسام الموقع */
+  .about-section, .features-section, .summary-section, .system-analysis-section {
+    padding: 80px 20px;
+    background-color: #fff;
+    text-align: center;
+  }
+  
+  .about-section {
+    background-color: #f9f9f9;
+  }
+  
+  .features-section {
+    background-color: #e9ecef;
+  }
+  
+  .about-section h2, .features-section h2, .summary-section h2, .system-analysis-section h2 {
+    font-size: 36px;
+    margin-bottom: 30px;
+    color: #000; /* لون العناوين أسود */
+  }
+  
+  .about-section p, .features-section p, .summary-section p, .system-analysis-section p {
+    font-size: 18px;
+    max-width: 800px;
+    margin: 0 auto 20px;
+    color: #555; /* لون الفقرات رمادي داكن */
+  }
+  
+  /* الحواشي والتذييلات */
+  footer {
+    background-color: #001529;
+    color: #fff;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 16px;
+  }
+  
+  /* التمرير السلس */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* الهواتف المحمولة */
+  @media (max-width: 768px) {
+    .navbar {
+      padding: 10px;
+    }
+  
+    .hero-section h1 {
+      font-size: 36px;
+    }
+  
+    .hero-section p {
+      font-size: 16px;
+    }
+  }
+  .logo {
+    width: 150px;
+    height: auto;
+    margin-left: 15px;
+    padding: 0;
+    display: block;
+    padding-left: 0px;
+    margin-top: 5px; /* إضافة مسافة من الأعلى */
+  }
+  
+  .navbar {
+    padding: 0; /* إزالة المسافات الداخلية */
+  }
+  .login-btn {
+    color: white;
+    margin-right: 20px; /* مسافة بين زر Login والزر الذي يليه */
+  }
+  
+  .signup-btn {
+    margin-right: 50px; /* مسافة إضافية للزر الأخير على الجانب الأيمن */
+  }
