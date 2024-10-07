@@ -1,56 +1,136 @@
-// SignUp.js
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../firebaseConfig'; 
+import { doc, setDoc } from 'firebase/firestore'; 
 
-const SignUp = () => {
+const SignUpPage = () => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // لتتبع الخطوة الحالية
-
-  const handleNextStep = () => {
-    setStep(step + 1);
-  };
+  const [password, setPassword] = useState('');
+  const [scholarId, setScholarId] = useState('');  
+  const [role, setRole] = useState('researcher'); 
+  const navigate = useNavigate();
 
   const handleSignUp = async () => {
-    setLoading(true); // تفعيل شاشة التحميل
-
     try {
-      await axios.post('http://your-server.com/api/signup', { email });
-      setLoading(false); // إيقاف شاشة التحميل
-      alert('تم إرسال رابط التسجيل إلى بريدك الإلكتروني.');
-      handleNextStep(); // الانتقال إلى الخطوة التالية
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const userDocRef = doc(db, `users/${user.uid}`);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: email,
+        scholarId: scholarId,
+        role: role, 
+      });
+
+      alert('Account created successfully with role!');
+      navigate('/login');
     } catch (error) {
-      setLoading(false);
-      console.error('خطأ أثناء التسجيل:', error);
-      alert('حدث خطأ أثناء التسجيل.');
+      alert(`Sign Up failed: ${error.message}`);
     }
   };
 
+  const redirectToLogin = () => {
+    navigate('/login');
+  };
+
   return (
-    <div>
-      {loading && <div className="loader">جاري التحميل...</div>}
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={styles.input}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Google Scholar ID"
+          value={scholarId}
+          onChange={(e) => setScholarId(e.target.value)}
+          style={styles.input}
+        />
+        <select value={role} onChange={(e) => setRole(e.target.value)} style={styles.select}>
+          <option value="researcher">Researcher</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button onClick={handleSignUp} style={styles.button}>Sign Up</button>
 
-      {step === 1 && (
-        <div>
-          <h2>الخطوة 1: أدخل بريدك الإلكتروني</h2>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="أدخل بريدك الإلكتروني"
-          />
-          <button onClick={handleSignUp}>إرسال رابط التسجيل</button>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div>
-          <h2>تم إرسال البريد الإلكتروني!</h2>
-          <p>تحقق من بريدك الإلكتروني واتبع التعليمات لإكمال التسجيل.</p>
-        </div>
-      )}
+        <p style={styles.text}>
+        Do you already have an account?
+        {' '}
+          <span onClick={redirectToLogin} style={styles.link}>
+            Login
+          </span>
+        </p>
+      </div>
     </div>
   );
 };
 
-export default SignUp;
+const styles = {
+  container: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    width: '100vw',
+    backgroundColor: '#f9f9f9',
+    textAlign: 'center',
+  },
+  card: {
+    width: '400px',
+    padding: '30px',
+    borderRadius: '8px',
+    backgroundColor: '#fff',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  input: {
+    width: '100%',
+    padding: '10px',
+    margin: '10px 0',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+  },
+  select: {
+    width: '100%',
+    padding: '10px',
+    margin: '10px 0',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+  },
+  button: {
+    padding: '10px 20px',
+    backgroundColor: 'LightBlue',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    marginTop: '10px',
+    width: '100%',
+  },
+  text: {
+    marginTop: '20px',
+    color: '#333',
+  },
+  link: {
+    color: '#007BFF',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
+};
+
+export default SignUpPage;
