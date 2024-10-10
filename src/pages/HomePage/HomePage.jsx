@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Layout, Button, Row, Col, Typography, Card } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth'; 
-import { auth } from '../../firebaseConfig'; 
-import FYP2 from '../../assets/FYP2.png'; 
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
+import FYP2 from '../../assets/FYP2.png';
 import './HomePage.css';
 
 const { Header, Content } = Layout;
@@ -22,19 +22,19 @@ function HomePage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert('Logged in as Researcher');
-      navigate('/dashboard'); 
+      navigate('/dashboard');
     } catch (error) {
-      alert('Login failed: ' + error.message); 
+      alert('Login failed: ' + error.message);
     }
   };
 
   const handleAdminLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, adminEmail, adminPassword); 
+      await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
       alert('Logged in as Administrator');
-      navigate('/admin-dashboard'); 
+      navigate('/admin-dashboard');
     } catch (error) {
-      alert('Admin login failed: ' + error.message); 
+      alert('Admin login failed: ' + error.message);
     }
   };
 

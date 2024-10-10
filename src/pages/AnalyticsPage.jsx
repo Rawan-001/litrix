@@ -1,7 +1,7 @@
 import Header from "../components/common/Header"; 
-import RevenueChart from "../components/analytics/RevenueChart";
-import ChannelData from "../components/analytics/ChannelData";
-import Data from "../components/analytics/Data";
+import RevenueChart from "../components/analyticsReseracher/CitesPerYearChart";
+import ChannelData from "../components/analyticsReseracher/ChannelData";
+import Data from "../components/analyticsReseracher/PublicationsOverTime";
 
 const AnalyticsPage = () => {
   return (

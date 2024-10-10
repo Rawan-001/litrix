@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import Header from '../components/common/Header';
 import StatCard from '../components/common/StatCard';
-import DistributionChart from '../components/overview/DistributionChart';
+import DistributionChart from '../components/analyticsReseracher/PieChart';
 import { LuFileSpreadsheet } from "react-icons/lu";
 import { FaQuoteRight } from "react-icons/fa";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { motion } from 'framer-motion';
-import RevenueChart from '../components/analytics/RevenueChart';
 
 const AdminDashboard = () => {
   const [selectedCollege, setSelectedCollege] = useState("");

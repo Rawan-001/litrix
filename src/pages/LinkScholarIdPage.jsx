@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card } from 'antd';
-import { db } from '../firebaseConfig'; // تأكد من استيراد Firebase config
-import { doc, setDoc } from 'firebase/firestore'; // Firestore methods
+import { db } from '../firebaseConfig'; 
+import { doc, setDoc } from 'firebase/firestore'; 
 
 const LinkScholarIdPage = ({ user }) => {
   const [scholarId, setScholarId] = useState('');
@@ -10,7 +10,6 @@ const LinkScholarIdPage = ({ user }) => {
 
   const handleSaveScholarId = async () => {
     try {
-      // حفظ معرف Google Scholar في Firestore
       const userDoc = doc(db, "users", user.uid);
       await setDoc(userDoc, { scholarId: scholarId }, { merge: true });
       alert('Scholar ID saved successfully!');

@@ -1,13 +1,14 @@
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-const CircularChart= [
-	{ name: "" },
-	{ name: "" },
-	{ name: ""},
-	{ name: "" },
-	{ name: "" },
-];
+const CircularChart = [
+	{ name: "Research Papers", value: 120 },
+	{ name: "Citations", value: 350 },
+	{ name: "Collaborations", value: 45 },
+	{ name: "Grants Awarded", value: 15 },
+	{ name: "Projects Completed", value: 30 },
+  ];
+  
 
 const COLORS = ["#4F46E5", "#7C3AED", "#DB2777", "#059669", "#D97706"];
 

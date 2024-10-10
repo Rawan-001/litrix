@@ -6,34 +6,31 @@ import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Avatar, Card, CardContent, Grid } from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import Header from '../components/common/Header';
+import { ClipLoader } from 'react-spinners'; // إضافة مكون ClipLoader
 
 const ResearcherProfilePage = () => {
-  const [userData, setUserData] = useState(null); // لحفظ بيانات التسجيل
-  const [facultyMembers, setFacultyMembers] = useState(null); // لحفظ بيانات الباحث
+  const [userData, setUserData] = useState(null); 
+  const [facultyMembers, setFacultyMembers] = useState(null); 
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // جلب بيانات التسجيل من users وجلب باقي البيانات من faculty_members
   const fetchResearcherData = async (uid) => {
     try {
-      // جلب بيانات التسجيل من مجموعة `users`
       const userDocRef = doc(db, `users/${uid}`);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setUserData(userData); // حفظ بيانات المستخدم
+        setUserData(userData); 
 
-        // استخدم `scholar_id` من بيانات التسجيل لجلب بيانات الباحث
         const researcherDocRef = doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${userData.scholar_id}`);
         const researcherDoc = await getDoc(researcherDocRef);
 
         if (researcherDoc.exists()) {
           const researcherData = researcherDoc.data();
-          setFacultyMembers(researcherData); // حفظ بيانات الباحث
+          setFacultyMembers(researcherData); 
 
-          // جلب الأبحاث المرتبطة بالباحث من مجموعة `publications`
           const publicationsRef = collection(
             db,
             `colleges/faculty_computing/departments/dept_cs/faculty_members/${userData.scholar_id}/publications`
@@ -54,7 +51,6 @@ const ResearcherProfilePage = () => {
     setLoading(false);
   };
 
-  // التحقق من تسجيل الدخول وجلب البيانات
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -67,7 +63,6 @@ const ResearcherProfilePage = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // عنصر لعرض الصفوف القابلة للتوسع
   const CollapsibleRow = ({ publication }) => {
     const [open, setOpen] = useState(false);
 
@@ -114,20 +109,24 @@ const ResearcherProfilePage = () => {
     );
   };
 
+  // عرض السبينر عند تحميل البيانات
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <ClipLoader size={100} color={"#4F46E5"} loading={true} />
+      </div>
+    );
   }
 
   return (
     <div className="flex-1 bg-gray-50 min-h-screen overflow-y-auto">
-      {/* عرض العنوان الثابت "Researcher Profile" */}
       <motion.div
         className="bg-white shadow-lg border-b border-gray-300"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Header title="Researcher Profile" /> {/* تم تثبيت العنوان */}
+        <Header title="Researcher Profile" /> 
       </motion.div>
 
       <motion.div
@@ -136,7 +135,6 @@ const ResearcherProfilePage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        {/* معلومات الباحث الأساسية */}
         <Grid container spacing={4}>
           <Grid item xs={12} md={8}>
             <motion.div
@@ -145,25 +143,21 @@ const ResearcherProfilePage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              {/* عرض صورة الباحث */}
               <div className="flex items-center mb-6">
                 <Avatar
                   alt="Researcher Profile Picture"
-                  src={facultyMembers?.url_picture || "/default-avatar.png"} // رابط الصورة من Firestore
-                  sx={{ width: 120, height: 120, marginRight: '20px' }} // تصميم الصورة (يمكن تعديله)
+                  src={facultyMembers?.url_picture || "/default-avatar.png"} 
+                  sx={{ width: 120, height: 120, marginRight: '20px' }} 
                 />
                 <div>
-                  {/* عرض اسم الباحث من مجموعة users */}
                   <Typography variant="h5" gutterBottom>
                     {userData?.firstName + ' ' + userData?.lastName || "Researcher"}
                   </Typography>
 
                   <p><strong>Scholar ID:</strong> {facultyMembers?.scholar_id || userData?.scholar_id || "N/A"}</p>
                   
-                  {/* عرض المؤسسة التعليمية */}
                   <p><strong>Institution:</strong> {facultyMembers?.institution || userData?.institution || "N/A"}</p>
                   
-                  {/* عرض بيانات البريد ورقم الهاتف من بيانات التسجيل */}
                   <p><strong>Email:</strong> {userData?.email || "N/A"}</p>
                   <p><strong>Phone Number:</strong> {userData?.phoneNumber || "N/A"}</p>
 
@@ -173,7 +167,6 @@ const ResearcherProfilePage = () => {
             </motion.div>
           </Grid>
 
-          {/* بطاقة الاقتباسات */}
           <Grid item xs={12} md={4}>
             <motion.div
               className="mb-8 bg-white shadow-lg p-6 rounded-lg"
@@ -207,7 +200,6 @@ const ResearcherProfilePage = () => {
           </Grid>
         </Grid>
 
-        {/* قائمة الأبحاث */}
         <motion.div
           className="bg-white shadow-lg p-6 rounded-lg"
           initial={{ opacity: 0, y: 20 }}
