@@ -1,22 +1,23 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LuLayoutDashboard } from "react-icons/lu";
-import { MdOutlineManageSearch } from "react-icons/md";
+import { MdOutlineManageSearch, MdSettings } from "react-icons/md"; //MdSettings 
 import { BsStars } from "react-icons/bs";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
 import { FaUserCircle } from "react-icons/fa"; 
-import { MdNotifications } from "react-icons/md"; 
 import { Menu } from "lucide-react"; 
 import { AnimatePresence, motion } from "framer-motion";
+import { FiUsers } from "react-icons/fi";
 import logo from "../../assets/FYP.png"; 
 
 const researcherSidebarItems = [
   { name: "Dashboard", icon: LuLayoutDashboard, color: "#2a4570", href: "/dashboard" },
   { name: "Profile", icon: FaUserCircle, color: "#2a4570", href: "/profile" },
   { name: "Search", icon: MdOutlineManageSearch, color: "#2a4570", href: "/search" },
-  { name: "Collaboration", icon: BsStars, color: "#2a4570", href: "/collaboration" },
+  { name: "Collaboration", icon: FiUsers, color: "#2a4570", href: "/collaboration" },
+  { name: "Litrix Chat", icon: BsStars, color: "#2a4570", href: "/chat" },
   { name: "Analytics", icon: TbBrandGoogleAnalytics, color: "#2a4570", href: "/analytics" },
-  { name: "Notifications", icon: MdNotifications, color: "#2a4570", href: "/notifications" },
+  { name: "Settings", icon: MdSettings, color: "#2a4570", href: "/settings" }, //MdSettings
 ];
 
 const ResearcherSidebar = () => {

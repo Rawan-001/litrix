@@ -23,7 +23,7 @@ const RevenueChart = () => {
 			transition={{ delay: 0.2 }}
 		>
 			<div className='flex justify-between items-center mb-6'>
-				<h2 className='text-xl font-semibold text-gray-900'>Number of Citations
+				<h2 className='text-xl font-semibold text-gray-900'>chart
 				</h2>
 				<select
 					className='bg-gray-200 text-gray-900 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500'

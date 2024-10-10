@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import Header from "../../components/common/Header"; 
-
-import { collection, doc, getDocs, getDoc } from "firebase/firestore"; 
+import { collection, getDocs, query, doc, getDoc } from "firebase/firestore"; 
 import { db } from "../../firebaseConfig"; 
+import Fuse from "fuse.js"; // لاستيراد Fuse.js للبحث الغامض
 import {
   Table,
   TableBody,
@@ -15,17 +14,29 @@ import {
   Collapse,
   Box,
   Typography,
+  Card,
+  CardContent,
+  TextField,
+  MenuItem,
+  Button,
 } from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 
 function SearchTable() {
-  const [scholarId, setScholarId] = useState(""); 
-  const [researcherData, setResearcherData] = useState(null);
-  const [publicationsData, setPublicationsData] = useState(null); 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // لتخزين قيمة البحث
+  const [searchType, setSearchType] = useState("name"); // لتحديد نوع البحث (الاسم أو Scholar ID)
+  const [researcherData, setResearcherData] = useState([]); // لتخزين بيانات الباحثين
+  const [publicationsData, setPublicationsData] = useState([]); // لتخزين بيانات الأبحاث
+  const [loading, setLoading] = useState(false); // لتحديد حالة التحميل
+  const [error, setError] = useState(""); // لتخزين الأخطاء
 
-  const fetchResearcherData = async (scholarId) => {
+  const fuseOptions = {
+    keys: ['name'], // البحث في أسماء الباحثين
+    threshold: 0.4, // البحث الغامض
+  };
+
+  // البحث باستخدام Scholar ID
+  const fetchResearcherById = async (scholarId) => {
     setLoading(true);
     setError("");
     try {
@@ -33,29 +44,26 @@ function SearchTable() {
         db,
         `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}`
       );
-
       const researcherDoc = await getDoc(researcherDocRef);
 
       if (researcherDoc.exists()) {
-        setResearcherData(researcherDoc.data());
+        const researcherData = researcherDoc.data();
+        setResearcherData([researcherData]); // تخزين بيانات الباحث
 
         const publicationsRef = collection(
           db,
           `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}/publications`
         );
-        const querySnapshot = await getDocs(publicationsRef);
-
-        if (!querySnapshot.empty) {
-          const publications = querySnapshot.docs.map((doc) => doc.data());
-          setPublicationsData(publications);
-        } else {
-          setPublicationsData([]);
-          setError("No publications found for this researcher.");
-        }
+        const publicationsSnapshot = await getDocs(publicationsRef);
+        const publicationsData = publicationsSnapshot.docs.map((doc) => ({
+          ...doc.data(),
+          researcherName: researcherData.name // إضافة اسم الباحث لكل منشور
+        }));
+        setPublicationsData(publicationsData);
       } else {
-        setResearcherData(null);
+        setResearcherData([]);
         setPublicationsData([]);
-        setError("No data found for this researcher.");
+        setError("No researcher found with this Scholar ID.");
       }
     } catch (err) {
       setError("Error fetching data: " + err.message);
@@ -63,32 +71,63 @@ function SearchTable() {
     setLoading(false);
   };
 
+  // البحث باستخدام اسم الباحث باستخدام Fuse.js
+  const fetchResearchersAndSearchByName = async (name) => {
+    setLoading(true);
+    setError("");
+    try {
+      const q = query(collection(db, `colleges/faculty_computing/departments/dept_cs/faculty_members`));
+      const querySnapshot = await getDocs(q);
+
+      const researchers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // البحث الغامض باستخدام Fuse.js
+      const fuse = new Fuse(researchers, fuseOptions);
+      const results = fuse.search(name);
+
+      if (results.length > 0) {
+        const foundResearchers = results.map(result => result.item);
+        setResearcherData(foundResearchers);
+
+        const allPublications = [];
+        for (const researcher of foundResearchers) {
+          const publicationsRef = collection(
+            db,
+            `colleges/faculty_computing/departments/dept_cs/faculty_members/${researcher.scholar_id}/publications`
+          );
+          const publicationsSnapshot = await getDocs(publicationsRef);
+          const publicationsData = publicationsSnapshot.docs.map((doc) => ({
+            ...doc.data(),
+            researcherName: researcher.name // إضافة اسم الباحث لكل منشور
+          }));
+          allPublications.push(...publicationsData);
+        }
+        setPublicationsData(allPublications);
+      } else {
+        setResearcherData([]);
+        setPublicationsData([]);
+        setError("No researchers found with this name.");
+      }
+    } catch (err) {
+      setError("Error fetching data: " + err.message);
+    }
+    setLoading(false);
+  };
+
+  // دالة البحث
   const handleSearch = () => {
-    if (scholarId) {
-      fetchResearcherData(scholarId);
+    if (searchTerm) {
+      if (searchType === "scholar_id") {
+        fetchResearcherById(searchTerm); // البحث باستخدام Scholar ID
+      } else {
+        fetchResearchersAndSearchByName(searchTerm); // البحث باستخدام اسم الباحث
+      }
     } else {
-      setError("Please enter a valid Scholar ID.");
+      setError("Please enter a valid search term.");
     }
   };
 
-  const getFieldName = (field) => {
-    const fieldNames = {
-      title: "Title",
-      pub_year: "Publication Year",
-      publisher: "Publisher",
-      num_citations: "Number of Citations",
-      name: "Researcher Name",
-    };
-    return fieldNames[field] || field.replace(/_/g, " ").toUpperCase();
-  };
-
-  const renderValue = (value) => {
-    if (typeof value === "object" && value !== null) {
-      return <pre>{JSON.stringify(value, null, 2)}</pre>;
-    }
-    return <span>{value}</span>;
-  };
-
+  // الصف القابل للتوسع لكل منشور
   const CollapsibleRow = ({ publication }) => {
     const [open, setOpen] = useState(false);
 
@@ -108,7 +147,7 @@ function SearchTable() {
           <TableCell>{publication.pub_year || "Unknown Year"}</TableCell>
           <TableCell>{publication.publisher || "Unknown Publisher"}</TableCell>
           <TableCell>{publication.num_citations || 0}</TableCell>
-          <TableCell>{publication.name || "Unknown Researcher"}</TableCell>
+          <TableCell>{publication.researcherName || "Unknown Researcher"}</TableCell>
         </TableRow>
         <TableRow>
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -119,12 +158,12 @@ function SearchTable() {
                 </Typography>
                 {Object.keys(publication).map(
                   (field) =>
-                    !["title", "pub_year", "publisher", "num_citations", "name"].includes(
-                      field
-                    ) && (
+                    !["title", "pub_year", "publisher", "num_citations", "researcherName"].includes(field) && (
                       <Typography key={field} variant="body2">
-                        <strong>{getFieldName(field)}:</strong>{" "}
-                        {renderValue(publication[field])}
+                        <strong>{field.replace(/_/g, " ").toUpperCase()}:</strong>{" "}
+                        {typeof publication[field] === 'object' && publication[field] !== null
+                          ? <pre>{JSON.stringify(publication[field], null, 2)}</pre>
+                          : publication[field]}
                       </Typography>
                     )
                 )}
@@ -137,34 +176,64 @@ function SearchTable() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-10">
-      <div className="w-full max-w-6xl bg-white p-6 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Fetch Researcher Data and Publications
-        </h1>
+    <div className="min-h-screen bg-gray-100 py-10">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8">
+        {/* شريط البحث في الأعلى */}
+        <Card
+          className="mb-6"
+          sx={{ borderRadius: "16px" }} // إضافة انحناء دائري
+        >
+          <CardContent>
+            <Typography variant="h5" gutterBottom className="text-center font-bold">
+              Search Publications
+            </Typography>
 
-        <div className="flex items-center justify-center mb-6">
-          <input
-            type="text"
-            placeholder="Enter Scholar ID"
-            value={scholarId}
-            onChange={(e) => setScholarId(e.target.value)}
-            className="border border-gray-300 rounded-full px-4 py-2 w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={handleSearch}
-            className="ml-4 bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition"
-          >
-            Search
-          </button>
-        </div>
+            <div className="flex items-center justify-center mb-6">
+              <TextField
+                select
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value)}
+                variant="outlined"
+                label="Search Type"
+                className="mr-4"
+                sx={{ borderRadius: "50px" }} // جعل الـ Input دائري
+              >
+                <MenuItem value="name">Search by Researcher Name</MenuItem>
+                <MenuItem value="scholar_id">Search by Scholar ID</MenuItem>
+              </TextField>
 
+              <TextField
+                variant="outlined"
+                label={searchType === "scholar_id" ? "Enter Scholar ID" : "Enter Researcher Name"}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full max-w-md"
+                sx={{ borderRadius: "50px" }} // جعل الـ Input دائري
+              />
+
+              <Button
+                onClick={handleSearch}
+                variant="contained"
+                color="primary"
+                className="ml-4"
+                sx={{ borderRadius: "50px", paddingX: 3 }} // جعل الـ Button دائري
+              >
+                Search
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* عرض حالة التحميل أو الأخطاء */}
         {loading && <p className="text-center text-gray-500">Loading...</p>}
-
         {error && <p className="text-center text-red-500">{error}</p>}
 
+        {/* عرض نتائج الأبحاث */}
         {publicationsData && publicationsData.length > 0 && (
-          <TableContainer component={Paper}>
+          <TableContainer
+            component={Paper}
+            sx={{ borderRadius: "16px" }} // إضافة انحناء دائري
+          >
             <Table>
               <TableHead>
                 <TableRow>

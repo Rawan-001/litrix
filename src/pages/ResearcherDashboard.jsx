@@ -1,79 +1,98 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import Header from '../components/common/Header';
+import StatCard from '../components/common/StatCard';
+import DistributionChart from '../components/overview/DistributionChart';
+import { LuFileSpreadsheet } from "react-icons/lu";
+import { FaQuoteRight } from "react-icons/fa";
+import { MdOutlinePeopleAlt } from "react-icons/md";
 import { motion } from 'framer-motion';
-import Header from '../components/common/Header'; 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import RevenueChart from '../components/analytics/RevenueChart';
 
-const ResearcherDashboard = () => {
-  const location = useLocation();
-  const [researcherData, setResearcherData] = useState(location.state?.researcherData || {});
+const AdminDashboard = () => {
+  const [selectedCollege, setSelectedCollege] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
-  useEffect(() => {
-    if (location.state?.researcherData) {
-      setResearcherData(location.state.researcherData);
-    }
-  }, [location.state]);
+  const handleCollegeChange = (e) => {
+    setSelectedCollege(e.target.value);
+    setSelectedDepartment(""); 
+  };
 
-  const publicationsData = researcherData.publications || [];
-  
-  const yearlyPublications = publicationsData.reduce((acc, pub) => {
-    const year = pub.pub_year || 'Unknown';
-    acc[year] = (acc[year] || 0) + 1;
-    return acc;
-  }, {});
-
-  const chartData = Object.entries(yearlyPublications).map(([year, count]) => ({
-    year,
-    count,
-  }));
+  const handleDepartmentChange = (e) => {
+    setSelectedDepartment(e.target.value);
+  };
 
   return (
-    <div className="flex-1">
-      <Header title="Researcher Dashboard" />
+    <div className="flex-1 relative z-10 overflow-auto">
+      <Header title="Dashboard" />
 
-      <motion.div
-        className="p-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <motion.h2
-          className="text-xl font-semibold mb-4"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          Research Overview
-        </motion.h2>
+      <main className="max-w-7xl mx-auto py-6 px-4 lg:px-8">
+        <div className="mb-8">
+          <div className="flex gap-4 mb-4">
+            <div>
+              <label htmlFor="college-select" className="block text-sm font-medium text-gray-700">
+                Select 
+              </label>
+              <select
+                id="college-select"
+                value={selectedCollege}
+                onChange={handleCollegeChange}
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value=""></option>
+                <option value="faculty_computing">1</option>
+                <option value="faculty_engineering">2</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="department-select" className="block text-sm font-medium text-gray-700">
+                Select
+              </label>
+              <select
+                id="department-select"
+                value={selectedDepartment}
+                onChange={handleDepartmentChange}
+                disabled={!selectedCollege} 
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value=""> </option>
+                {selectedCollege === 'faculty_computing' && (
+                  <>
+                    <option value="dept_cs">1</option>
+                    <option value="dept_it">2</option>
+                    <option value="dept_se">3</option>
+                    <option value="dept_sn">4</option>
+                  </>
+                )}
+                {selectedCollege === 'faculty_engineering' && (
+                  <>
+                    <option value="dept_civil">1</option>
+                    <option value="dept_electrical">1</option>
+                    <option value="dept_mechanical">1</option>
+                  </>
+                )}
+              </select>
+            </div>
+          </div>
+        </div>
 
         <motion.div
-          className="mb-8"
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ duration: 1 }}
         >
-          <motion.h3
-            className="text-lg font-medium mb-2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            Publications per Year
-          </motion.h3>
-
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
+          <StatCard name="My Publcation" icon={LuFileSpreadsheet} value="" color="#6366F1" />
+          <StatCard name="My Citations" icon={FaQuoteRight} value="" color="#10B981" />
         </motion.div>
-      </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <DistributionChart />
+          <RevenueChart />
+        </div>
+      </main>
     </div>
   );
 };
 
-export default ResearcherDashboard;
+export default AdminDashboard;

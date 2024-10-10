@@ -10,11 +10,12 @@ import AdminDashboard from './pages/AdminDashboard';
 import SearchPage from './pages/SearchPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
-import LoginPage from './pages/LoginPage'; 
 import SignUpPage from './pages/SignUpPage'; 
 import ResearcherProfilePage from './pages/ResearcherProfilePage';
 import ResearcherDashboard from './pages/ResearcherDashboard';
 import LitrixChatPage from './pages/LitrixChatPage';
+import CollaborationPage from './pages/CollaborationPage';
+
 
 const App = () => {
   const [user, setUser] = useState(null); 
@@ -43,7 +44,7 @@ const App = () => {
         const userData = await fetchUserRole(user.uid);
         if (userData) {
           setUser(user); 
-          setRole(userData.role);
+          setRole(userData.role); 
         } else {
           setUser(null);
           setRole('');
@@ -59,33 +60,32 @@ const App = () => {
   const ProtectedRoute = ({ element, roleRequired }) => {
     useEffect(() => {
       if (!user) {
-        navigate('/login'); 
+        navigate('/'); 
       } else if (roleRequired && role !== roleRequired) {
         navigate('/'); 
       }
     }, [user, role, navigate, roleRequired]);
 
     if (!user || (roleRequired && role !== roleRequired)) {
-      return <div>Loading...</div>;  
+      return <div>Loading...</div>; 
     }
 
-    return element;
+    return element; 
   };
 
   return (
     <div className="flex h-screen bg-white text-gray-800 overflow-hidden">
-      {!['/', '/login', '/signup'].includes(location.pathname) && role === 'admin' && <Sidebar />}
-      {!['/', '/login', '/signup'].includes(location.pathname) && role === 'researcher' && <ResearcherSidebar />}
+      {!['/', '/signup'].includes(location.pathname) && role === 'admin' && <Sidebar />}
+      {!['/', '/signup'].includes(location.pathname) && role === 'researcher' && <ResearcherSidebar />}
       
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
 
         <Route path="/admin-dashboard" element={<ProtectedRoute element={<AdminDashboard />} roleRequired="admin" />} />
         <Route path="/profile" element={<ProtectedRoute element={<ResearcherProfilePage />} roleRequired="researcher" />} />
         <Route path="/dashboard" element={<ProtectedRoute element={<ResearcherDashboard />} roleRequired="researcher" />} /> 
-
+        <Route path="/collaboration" element={<ProtectedRoute element={<CollaborationPage />} roleRequired="researcher" />} /> 
 
         <Route path="/search" element={<SearchPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />

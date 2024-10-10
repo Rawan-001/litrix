@@ -1,5 +1,5 @@
 import Header from "../components/common/Header";
-import UsersTable from "../components/search/SearchTable";
+import SearchTable from "../components/search/SearchTable";
 
 
 const SearchPage = () => {
@@ -7,7 +7,7 @@ const SearchPage = () => {
 		<div className='flex-1 overflow-auto relative z-10'>
 			<Header title='Search' />
 			<main className='max-w-7xl mx-auto py-6 px-4 lg:px-8'>	
-				<UsersTable />
+				<SearchTable />
 			</main>
 		</div>
 	);

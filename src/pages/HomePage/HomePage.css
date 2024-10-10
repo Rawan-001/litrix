@@ -1,128 +1,217 @@
-/* الصفحة الرئيسية */
+/* Layout and Navbar */
 .layout {
-    background-color: #f0f2f5;
-  }
-  
-  .navbar {
-    position: fixed;
-    top: 0;
+  background-color: #f0f2f5;
+}
+
+.navbar {
+  background-color: #506d94;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  padding: 0 50px;
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+/* Hero Section */
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 90vh;
+  text-align: center;
+  background-color: #fff;
+  color: #000;
+  padding: 60px 20px;
+}
+
+.hero-title {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.hero-subtitle {
+  font-size: 18px;
+  max-width: 700px;
+  margin: 0 auto 30px;
+  color: #555;
+}
+
+/* Login Card Styling */
+.login-card {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 30px;
+  width: 500px;
+  text-align: center;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.login-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #000;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  transition: border-color 0.2s;
+}
+
+.login-input:focus {
+  border-color: #506d94;
+}
+
+.login-btn-main {
+  width: 100%;
+  padding: 12px;
+  background-color: #506d94;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 20px;
+  font-size: 16px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.login-btn-main:hover {
+  background-color: #40557a;
+}
+
+.login-text {
+  margin-top: 20px;
+  color: #333;
+}
+
+.login-link {
+  color: #007BFF;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.login-link:hover {
+  color: #0056b3;
+}
+
+/* About Section */
+.about-section {
+  padding: 80px 20px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.about-section h2 {
+  font-size: 36px;
+  margin-bottom: 30px;
+}
+
+.about-section p {
+  font-size: 18px;
+  max-width: 800px;
+  margin: 0 auto 50px; /* تعديل المسافة السفلية بين الفقرة والبطاقات */
+  color: #555;
+}
+
+/* Footer */
+footer {
+  background-color: #001529;
+  color: #fff;
+  text-align: center;
+  padding: 20px 0;
+  font-size: 16px;
+}
+
+/* Cards */
+.custom-card {
+  transition: transform 0.3s ease;
+  height: 280px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.custom-card:hover {
+  transform: scale(1.05);
+}
+
+.ant-card-body {
+  overflow: hidden;
+  padding: px;
+}
+
+.custom-card p {
+  margin-bottom: 1px; /* تقليل المسافة السفلية بين الفقرة والعنوان */
+}
+
+.custom-card h3 {
+  margin-top: 1px; /* تقليل المسافة العلوية بين العنوان والفقرة السابقة */
+}
+
+@media (max-width: 768px) {
+  .custom-card {
     width: 100%;
-    z-index: 100;
-    transition: background-color 0.3s ease;
-  }
-  
-  .hero-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 90vh;
-    text-align: center;
-    background-color: #fff; /* خلفية بيضاء */
-    color: #000; /* لون النص الداكن */
-    padding: 60px 20px;
-  }
-  
-  .hero-title {
-    font-size: 48px;
-    margin-bottom: 20px;
-    color: #000; /* لون النص الأسود */
-  }
-  
-  .hero-subtitle {
-    font-size: 18px;
-    max-width: 700px;
-    margin: 0 auto 30px;
-    color: #555; /* لون رمادي داكن للنص الثانوي */
-  }
-  
-  .hero-section button {
-    font-size: 18px;
-    padding: 10px 20px;
-    color: #fff;
-    background-color: #506d94; /* لون الزر */
-    border-color: #8baddb;
-  }
-  
-  .hero-section button:hover {
-    background-color: #506d94;
-    border-color: #506d94;
-  }
-  
-  /* أقسام الموقع */
-  .about-section, .features-section, .summary-section, .system-analysis-section {
-    padding: 80px 20px;
-    background-color: #fff;
-    text-align: center;
-  }
-  
-  .about-section {
-    background-color: #f9f9f9;
-  }
-  
-  .features-section {
-    background-color: #e9ecef;
-  }
-  
-  .about-section h2, .features-section h2, .summary-section h2, .system-analysis-section h2 {
-    font-size: 36px;
-    margin-bottom: 30px;
-    color: #000; /* لون العناوين أسود */
-  }
-  
-  .about-section p, .features-section p, .summary-section p, .system-analysis-section p {
-    font-size: 18px;
-    max-width: 800px;
-    margin: 0 auto 20px;
-    color: #555; /* لون الفقرات رمادي داكن */
-  }
-  
-  /* الحواشي والتذييلات */
-  footer {
-    background-color: #001529;
-    color: #fff;
-    text-align: center;
-    padding: 6px 0;
-    font-size: 16px;
-  }
-  
-  /* التمرير السلس */
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  /* الهواتف المحمولة */
-  @media (max-width: 768px) {
-    .navbar {
-      padding: 10px;
-    }
-  
-    .hero-section h1 {
-      font-size: 36px;
-    }
-  
-    .hero-section p {
-      font-size: 16px;
-    }
-  }
-  .logo {
-    width: 150px;
     height: auto;
-    margin-left: 15px;
-    padding: 0;
-    display: block;
-    padding-left: 0px;
-    margin-top: 5px; /* إضافة مسافة من الأعلى */
   }
-  
-  .navbar {
-    padding: 0; /* إزالة المسافات الداخلية */
-  }
-  .login-btn {
-    color: white;
-    margin-right: 20px; /* مسافة بين زر Login والزر الذي يليه */
-  }
-  
-  .signup-btn {
-    margin-right: 50px; /* مسافة إضافية للزر الأخير على الجانب الأيمن */
-  }
+}
+/* تعديل على typewriter-text */
+.typewriter-text {
+  font-size: 50px;
+  color: #34495e; /* اللون الأزرق الرمادي الداكن */
+  font-weight: bold;
+  overflow: hidden;
+  border-right: 3px solid #34495e; /* مؤشر الكتابة */
+  white-space: nowrap;
+  letter-spacing: 2px;
+  width: 0;
+  animation: typing 4s steps(10) infinite, blink-caret 0.75s step-end infinite;
+
+  /* وضع الكلمة بشكل موازي */
+  position: absolute;
+  top: 115px; /* تعديل المسافة حسب الحاجة */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 101; /* للتأكد من ظهور النص فوق العناصر الأخرى */
+}
+@keyframes typing {
+  0% { width: 0; }
+  10% { width: 1ch; } /* L */
+  20% { width: 2ch; } /* Li */
+  30% { width: 3ch; } /* Lit */
+  40% { width: 4ch; } /* Litr */
+  50% { width: 5ch; } /* Litri */
+  60% { width: 6ch; } /* Litrix */
+  70% { width: 5ch; } /* Litri */
+  80% { width: 4ch; } /* Litr */
+  90% { width: 1ch; } /* L */
+  100% { width: 0; } /* اختفاء النص */
+}
+
+@keyframes blink-caret {
+  0% { border-right-color: #34495e; }
+  50% { border-right-color: transparent; }
+  100% { border-right-color: #34495e; }
+}

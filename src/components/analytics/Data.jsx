@@ -20,7 +20,7 @@ const UserRetention = () => {
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ delay: 0.5 }}
 		>
-			<h2 className='text-xl font-semibold text-gray-100 mb-4'>Data</h2>
+			<h2 className='text-xl font-semibold text-gray-100 mb-4'>chart</h2>
 			<div style={{ width: "100%", height: 300 }}>
 				<ResponsiveContainer>
 					<LineChart data={Data}>
