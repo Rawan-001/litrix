@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Steps, Button, Form, Input, message, Modal, Select } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons'; // استيراد أيقونة الرجوع
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebaseConfig'; 
+import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
+import FYP2 from '../assets/FYP.png';  // استيراد الشعار
+
 
 const { Step } = Steps;
 const { Option } = Select;
@@ -11,8 +14,6 @@ const { Option } = Select;
 const SignUpPage = () => {
   const [current, setCurrent] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [scholarId, setScholarId] = useState('');
-  const [scholarIdError, setScholarIdError] = useState('');
 
   const [formData, setFormData] = useState({
     email: '',
@@ -51,63 +52,25 @@ const SignUpPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const validateScholarUrl = (url) => {
-    const regex = /^https?:\/\/scholar\.google\.com\/citations\?(?:.*&)?user=([a-zA-Z0-9_-]+)(?:&.*)?$/;
-    const match = url.trim().match(regex);
-    return match ? match[1] : null;
-  };
-
   const handleSignUp = async () => {
-    if (formData.password !== formData.confirmPassword) {
-      message.error("Passwords do not match");
-      return;
-    }
-
-    const extractedScholarId = validateScholarUrl(formData.googleScholarLink);
-    if (!extractedScholarId) {
-        message.error("Invalid Google Scholar profile link");
-        return;
-    }
-
-    const docRef = doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${extractedScholarId}`);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      message.error('Scholar ID not found in our records. Please create a Google Scholar account or contact support.');
-      return;
-    }
-
     try {
-      // Create the user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      console.log('User created:', user.uid);
+      await setDoc(doc(db, `users/${user.uid}`), {
+        uid: user.uid,
+        email: formData.email,
+        role: 'researcher',
+        ...formData,
+      });
 
-      try {
-        const userDocRef = doc(db, `users/${user.uid}`);
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: formData.email,
-          scholar_id: extractedScholarId,
-          role: 'researcher',
-          ...formData,
-        });
-        console.log('User data stored in Firestore successfully');
-      } catch (error) {
-        console.error('Error storing user data:', error.message);
-      }
-      
-
-      // Automatically sign in the user after registration
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-
       setIsModalVisible(true);
     } catch (error) {
-      console.error('Error during sign up:', error.message);
       message.error(`Error: ${error.message}`);
     }
   };
+
   const handleConfirm = () => {
     setIsModalVisible(false);
     navigate('/');
@@ -178,20 +141,8 @@ const SignUpPage = () => {
       title: 'Google Scholar Verification',
       content: (
         <Form layout="vertical">
-          <Form.Item
-            label="Google Scholar Profile Link"
-            required
-            validateStatus={scholarIdError ? 'error' : ''}
-            help={scholarIdError}
-          >
-            <Input
-              value={formData.googleScholarLink}
-              name="googleScholarLink"
-              onChange={(e) => {
-                handleChange(e);
-                setScholarIdError('');
-              }}
-            />
+          <Form.Item label="Google Scholar Profile Link" required>
+            <Input value={formData.googleScholarLink} name="googleScholarLink" onChange={handleChange} />
           </Form.Item>
           <p>Verify your Google Scholar profile to continue.</p>
         </Form>
@@ -201,7 +152,12 @@ const SignUpPage = () => {
 
   return (
     <div style={styles.container}>
+   
+      <img src={FYP2} alt="Litrix Logo" style={styles.logo} />
+
       <div style={styles.card}>
+        <ArrowLeftOutlined onClick={() => navigate('/')} style={styles.backIcon} />
+        
         <Steps current={current} style={{ marginBottom: 20 }}>
           {steps.map((step, index) => (
             <Step key={index} title={step.title} />
@@ -226,11 +182,11 @@ const SignUpPage = () => {
           )}
         </div>
         <Modal
-  title="Profile Confirmation"
-  open={isModalVisible}
-  onOk={handleConfirm}
-  onCancel={() => setIsModalVisible(false)}
->
+          title="Profile Confirmation"
+          open={isModalVisible}
+          onOk={handleConfirm}
+          onCancel={() => setIsModalVisible(false)}
+        >
           <p><strong>Name:</strong> {`${formData.firstName} ${formData.lastName}`}</p>
           <p><strong>Email:</strong> {formData.email}</p>
           <p><strong>Phone Number:</strong> {formData.phoneNumber}</p>
@@ -250,6 +206,14 @@ const styles = {
     height: '100vh',
     width: '100vw',
     backgroundColor: '#f0f2f5',
+    position: 'relative',
+  },
+  logo: {
+    position: 'fixed', 
+    top: '10px',  
+    left: '10px', 
+    height: '60px',  
+    zIndex: 1000,  
   },
   card: {
     width: '100%',
@@ -262,6 +226,14 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
+    position: 'relative',
+  },
+  backIcon: {
+    position: 'absolute',
+    top: '-40px',
+    left: '20px',
+    fontSize: '24px',
+    cursor: 'pointer',
   },
   gridContainer: {
     display: 'grid',
