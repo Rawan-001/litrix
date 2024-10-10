@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import { Steps, Button, Form, Input, message, Modal, Select } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons'; // استيراد أيقونة الرجوع
+import { Steps, Button, Form, Input, message, Modal, Select } from 'antd'; // تأكد من استيراد Steps هنا
+import { ArrowLeftOutlined } from '@ant-design/icons'; 
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
-import FYP2 from '../assets/FYP.png';  // استيراد الشعار
+import FYP from '../assets/FYP.png';
 
+const { Step } = Steps; 
 
-const { Step } = Steps;
-const { Option } = Select;
 
 const SignUpPage = () => {
   const [current, setCurrent] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [scholarIdError, setScholarIdError] = useState('');
 
   const [formData, setFormData] = useState({
     email: '',
@@ -52,21 +52,57 @@ const SignUpPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validateScholarUrl = (url) => {
+    const regex = /^https?:\/\/scholar\.google\.com\/citations\?(?:.*&)?user=([a-zA-Z0-9_-]+)(?:&.*)?$/;
+    const match = url.trim().match(regex);
+    return match ? match[1] : null;
+  };
+
   const handleSignUp = async () => {
+    if (formData.password !== formData.confirmPassword) {
+      message.error("Passwords do not match");
+      return;
+    }
+
+    const extractedScholarId = validateScholarUrl(formData.googleScholarLink);
+    if (!extractedScholarId) {
+      message.error("Invalid Google Scholar profile link");
+      return;
+    }
+
+    const docRef = doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${extractedScholarId}`);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      message.error('Scholar ID not found in our records. Please create a Google Scholar account or contact support.');
+      return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      await setDoc(doc(db, `users/${user.uid}`), {
-        uid: user.uid,
-        email: formData.email,
-        role: 'researcher',
-        ...formData,
-      });
+      console.log('User created:', user.uid);
+
+      try {
+        const userDocRef = doc(db, `users/${user.uid}`);
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: formData.email,
+          scholar_id: extractedScholarId,
+          role: 'researcher',
+          ...formData,
+        });
+        console.log('User data stored in Firestore successfully');
+      } catch (error) {
+        console.error('Error storing user data:', error.message);
+      }
 
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
+
       setIsModalVisible(true);
     } catch (error) {
+      console.error('Error during sign up:', error.message);
       message.error(`Error: ${error.message}`);
     }
   };
@@ -141,8 +177,20 @@ const SignUpPage = () => {
       title: 'Google Scholar Verification',
       content: (
         <Form layout="vertical">
-          <Form.Item label="Google Scholar Profile Link" required>
-            <Input value={formData.googleScholarLink} name="googleScholarLink" onChange={handleChange} />
+          <Form.Item
+            label="Google Scholar Profile Link"
+            required
+            validateStatus={scholarIdError ? 'error' : ''}
+            help={scholarIdError}
+          >
+            <Input
+              value={formData.googleScholarLink}
+              name="googleScholarLink"
+              onChange={(e) => {
+                handleChange(e);
+                setScholarIdError('');
+              }}
+            />
           </Form.Item>
           <p>Verify your Google Scholar profile to continue.</p>
         </Form>
@@ -152,12 +200,17 @@ const SignUpPage = () => {
 
   return (
     <div style={styles.container}>
-   
-      <img src={FYP2} alt="Litrix Logo" style={styles.logo} />
-
+      
       <div style={styles.card}>
-        <ArrowLeftOutlined onClick={() => navigate('/')} style={styles.backIcon} />
-        
+        <Button
+          type="link"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/')}
+          style={styles.backButton}
+        >
+          Back to Homepage
+        </Button>
+
         <Steps current={current} style={{ marginBottom: 20 }}>
           {steps.map((step, index) => (
             <Step key={index} title={step.title} />
@@ -208,13 +261,6 @@ const styles = {
     backgroundColor: '#f0f2f5',
     position: 'relative',
   },
-  logo: {
-    position: 'fixed', 
-    top: '10px',  
-    left: '10px', 
-    height: '60px',  
-    zIndex: 1000,  
-  },
   card: {
     width: '100%',
     maxWidth: '1000px',
@@ -228,12 +274,12 @@ const styles = {
     textAlign: 'center',
     position: 'relative',
   },
-  backIcon: {
+  backButton: {
     position: 'absolute',
-    top: '-40px',
-    left: '20px',
-    fontSize: '24px',
-    cursor: 'pointer',
+    top: '-50px',
+    left: '16px',
+    fontSize: '16px',
+    color: '#1890ff',
   },
   gridContainer: {
     display: 'grid',
