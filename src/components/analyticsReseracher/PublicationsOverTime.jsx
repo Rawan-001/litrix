@@ -3,37 +3,39 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { motion } from "framer-motion";
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebaseConfig';
-import { GridLoader } from 'react-spinners'; // استيراد GridLoader
+import { GridLoader } from 'react-spinners';
 
 const UserRetention = () => {
-  const [data, setData] = useState([]); 
-  const [selectedTimeRange, setSelectedTimeRange] = useState("Yearly"); 
+  const [data, setData] = useState([]);
+  const [selectedTimeRange, setSelectedTimeRange] = useState("Yearly");
   const [loading, setLoading] = useState(true);
   const [scholarId, setScholarId] = useState(null);
+  const [college, setCollege] = useState(null);
+  const [department, setDepartment] = useState(null);
 
-  const fetchScholarId = async (uid) => {
+  const fetchUserData = async (uid) => {
     try {
       const userDocRef = doc(db, `users/${uid}`);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        return userData.scholar_id; 
+        return { scholar_id: userData.scholar_id, college: userData.college, department: userData.department };
       }
     } catch (error) {
-      console.error("Error fetching scholar ID: ", error);
+      console.error("Error fetching user data: ", error);
     }
     return null;
   };
 
-  const fetchPublicationsByRange = async (scholarId) => {
+  const fetchPublicationsByRange = async (scholarId, college, department) => {
     setLoading(true);
     try {
-      const publicationsRef = collection(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}/publications`);
+      const publicationsRef = collection(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}/publications`);
       const publicationsSnapshot = await getDocs(publicationsRef);
 
       const publicationsByRange = {};
-      
+
       publicationsSnapshot.forEach(doc => {
         const publication = doc.data();
         const pubYear = publication.pub_year;
@@ -50,8 +52,8 @@ const UserRetention = () => {
       const formattedData = Object.keys(publicationsByRange)
         .sort((a, b) => a - b)
         .map(year => ({
-          name: year, 
-          publications: publicationsByRange[year] 
+          name: year,
+          publications: publicationsByRange[year]
         }));
 
       setData(formattedData);
@@ -65,11 +67,12 @@ const UserRetention = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const scholarId = await fetchScholarId(user.uid);
-        setScholarId(scholarId);
-
-        if (scholarId) {
-          fetchPublicationsByRange(scholarId);
+        const userData = await fetchUserData(user.uid);
+        if (userData) {
+          setScholarId(userData.scholar_id);
+          setCollege(userData.college);
+          setDepartment(userData.department);
+          fetchPublicationsByRange(userData.scholar_id, userData.college, userData.department);
         }
       }
     });

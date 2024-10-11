@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { collection, getDocs, query, doc, getDoc } from "firebase/firestore"; 
-import { db } from "../../firebaseConfig"; 
-import Fuse from "fuse.js"; // لاستيراد Fuse.js للبحث الغامض
+import { collection, getDocs, query, doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
+import Fuse from "fuse.js";
 import {
   Table,
   TableBody,
@@ -19,23 +19,40 @@ import {
   TextField,
   MenuItem,
   Button,
+  Grid,
+  Divider,
 } from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import SearchIcon from '@mui/icons-material/Search';
 
 function SearchTable() {
-  const [searchTerm, setSearchTerm] = useState(""); // لتخزين قيمة البحث
-  const [searchType, setSearchType] = useState("name"); // لتحديد نوع البحث (الاسم أو Scholar ID)
-  const [researcherData, setResearcherData] = useState([]); // لتخزين بيانات الباحثين
-  const [publicationsData, setPublicationsData] = useState([]); // لتخزين بيانات الأبحاث
-  const [loading, setLoading] = useState(false); // لتحديد حالة التحميل
-  const [error, setError] = useState(""); // لتخزين الأخطاء
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [searchType, setSearchType] = useState("name");
+  const [researcherData, setResearcherData] = useState([]);
+  const [publicationsData, setPublicationsData] = useState([]);
+  const [collegeFilter, setCollegeFilter] = useState(""); // فلتر الكلية
+  const [departmentFilter, setDepartmentFilter] = useState(""); // فلتر القسم
+  const [publisherFilter, setPublisherFilter] = useState(""); // فلتر الناشر
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const fuseOptions = {
-    keys: ['name'], // البحث في أسماء الباحثين
-    threshold: 0.4, // البحث الغامض
+    keys: ['name'],
+    threshold: 0.4,
   };
 
-  // البحث باستخدام Scholar ID
+  const handleSearch = () => {
+    if (searchTerm) {
+      if (searchType === "scholar_id") {
+        fetchResearcherById(searchTerm);
+      } else {
+        fetchResearchersAndSearchByName(searchTerm);
+      }
+    } else {
+      setError("Please enter a valid search term.");
+    }
+  };
+
   const fetchResearcherById = async (scholarId) => {
     setLoading(true);
     setError("");
@@ -48,7 +65,7 @@ function SearchTable() {
 
       if (researcherDoc.exists()) {
         const researcherData = researcherDoc.data();
-        setResearcherData([researcherData]); // تخزين بيانات الباحث
+        setResearcherData([researcherData]);
 
         const publicationsRef = collection(
           db,
@@ -57,7 +74,7 @@ function SearchTable() {
         const publicationsSnapshot = await getDocs(publicationsRef);
         const publicationsData = publicationsSnapshot.docs.map((doc) => ({
           ...doc.data(),
-          researcherName: researcherData.name // إضافة اسم الباحث لكل منشور
+          researcherName: researcherData.name
         }));
         setPublicationsData(publicationsData);
       } else {
@@ -71,7 +88,6 @@ function SearchTable() {
     setLoading(false);
   };
 
-  // البحث باستخدام اسم الباحث باستخدام Fuse.js
   const fetchResearchersAndSearchByName = async (name) => {
     setLoading(true);
     setError("");
@@ -81,7 +97,6 @@ function SearchTable() {
 
       const researchers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      // البحث الغامض باستخدام Fuse.js
       const fuse = new Fuse(researchers, fuseOptions);
       const results = fuse.search(name);
 
@@ -98,7 +113,7 @@ function SearchTable() {
           const publicationsSnapshot = await getDocs(publicationsRef);
           const publicationsData = publicationsSnapshot.docs.map((doc) => ({
             ...doc.data(),
-            researcherName: researcher.name // إضافة اسم الباحث لكل منشور
+            researcherName: researcher.name
           }));
           allPublications.push(...publicationsData);
         }
@@ -114,20 +129,6 @@ function SearchTable() {
     setLoading(false);
   };
 
-  // دالة البحث
-  const handleSearch = () => {
-    if (searchTerm) {
-      if (searchType === "scholar_id") {
-        fetchResearcherById(searchTerm); // البحث باستخدام Scholar ID
-      } else {
-        fetchResearchersAndSearchByName(searchTerm); // البحث باستخدام اسم الباحث
-      }
-    } else {
-      setError("Please enter a valid search term.");
-    }
-  };
-
-  // الصف القابل للتوسع لكل منشور
   const CollapsibleRow = ({ publication }) => {
     const [open, setOpen] = useState(false);
 
@@ -179,48 +180,106 @@ function SearchTable() {
     <div className="min-h-screen bg-gray-100 py-10">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         {/* شريط البحث في الأعلى */}
-        <Card
-          className="mb-6"
-          sx={{ borderRadius: "16px" }} // إضافة انحناء دائري
-        >
+        <Card className="mb-6" sx={{ borderRadius: "16px" }}>
           <CardContent>
             <Typography variant="h5" gutterBottom className="text-center font-bold">
               Search Publications
             </Typography>
 
-            <div className="flex items-center justify-center mb-6">
-              <TextField
-                select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value)}
-                variant="outlined"
-                label="Search Type"
-                className="mr-4"
-                sx={{ borderRadius: "50px" }} // جعل الـ Input دائري
-              >
-                <MenuItem value="name">Search by Researcher Name</MenuItem>
-                <MenuItem value="scholar_id">Search by Scholar ID</MenuItem>
-              </TextField>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  select
+                  fullWidth
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value)}
+                  variant="outlined"
+                  label="Search Type"
+                >
+                  <MenuItem value="name">Search by Researcher Name</MenuItem>
+                  <MenuItem value="scholar_id">Search by Scholar ID</MenuItem>
+                </TextField>
+              </Grid>
 
-              <TextField
-                variant="outlined"
-                label={searchType === "scholar_id" ? "Enter Scholar ID" : "Enter Researcher Name"}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full max-w-md"
-                sx={{ borderRadius: "50px" }} // جعل الـ Input دائري
-              />
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  label={searchType === "scholar_id" ? "Enter Scholar ID" : "Enter Researcher Name"}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </Grid>
 
-              <Button
-                onClick={handleSearch}
-                variant="contained"
-                color="primary"
-                className="ml-4"
-                sx={{ borderRadius: "50px", paddingX: 3 }} // جعل الـ Button دائري
-              >
-                Search
-              </Button>
-            </div>
+              <Grid item xs={12} sm={2}>
+                <Button
+                  onClick={handleSearch}
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  startIcon={<SearchIcon />}
+                >
+                  Search
+                </Button>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* قسم الفلاتر المتقدمة */}
+        <Card className="mb-6" sx={{ borderRadius: "16px" }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom className="text-center font-bold">
+              Advanced Filters
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  select
+                  fullWidth
+                  value={collegeFilter}
+                  onChange={(e) => setCollegeFilter(e.target.value)}
+                  variant="outlined"
+                  label="College"
+                >
+                  <MenuItem value="">All Colleges</MenuItem>
+                  <MenuItem value="faculty_computing">Faculty of Computing</MenuItem>
+                  {/* أضف المزيد من الكليات هنا */}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  select
+                  fullWidth
+                  value={departmentFilter}
+                  onChange={(e) => setDepartmentFilter(e.target.value)}
+                  variant="outlined"
+                  label="Department"
+                >
+                  <MenuItem value="">All Departments</MenuItem>
+                  <MenuItem value="dept_cs">Department of Computer Science</MenuItem>
+                  {/* أضف المزيد من الأقسام هنا */}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  select
+                  fullWidth
+                  value={publisherFilter}
+                  onChange={(e) => setPublisherFilter(e.target.value)}
+                  variant="outlined"
+                  label="Publisher"
+                >
+                  <MenuItem value="">All Publishers</MenuItem>
+                  <MenuItem value="IEEE">IEEE</MenuItem>
+                  <MenuItem value="ACM">ACM</MenuItem>
+                  {/* أضف المزيد من الناشرين هنا */}
+                </TextField>
+              </Grid>
+            </Grid>
           </CardContent>
         </Card>
 
@@ -228,11 +287,34 @@ function SearchTable() {
         {loading && <p className="text-center text-gray-500">Loading...</p>}
         {error && <p className="text-center text-red-500">{error}</p>}
 
+        {/* عرض نتائج الباحثين */}
+        {researcherData && researcherData.length > 0 && (
+          <div>
+            <Typography variant="h6" gutterBottom className="text-center font-bold">
+              Researcher Profile
+            </Typography>
+            <Grid container spacing={2} className="mb-6">
+              {researcherData.map((researcher, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card sx={{ borderRadius: "16px" }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>{researcher.name}</Typography>
+                      <Typography variant="body2">Affiliation: {researcher.affiliation}</Typography>
+                      <Typography variant="body2">Scholar ID: {researcher.scholar_id}</Typography>
+                      <Typography variant="body2">Email: {researcher.email}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </div>
+        )}
+
         {/* عرض نتائج الأبحاث */}
         {publicationsData && publicationsData.length > 0 && (
           <TableContainer
             component={Paper}
-            sx={{ borderRadius: "16px" }} // إضافة انحناء دائري
+            sx={{ borderRadius: "16px" }}
           >
             <Table>
               <TableHead>

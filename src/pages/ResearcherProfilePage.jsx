@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { auth, db } from '../firebaseConfig'; 
+import { auth, db } from '../firebaseConfig';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Avatar, Card, CardContent, Grid } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Avatar, Card, CardContent, Grid, Link } from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import Header from '../components/common/Header';
-import { ClipLoader } from 'react-spinners'; // إضافة مكون ClipLoader
+import { ClipLoader } from 'react-spinners';
 
 const ResearcherProfilePage = () => {
-  const [userData, setUserData] = useState(null); 
-  const [facultyMembers, setFacultyMembers] = useState(null); 
+  const [userData, setUserData] = useState(null);
+  const [facultyMembers, setFacultyMembers] = useState(null);
   const [publications, setPublications] = useState([]);
+  const [coauthors, setCoauthors] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -22,21 +23,26 @@ const ResearcherProfilePage = () => {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setUserData(userData); 
+        setUserData(userData);
 
-        const researcherDocRef = doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${userData.scholar_id}`);
+        const researcherDocRef = doc(db, `colleges/${userData.college}/departments/${userData.department}/faculty_members/${userData.scholar_id}`);
         const researcherDoc = await getDoc(researcherDocRef);
 
         if (researcherDoc.exists()) {
           const researcherData = researcherDoc.data();
-          setFacultyMembers(researcherData); 
+          setFacultyMembers(researcherData);
+
+          if (researcherData.coauthors) {
+            setCoauthors(researcherData.coauthors);
+          }
 
           const publicationsRef = collection(
             db,
-            `colleges/faculty_computing/departments/dept_cs/faculty_members/${userData.scholar_id}/publications`
+            `colleges/${userData.college}/departments/${userData.department}/faculty_members/${userData.scholar_id}/publications`
           );
           const publicationsSnapshot = await getDocs(publicationsRef);
           const publicationsData = publicationsSnapshot.docs.map((doc) => doc.data());
+          publicationsData.sort((a, b) => b.num_citations - a.num_citations || b.pub_year - a.pub_year);
           setPublications(publicationsData);
         } else {
           console.error('No researcher data found');
@@ -78,9 +84,20 @@ const ResearcherProfilePage = () => {
               {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
             </IconButton>
           </TableCell>
-          <TableCell>{publication.title || "No Title"}</TableCell>
+          <TableCell>
+            <Typography variant="body1" fontWeight="bold">{publication.title || "No Title"}</Typography>
+            {publication.authors && (
+              <Typography variant="body2" color="textSecondary">
+                Authors: {Array.isArray(publication.authors) ? publication.authors.join(', ') : publication.authors}
+              </Typography>
+            )}
+            {publication.publisher && (
+              <Typography variant="body2" style={{ color: "#4F46E5" }}>
+                Publisher: {publication.publisher}
+              </Typography>
+            )}
+          </TableCell>
           <TableCell>{publication.pub_year || "Unknown Year"}</TableCell>
-          <TableCell>{publication.publisher || "Unknown Publisher"}</TableCell>
           <TableCell>{publication.num_citations || 0}</TableCell>
         </TableRow>
         <TableRow>
@@ -92,14 +109,20 @@ const ResearcherProfilePage = () => {
                 </Typography>
                 {Object.keys(publication).map(
                   (field) =>
-                    !["title", "pub_year", "publisher", "num_citations"].includes(field) && (
+                    !["title", "pub_year", "publisher", "num_citations", "authors", "pub_url"].includes(field) && (
                       <Typography key={field} variant="body2">
                         <strong>{field.replace(/_/g, " ").toUpperCase()}:</strong>{" "}
-                        {typeof publication[field] === 'object' && publication[field] !== null
-                          ? <pre>{JSON.stringify(publication[field], null, 2)}</pre>
-                          : publication[field]}
+                        {typeof publication[field] === 'object' ? JSON.stringify(publication[field]) : publication[field]}
                       </Typography>
                     )
+                )}
+                {publication.pub_url && (
+                  <Typography variant="body2">
+                    <strong>Pub URL: </strong>
+                    <Link href={publication.pub_url} target="_blank" rel="noopener" style={{ color: '#0072e5' }}>
+                      {publication.pub_url}
+                    </Link>
+                  </Typography>
                 )}
               </Box>
             </Collapse>
@@ -109,7 +132,6 @@ const ResearcherProfilePage = () => {
     );
   };
 
-  // عرض السبينر عند تحميل البيانات
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -126,7 +148,7 @@ const ResearcherProfilePage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Header title="Researcher Profile" /> 
+        <Header title="Researcher Profile" />
       </motion.div>
 
       <motion.div
@@ -136,18 +158,18 @@ const ResearcherProfilePage = () => {
         transition={{ delay: 0.2 }}
       >
         <Grid container spacing={4}>
-          <Grid item xs={12} md={8}>
+          <Grid item xs={8}>
             <motion.div
               className="mb-8 bg-white shadow-lg p-6 rounded-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <div className="flex items-center mb-6">
+              <div className="flex items-center mb-3">
                 <Avatar
                   alt="Researcher Profile Picture"
-                  src={facultyMembers?.url_picture || "/default-avatar.png"} 
-                  sx={{ width: 120, height: 120, marginRight: '20px' }} 
+                  src={facultyMembers?.url_picture || "/default-avatar.png"}
+                  sx={{ width: 120, height: 120, marginRight: '20px' }}
                 />
                 <div>
                   <Typography variant="h5" gutterBottom>
@@ -155,9 +177,11 @@ const ResearcherProfilePage = () => {
                   </Typography>
 
                   <p><strong>Scholar ID:</strong> {facultyMembers?.scholar_id || userData?.scholar_id || "N/A"}</p>
-                  
+
                   <p><strong>Institution:</strong> {facultyMembers?.institution || userData?.institution || "N/A"}</p>
                   
+                  <p><strong>Affiliation:</strong> {facultyMembers?.affiliation || "N/A"}</p>
+
                   <p><strong>Email:</strong> {userData?.email || "N/A"}</p>
                   <p><strong>Phone Number:</strong> {userData?.phoneNumber || "N/A"}</p>
 
@@ -167,7 +191,7 @@ const ResearcherProfilePage = () => {
             </motion.div>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid item xs={4}>
             <motion.div
               className="mb-8 bg-white shadow-lg p-6 rounded-lg"
               initial={{ opacity: 0, y: 20 }}
@@ -198,38 +222,72 @@ const ResearcherProfilePage = () => {
               </Card>
             </motion.div>
           </Grid>
-        </Grid>
 
-        <motion.div
-          className="bg-white shadow-lg p-6 rounded-lg"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h3 className="text-lg font-medium mb-2">Publications</h3>
-          {publications.length > 0 ? (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell />
-                    <TableCell>Title</TableCell>
-                    <TableCell>Publication Year</TableCell>
-                    <TableCell>Publisher</TableCell>
-                    <TableCell>Number of Citations</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {publications.map((publication, index) => (
-                    <CollapsibleRow key={index} publication={publication} />
+          <Grid item xs={8}>
+            <motion.div
+              className="bg-white shadow-lg p-6 rounded-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <h3 className="text-lg font-medium mb-2">Publications</h3>
+              {publications.length > 0 ? (
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell />
+                        <TableCell>Title</TableCell>
+                        <TableCell>Publication Year</TableCell>
+                        <TableCell>Number of Citations</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {publications.map((publication, index) => (
+                        <CollapsibleRow key={index} publication={publication} />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <p>No publications found.</p>
+              )}
+            </motion.div>
+          </Grid>
+
+          <Grid item xs={4}>
+            <motion.div
+              className="bg-white shadow-lg p-6 rounded-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <h3 className="text-lg font-medium mb-2">Coauthors</h3>
+              <Card style={{ padding: '10px', fontSize: '0.85rem', maxWidth: '100%' }}>
+                <CardContent>
+                  {coauthors.map((coauthor, index) => (
+                    <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+                      <Avatar
+                        alt={coauthor.name}
+                        src="/default-avatar.png"
+                        sx={{ width: 30, height: 30, marginRight: '10px' }}
+                      />
+                      <div>
+                        <Typography variant="body2" style={{ fontSize: '0.85rem' }}>
+                          <strong>Name:</strong> {coauthor.name}
+                        </Typography>
+                        <Typography variant="body2" style={{ fontSize: '0.85rem', color: "#666" }}>
+                          <strong>Affiliation:</strong> {coauthor.affiliation}
+                        </Typography>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <p>No publications found.</p>
-          )}
-        </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+
+        </Grid>
       </motion.div>
     </div>
   );
