@@ -158,6 +158,7 @@ const ResearcherProfilePage = () => {
         transition={{ delay: 0.2 }}
       >
         <Grid container spacing={4}>
+          {/* عرض بيانات الباحث وكارد السايتاشن بجانب بعض */}
           <Grid item xs={8}>
             <motion.div
               className="mb-8 bg-white shadow-lg p-6 rounded-lg"
@@ -223,7 +224,8 @@ const ResearcherProfilePage = () => {
             </motion.div>
           </Grid>
 
-          <Grid item xs={8}>
+          {/* عرض الأبحاث أسفل البيانات وكارد السايتاشن */}
+          <Grid item xs={coauthors.length > 0 ? 8 : 12}>
             <motion.div
               className="bg-white shadow-lg p-6 rounded-lg"
               initial={{ opacity: 0, y: 20 }}
@@ -255,37 +257,40 @@ const ResearcherProfilePage = () => {
             </motion.div>
           </Grid>
 
-          <Grid item xs={4}>
-            <motion.div
-              className="bg-white shadow-lg p-6 rounded-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <h3 className="text-lg font-medium mb-2">Coauthors</h3>
-              <Card style={{ padding: '10px', fontSize: '0.85rem', maxWidth: '100%' }}>
-                <CardContent>
-                  {coauthors.map((coauthor, index) => (
-                    <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-                      <Avatar
-                        alt={coauthor.name}
-                        src="/default-avatar.png"
-                        sx={{ width: 30, height: 30, marginRight: '10px' }}
-                      />
-                      <div>
-                        <Typography variant="body2" style={{ fontSize: '0.85rem' }}>
-                          <strong>Name:</strong> {coauthor.name}
-                        </Typography>
-                        <Typography variant="body2" style={{ fontSize: '0.85rem', color: "#666" }}>
-                          <strong>Affiliation:</strong> {coauthor.affiliation}
-                        </Typography>
+          {/* عرض الكو اوثرز فقط إذا وجد */}
+          {coauthors.length > 0 && (
+            <Grid item xs={4}>
+              <motion.div
+                className="bg-white shadow-lg p-6 rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <h3 className="text-lg font-medium mb-2">Coauthors</h3>
+                <Card style={{ padding: '10px', fontSize: '0.85rem', maxWidth: '100%' }}>
+                  <CardContent>
+                    {coauthors.map((coauthor, index) => (
+                      <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+                        <Avatar
+                          alt={coauthor.name}
+                          src="/default-avatar.png"
+                          sx={{ width: 30, height: 30, marginRight: '10px' }}
+                        />
+                        <div>
+                          <Typography variant="body2" style={{ fontSize: '0.85rem' }}>
+                            <strong>Name:</strong> {coauthor.name}
+                          </Typography>
+                          <Typography variant="body2" style={{ fontSize: '0.85rem', color: "#666" }}>
+                            <strong>Affiliation:</strong> {coauthor.affiliation}
+                          </Typography>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
+                    ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
+          )}
 
         </Grid>
       </motion.div>
