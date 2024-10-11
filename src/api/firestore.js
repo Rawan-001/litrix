@@ -1,19 +1,19 @@
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
-export const fetchResearcherDataById = async (scholarId) => {
+export const fetchResearcherDataById = async (scholarId, college, department) => {
   const researcherDocRef = doc(
     db,
-    `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}`
+    `colleges/${college}/departments/${department}/faculty_members/${scholarId}`
   );
   const researcherDoc = await getDoc(researcherDocRef);
   return researcherDoc.exists() ? researcherDoc.data() : null;
 };
 
-export const fetchPublicationsByScholarId = async (scholarId) => {
+export const fetchPublicationsByScholarId = async (scholarId, college, department) => {
   const publicationsCollection = collection(
     db,
-    `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}/publications`
+    `colleges/${college}/departments/${department}/faculty_members/${scholarId}/publications`
   );
   const publicationsSnapshot = await getDocs(publicationsCollection);
 

@@ -8,7 +8,7 @@ import Data from '../components/analyticsReseracher/PublicationsOverTime';
 import RevenueChart from '../components/analyticsReseracher/CitesPerYearChart'; 
 import { auth, db } from '../firebaseConfig'; 
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { ClipLoader } from 'react-spinners'; 
+import { GridLoader } from 'react-spinners';
 import { Button, Menu, MenuItem } from '@mui/material';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
@@ -35,15 +35,17 @@ const ResearcherDashboard = () => {
           if (userDoc.exists()) {
             const userData = userDoc.data();
             const scholarId = userData.scholar_id;
+            const college = userData.college;
+            const department = userData.department;
 
-            const researcherDocRef = doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}`);
+            const researcherDocRef = doc(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}`);
             const researcherDoc = await getDoc(researcherDocRef);
 
             if (researcherDoc.exists()) {
               const researcherData = researcherDoc.data();
               setResearcher(researcherData);
 
-              const publicationsRef = collection(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}/publications`);
+              const publicationsRef = collection(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}/publications`);
               const publicationsSnapshot = await getDocs(publicationsRef);
               setPublicationsCount(publicationsSnapshot.size);
 
@@ -147,7 +149,9 @@ const ResearcherDashboard = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <ClipLoader size={150} color={"#4F46E5"} loading={true} />
+        <div className="absolute inset-0 flex justify-center items-center">
+          <GridLoader size={30} color={"#123abc"} />
+        </div>
       </div>
     );
   }

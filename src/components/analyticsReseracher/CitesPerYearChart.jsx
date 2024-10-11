@@ -2,26 +2,41 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { doc, getDoc } from "firebase/firestore"; 
-import { db } from "../../firebaseConfig"; 
-import { ClipLoader } from 'react-spinners';  // استيراد ClipLoader من react-spinners
+import { db, auth } from "../../firebaseConfig"; 
+import { GridLoader } from 'react-spinners'; 
 
 const CitesPerYearChart = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [scholarId, setScholarId] = useState(null);
 
-  // وظيفة جلب بيانات الاقتباسات لكل سنة
-  const fetchCitesPerYear = async () => {
+  const fetchScholarId = async (uid) => {
     try {
-      const docRef= doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}`);
+      const userDocRef = doc(db, `users/${uid}`);
+      const userDoc = await getDoc(userDocRef);
 
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return userData.scholar_id; 
+      }
+    } catch (error) {
+      console.error("Error fetching scholar ID: ", error);
+    }
+    return null;
+  };
 
+  const fetchCitesPerYear = async (scholarId) => {
+    setLoading(true);
+    try {
+      const docRef = doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}`);
       const docSnap = await getDoc(docRef);
+
       if (docSnap.exists()) {
         const researcherData = docSnap.data();
-        const citesPerYear = researcherData.cites_per_year;
+        const citesPerYear = researcherData.cites_per_year || {};
 
         const formattedData = Object.keys(citesPerYear).map((year) => ({
-          year: parseInt(year),
+          year: parseInt(year), 
           cites: citesPerYear[year],
         }));
 
@@ -37,14 +52,24 @@ const CitesPerYearChart = () => {
   };
 
   useEffect(() => {
-    fetchCitesPerYear();
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const scholarId = await fetchScholarId(user.uid);
+        setScholarId(scholarId);
+
+        if (scholarId) {
+          fetchCitesPerYear(scholarId);
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
-    // عرض ClipLoader أثناء التحميل
     return (
       <div className="flex justify-center items-center h-screen">
-        <ClipLoader size={150} color={"#123abc"} loading={true} />
+        <GridLoader size={15} color={"#123abc"} loading={true} />
       </div>
     );
   }

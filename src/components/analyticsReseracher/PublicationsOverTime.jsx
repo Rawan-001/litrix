@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { motion } from "framer-motion";
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebaseConfig';
-import { ClipLoader } from 'react-spinners'; 
+import { GridLoader } from 'react-spinners'; // استيراد GridLoader
 
 const UserRetention = () => {
   const [data, setData] = useState([]); 
@@ -84,7 +84,7 @@ const UserRetention = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <ClipLoader size={150} color={"#4F46E5"} loading={true} />
+        <GridLoader size={15} color={"#4F46E5"} loading={true} />
       </div>
     );
   }

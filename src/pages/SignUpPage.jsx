@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Steps, Button, Form, Input, message, Modal, Select } from 'antd'; // تأكد من استيراد Steps هنا
+import { Steps, Button, Form, Input, message, Modal, Select } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons'; 
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
-import FYP from '../assets/FYP.png';
 
 const { Step } = Steps; 
-
+const { Option } = Select;
 
 const SignUpPage = () => {
   const [current, setCurrent] = useState(0);
@@ -70,7 +69,7 @@ const SignUpPage = () => {
       return;
     }
 
-    const docRef = doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${extractedScholarId}`);
+    const docRef = doc(db, `colleges/${formData.college}/departments/${formData.department}/faculty_members/${extractedScholarId}`);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -82,27 +81,20 @@ const SignUpPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      console.log('User created:', user.uid);
-
-      try {
-        const userDocRef = doc(db, `users/${user.uid}`);
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: formData.email,
-          scholar_id: extractedScholarId,
-          role: 'researcher',
-          ...formData,
-        });
-        console.log('User data stored in Firestore successfully');
-      } catch (error) {
-        console.error('Error storing user data:', error.message);
-      }
+      const userDocRef = doc(db, `users/${user.uid}`);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: formData.email,
+        scholar_id: extractedScholarId,
+        role: 'researcher',
+        college: formData.college,
+        department: formData.department,
+        ...formData,
+      });
 
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-
       setIsModalVisible(true);
     } catch (error) {
-      console.error('Error during sign up:', error.message);
       message.error(`Error: ${error.message}`);
     }
   };
@@ -159,15 +151,27 @@ const SignUpPage = () => {
             </Form.Item>
             <Form.Item label="College" required>
               <Select value={formData.college} onChange={(value) => handleSelectChange(value, 'college')}>
-                <Option value="College of Computing">College of Computing</Option>
-                <Option value="College of Engineering">College of Engineering</Option>
+                <Option value="faculty_computing">Faculty of Computing</Option>
+                <Option value="faculty_engineering">Faculty of Engineering</Option>
               </Select>
             </Form.Item>
           </div>
           <Form.Item label="Department" required>
             <Select value={formData.department} onChange={(value) => handleSelectChange(value, 'department')}>
-              <Option value="Computer Science">Computer Science</Option>
-              <Option value="Information Systems">Information Systems</Option>
+              {formData.college === "faculty_computing" && (
+                <>
+                  <Option value="dept_cs">Computer Science</Option>
+                  <Option value="dept_it">Information Technology</Option>
+                  <Option value="dept_se">Software Engineering</Option>
+                  <Option value="dept_sn">Systems and Networks</Option>
+                </>
+              )}
+              {formData.college === "faculty_engineering" && (
+                <>
+                  <Option value="dept_ece">Electrical Engineering</Option>
+                  <Option value="dept_me">Mechanical Engineering</Option>
+                </>
+              )}
             </Select>
           </Form.Item>
         </Form>
@@ -200,7 +204,6 @@ const SignUpPage = () => {
 
   return (
     <div style={styles.container}>
-      
       <div style={styles.card}>
         <Button
           type="link"
