@@ -12,9 +12,10 @@ const CitesPerYearChart = () => {
   // وظيفة جلب بيانات الاقتباسات لكل سنة
   const fetchCitesPerYear = async () => {
     try {
-      const docRef = doc(db, "colleges/faculty_computing/departments/dept_cs/faculty_members/JSQbyBgAAAAJ");
-      const docSnap = await getDoc(docRef);
+      const docRef= doc(db, `colleges/faculty_computing/departments/dept_cs/faculty_members/${scholarId}`);
 
+
+      const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const researcherData = docSnap.data();
         const citesPerYear = researcherData.cites_per_year;

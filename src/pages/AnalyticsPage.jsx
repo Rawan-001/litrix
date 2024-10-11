@@ -2,6 +2,7 @@ import Header from "../components/common/Header";
 import RevenueChart from "../components/analyticsReseracher/CitesPerYearChart";
 import ChannelData from "../components/analyticsReseracher/ChannelData";
 import Data from "../components/analyticsReseracher/PublicationsOverTime";
+import PieChart from "../components/analyticsReseracher/PieChart";
 
 const AnalyticsPage = () => {
   return (
@@ -13,6 +14,7 @@ const AnalyticsPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <ChannelData />
+          <PieChart/>
           <Data />
         </div>
 

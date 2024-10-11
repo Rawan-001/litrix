@@ -152,7 +152,7 @@ function HomePage() {
         </Row>
 
         <section id="about" className="about-section" style={{ marginTop: '50px' }}>
-          <Title level={2}>About the Project</Title>
+          <Title level={2}>About the Litrix</Title>
           <Paragraph>
             Our system facilitates the collection of research data from primary sources like Google Scholar and provides smart analysis tools to simplify research management.
           </Paragraph>
