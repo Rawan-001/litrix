@@ -24,7 +24,12 @@ import {
   Link,
   MenuItem,
   Select,
-  InputAdornment
+  InputAdornment,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -41,6 +46,7 @@ function SearchTable() {
   const [colleges, setColleges] = useState([]);
   const [selectedCollege, setSelectedCollege] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [openDialog, setOpenDialog] = useState(false); // للتحكم في عرض الـ popup
 
   const navigate = useNavigate();
 
@@ -63,9 +69,11 @@ function SearchTable() {
       for (const collegeDoc of collegesSnapshot.docs) {
         const collegeData = collegeDoc.data();
         const collegeId = collegeDoc.id;
+
         const departmentsRef = collection(db, `colleges/${collegeId}/departments`);
         const departmentsSnapshot = await getDocs(departmentsRef);
         const departmentList = departmentsSnapshot.docs.map(doc => doc.id);
+
         collegeList.push({
           id: collegeId,
           name: collegeData.name,
@@ -80,7 +88,7 @@ function SearchTable() {
   }, []);
 
   const fuseOptions = {
-    keys: ['firstName', 'lastName', 'title'],
+    keys: ['firstName', 'lastName'], // لا يوجد بحث بالعناوين هنا
     threshold: 0.4,
   };
 
@@ -88,6 +96,14 @@ function SearchTable() {
     if (searchTerm || selectedCollege || selectedDepartment) {
       setLoading(true);
       setError("");
+
+      // تحقق إذا كان البحث متعلقًا بعناوين البحوث
+      if (searchTerm.includes(" ")) {
+        setOpenDialog(true); // عرض الـ popup
+        setLoading(false);
+        return; // إيقاف البحث هنا لأن البحث بعناوين البحوث لم يتم تفعيله بعد
+      }
+
       try {
         const q = query(collection(db, `users`));
         const querySnapshot = await getDocs(q);
@@ -142,11 +158,15 @@ function SearchTable() {
 
   const handleCollegeChange = (event) => {
     setSelectedCollege(event.target.value);
-    setSelectedDepartment("");
+    setSelectedDepartment(""); // Reset department when college changes
   };
 
   const handleDepartmentChange = (event) => {
     setSelectedDepartment(event.target.value);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   const CollapsibleRow = ({ publication }) => {
@@ -222,7 +242,7 @@ function SearchTable() {
                   variant="outlined"
                   fullWidth
                   label="Enter Researcher Name or Publication Title"
-                  size="small"
+                  size="small" // Smaller search bar
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
@@ -234,8 +254,8 @@ function SearchTable() {
                       </InputAdornment>
                     ),
                     style: { 
-                      borderRadius: '25px',
-                      padding: '6px 10px',
+                      borderRadius: '25px', // Making search bar smaller and rounded
+                      padding: '6px 10px', // Smaller padding for the search bar
                     },
                   }}
                 />
@@ -248,8 +268,8 @@ function SearchTable() {
                   value={selectedCollege}
                   onChange={handleCollegeChange}
                   variant="outlined"
-                  size="small"
-                  sx={{ padding: '6px 10px', minHeight: '40px' }}
+                  size="small" // Smaller select box
+                  sx={{ padding: '6px 10px', minHeight: '40px' }} // Smaller padding for the select box
                 >
                   <MenuItem value="">All Colleges</MenuItem>
                   {colleges.map((college, index) => (
@@ -268,8 +288,8 @@ function SearchTable() {
                     value={selectedDepartment}
                     onChange={handleDepartmentChange}
                     variant="outlined"
-                    size="small"
-                    sx={{ padding: '6px 10px', minHeight: '40px' }}
+                    size="small" // Smaller select box
+                    sx={{ padding: '6px 10px', minHeight: '40px' }} // Smaller padding for the select box
                   >
                     <MenuItem value="">All Departments</MenuItem>
                     {colleges
@@ -285,6 +305,24 @@ function SearchTable() {
             </Grid>
           </CardContent>
         </Card>
+
+        {/* Dialog popup for title search not being enabled */}
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+        >
+          <DialogTitle>Feature Not Available</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              البحث بعناوين البحوث لم يتم تفعيله بعد.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="primary">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {loading && <p className="text-center text-gray-500">Loading...</p>}
         {error && <p className="text-center text-red-500">{error}</p>}
