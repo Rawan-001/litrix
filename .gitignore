@@ -22,3 +22,64 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ignore virtual environments
+litrix-env/
+
+# Ignore system files
+.DS_Store
+.Trash/
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+
+# Ignore logs
+/logs/
+
+# Ignore environment variable files (optional, if you have .env files)
+.env
+# Python virtual environments
+litrix-env/
+anaconda3/
+environment/
+
+# Python specific
+__pycache__/
+*.py[cod]
+.python_history
+.ipynb_checkpoints/
+.venv/
+
+# Eclipse, IntelliJ IDEA, and other IDEs
+.idea/
+.vscode/
+.project/
+.metadata/
+*.iml
+*.class
+
+# Log files
+*.log
+
+# Git system files
+.gitconfig
+.git/
+
+# Cloud storage files
+Google Drive/
+Creative Cloud Files/
+
+# Other files
+*.zip
+*.pkt
+*.pkz
+litrix-env/
+litrix-env/
+scraping_author_artciles.py
+scraping_author_artciles.py
+*.json
+
+scraping_author_artciles.py
+
+
