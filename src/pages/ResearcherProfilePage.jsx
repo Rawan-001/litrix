@@ -1,55 +1,81 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { auth, db } from '../firebaseConfig';
+import { db } from '../firebaseConfig';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Avatar, Card, CardContent, Grid, Link } from "@mui/material";
-import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import { KeyboardArrowDown, KeyboardArrowUp, ArrowUpward, ArrowDownward } from "@mui/icons-material";
 import Header from '../components/common/Header';
-import { ClipLoader } from 'react-spinners';
+import { GridLoader } from 'react-spinners';
 
 const ResearcherProfilePage = () => {
-  const [userData, setUserData] = useState(null);
-  const [facultyMembers, setFacultyMembers] = useState(null);
+  const { scholar_id } = useParams(); // احضار Scholar ID من الرابط
+  const [researcherData, setResearcherData] = useState(null);
+  const [userData, setUserData] = useState(null); // بيانات التسجيل
   const [publications, setPublications] = useState([]);
   const [coauthors, setCoauthors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [sortOption, setSortOption] = useState({ field: "citations", order: "desc" }); // الافتراضي فرز بناءً على الاستشهادات نزولاً
 
-  const fetchResearcherData = async (uid) => {
+  const fetchResearcherData = async () => {
+    if (!scholar_id) {
+      console.error('Scholar ID غير موجود في الرابط');
+      return;
+    }
+
     try {
-      const userDocRef = doc(db, `users/${uid}`);
-      const userDoc = await getDoc(userDocRef);
+      let researcherDoc = null;
+      let publicationsData = [];
+      let researcherDataFetched = null;
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUserData(userData);
+      // البحث في جميع الكليات والأقسام
+      const collegesSnapshot = await getDocs(collection(db, 'colleges'));
+      for (const collegeDoc of collegesSnapshot.docs) {
+        const collegeId = collegeDoc.id;
+        const departmentsSnapshot = await getDocs(collection(db, `colleges/${collegeId}/departments`));
+        for (const departmentDoc of departmentsSnapshot.docs) {
+          const departmentId = departmentDoc.id;
 
-        const researcherDocRef = doc(db, `colleges/${userData.college}/departments/${userData.department}/faculty_members/${userData.scholar_id}`);
-        const researcherDoc = await getDoc(researcherDocRef);
+          // البحث عن الباحث بناءً على scholar_id
+          const researcherRef = doc(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}`);
+          const docSnap = await getDoc(researcherRef);
 
-        if (researcherDoc.exists()) {
-          const researcherData = researcherDoc.data();
-          setFacultyMembers(researcherData);
+          if (docSnap.exists()) {
+            researcherDoc = docSnap;
+            researcherDataFetched = docSnap.data();
 
-          if (researcherData.coauthors) {
-            setCoauthors(researcherData.coauthors);
+            // جلب الأبحاث الخاصة بالباحث
+            const publicationsRef = collection(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}/publications`);
+            const publicationsSnapshot = await getDocs(publicationsRef);
+            publicationsData = publicationsSnapshot.docs.map((doc) => doc.data());
+
+            break;
           }
+        }
+        if (researcherDoc) break;
+      }
 
-          const publicationsRef = collection(
-            db,
-            `colleges/${userData.college}/departments/${userData.department}/faculty_members/${userData.scholar_id}/publications`
-          );
-          const publicationsSnapshot = await getDocs(publicationsRef);
-          const publicationsData = publicationsSnapshot.docs.map((doc) => doc.data());
-          publicationsData.sort((a, b) => b.num_citations - a.num_citations || b.pub_year - a.pub_year);
-          setPublications(publicationsData);
-        } else {
-          console.error('No researcher data found');
+      if (researcherDoc && researcherDataFetched) {
+        setResearcherData(researcherDataFetched);
+        setPublications(publicationsData);
+
+        if (researcherDataFetched.coauthors) {
+          setCoauthors(researcherDataFetched.coauthors);
         }
       } else {
-        console.error('No user data found');
-        navigate('/');
+        console.error('لا توجد بيانات لهذا الباحث');
+      }
+
+      // جلب بيانات التسجيل من /users بناءً على `scholar_id`
+      const userQuerySnapshot = await getDocs(collection(db, 'users'));
+      const foundUser = userQuerySnapshot.docs
+        .map(doc => doc.data())
+        .find(user => user.scholar_id === scholar_id);
+      
+      if (foundUser) {
+        setUserData(foundUser);
+      } else {
+        console.error('لا توجد بيانات تسجيل لهذا الباحث');
       }
     } catch (error) {
       console.error('Error fetching researcher data:', error);
@@ -58,16 +84,37 @@ const ResearcherProfilePage = () => {
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        fetchResearcherData(user.uid);
-      } else {
-        navigate('/');
-      }
-    });
+    fetchResearcherData();
+  }, [scholar_id]);
 
-    return () => unsubscribe();
-  }, [navigate]);
+  // دالة لفرز الأبحاث
+  const sortPublications = () => {
+    return publications.sort((a, b) => {
+      if (sortOption.field === "citations") {
+        return sortOption.order === "asc"
+          ? (a.num_citations || 0) - (b.num_citations || 0)
+          : (b.num_citations || 0) - (a.num_citations || 0);
+      } else if (sortOption.field === "year") {
+        return sortOption.order === "asc"
+          ? (a.pub_year || 0) - (b.pub_year || 0)
+          : (b.pub_year || 0) - (a.pub_year || 0);
+      }
+      return 0;
+    });
+  };
+
+  const handleSort = (field) => {
+    if (sortOption.field === field) {
+      // إذا كانت نفس الحقل، قم بتغيير ترتيب الفرز
+      setSortOption((prev) => ({
+        field,
+        order: prev.order === "asc" ? "desc" : "asc",
+      }));
+    } else {
+      // فرز بحقل جديد
+      setSortOption({ field, order: "desc" });
+    }
+  };
 
   const CollapsibleRow = ({ publication }) => {
     const [open, setOpen] = useState(false);
@@ -80,6 +127,7 @@ const ResearcherProfilePage = () => {
               aria-label="expand row"
               size="small"
               onClick={() => setOpen(!open)}
+              sx={{ color: open ? 'blue' : 'inherit' }} // يتغير اللون عند الفتح
             >
               {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
             </IconButton>
@@ -135,7 +183,9 @@ const ResearcherProfilePage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <ClipLoader size={100} color={"#4F46E5"} loading={true} />
+        <div className="absolute inset-0 flex justify-center items-center">
+          <GridLoader size={30} color={"#123abc"} />
+        </div>
       </div>
     );
   }
@@ -158,8 +208,7 @@ const ResearcherProfilePage = () => {
         transition={{ delay: 0.2 }}
       >
         <Grid container spacing={4}>
-          {/* عرض بيانات الباحث وكارد السايتاشن بجانب بعض */}
-          <Grid item xs={8}>
+          <Grid item xs={8}> {/* توسيع حجم كارد البيانات والسايتيشن */}
             <motion.div
               className="mb-8 bg-white shadow-lg p-6 rounded-lg"
               initial={{ opacity: 0, y: 20 }}
@@ -169,7 +218,7 @@ const ResearcherProfilePage = () => {
               <div className="flex items-center mb-3">
                 <Avatar
                   alt="Researcher Profile Picture"
-                  src={facultyMembers?.url_picture || "/default-avatar.png"}
+                  src={researcherData?.url_picture || "/default-avatar.png"}
                   sx={{ width: 120, height: 120, marginRight: '20px' }}
                 />
                 <div>
@@ -177,16 +226,12 @@ const ResearcherProfilePage = () => {
                     {userData?.firstName + ' ' + userData?.lastName || "Researcher"}
                   </Typography>
 
-                  <p><strong>Scholar ID:</strong> {facultyMembers?.scholar_id || userData?.scholar_id || "N/A"}</p>
-
-                  <p><strong>Institution:</strong> {facultyMembers?.institution || userData?.institution || "N/A"}</p>
-                  
-                  <p><strong>Affiliation:</strong> {facultyMembers?.affiliation || "N/A"}</p>
-
+                  <p><strong>Scholar ID:</strong> {researcherData?.scholar_id || userData?.scholar_id || "N/A"}</p>
+                  <p><strong>Institution:</strong> {researcherData?.institution || "N/A"}</p>
+                  <p><strong>Affiliation:</strong> {researcherData?.affiliation || "N/A"}</p>
                   <p><strong>Email:</strong> {userData?.email || "N/A"}</p>
                   <p><strong>Phone Number:</strong> {userData?.phoneNumber || "N/A"}</p>
-
-                  <p><strong>Interests:</strong> {facultyMembers?.interests ? facultyMembers.interests.join(", ") : "N/A"}</p>
+                  <p><strong>Interests:</strong> {researcherData?.interests ? researcherData.interests.join(", ") : "N/A"}</p>
                 </div>
               </div>
             </motion.div>
@@ -205,27 +250,26 @@ const ResearcherProfilePage = () => {
                     Citation Metrics
                   </Typography>
                   <Typography variant="body1">
-                    <strong>H-index:</strong> {facultyMembers?.hindex || "N/A"}
+                    <strong>H-index:</strong> {researcherData?.hindex || "N/A"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>H-index (Last 5 years):</strong> {facultyMembers?.hindex5y || "N/A"}
+                    <strong>H-index (Last 5 years):</strong> {researcherData?.hindex5y || "N/A"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>i10-index:</strong> {facultyMembers?.i10index || "N/A"}
+                    <strong>i10-index:</strong> {researcherData?.i10index || "N/A"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>i10-index (Last 5 years):</strong> {facultyMembers?.i10index5y || "N/A"}
+                    <strong>i10-index (Last 5 years):</strong> {researcherData?.i10index5y || "N/A"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Cited By:</strong> {facultyMembers?.citedby || "N/A"}
+                    <strong>Cited By:</strong> {researcherData?.citedby || "N/A"}
                   </Typography>
                 </CardContent>
               </Card>
             </motion.div>
           </Grid>
 
-          {/* عرض الأبحاث أسفل البيانات وكارد السايتاشن */}
-          <Grid item xs={coauthors.length > 0 ? 8 : 12}>
+          <Grid item xs={coauthors.length > 0 ? 9 : 11}> 
             <motion.div
               className="bg-white shadow-lg p-6 rounded-lg"
               initial={{ opacity: 0, y: 20 }}
@@ -233,33 +277,39 @@ const ResearcherProfilePage = () => {
               transition={{ delay: 0.5 }}
             >
               <h3 className="text-lg font-medium mb-2">Publications</h3>
-              {publications.length > 0 ? (
-                <TableContainer component={Paper}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell />
-                        <TableCell>Title</TableCell>
-                        <TableCell>Publication Year</TableCell>
-                        <TableCell>Number of Citations</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {publications.map((publication, index) => (
-                        <CollapsibleRow key={index} publication={publication} />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                <p>No publications found.</p>
-              )}
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell />
+                      <TableCell>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }} onClick={() => handleSort("year")}>
+                          <span style={{ fontSize: "12px", marginRight: "5px" }}>Year</span>
+                          <ArrowUpward fontSize="small" style={{ opacity: sortOption.field === "year" && sortOption.order === "asc" ? 1 : 0.2 }} />
+                          <ArrowDownward fontSize="small" style={{ opacity: sortOption.field === "year" && sortOption.order === "desc" ? 1 : 0.2 }} />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }} onClick={() => handleSort("citations")}>
+                          <span style={{ fontSize: "12px", marginRight: "5px" }}>Citations</span>
+                          <ArrowUpward fontSize="small" style={{ opacity: sortOption.field === "citations" && sortOption.order === "asc" ? 1 : 0.2 }} />
+                          <ArrowDownward fontSize="small" style={{ opacity: sortOption.field === "citations" && sortOption.order === "desc" ? 1 : 0.2 }} />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {sortPublications().map((publication, index) => (
+                      <CollapsibleRow key={index} publication={publication} />
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </motion.div>
           </Grid>
 
-          {/* عرض الكو اوثرز فقط إذا وجد */}
           {coauthors.length > 0 && (
-            <Grid item xs={4}>
+            <Grid item xs={3}> 
               <motion.div
                 className="bg-white shadow-lg p-6 rounded-lg"
                 initial={{ opacity: 0, y: 20 }}
@@ -291,7 +341,6 @@ const ResearcherProfilePage = () => {
               </motion.div>
             </Grid>
           )}
-
         </Grid>
       </motion.div>
     </div>

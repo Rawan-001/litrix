@@ -21,7 +21,6 @@ function HomePage() {
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert('Logged in as Researcher');
       navigate('/dashboard');
     } catch (error) {
       alert('Login failed: ' + error.message);
@@ -31,7 +30,6 @@ function HomePage() {
   const handleAdminLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-      alert('Logged in as Administrator');
       navigate('/admin-dashboard');
     } catch (error) {
       alert('Admin login failed: ' + error.message);

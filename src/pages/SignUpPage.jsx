@@ -13,7 +13,6 @@ const SignUpPage = () => {
   const [current, setCurrent] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [scholarIdError, setScholarIdError] = useState('');
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -30,6 +29,7 @@ const SignUpPage = () => {
 
   const navigate = useNavigate();
 
+  // للتحقق من مطابقة كلمة المرور
   const handleNext = () => {
     if (current === 0 && formData.password !== formData.confirmPassword) {
       message.error("Passwords do not match");
@@ -38,57 +38,62 @@ const SignUpPage = () => {
     setCurrent((prev) => prev + 1);
   };
 
+  // للتراجع للخطوة السابقة
   const handlePrev = () => {
     setCurrent((prev) => prev - 1);
   };
 
+  // معالجة تغييرات المدخلات
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // معالجة التغييرات في اختيار المدخلات Select
   const handleSelectChange = (value, name) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // التحقق من صحة رابط Google Scholar
   const validateScholarUrl = (url) => {
     const regex = /^https?:\/\/scholar\.google\.com\/citations\?(?:.*&)?user=([a-zA-Z0-9_-]+)(?:&.*)?$/;
     const match = url.trim().match(regex);
     return match ? match[1] : null;
   };
 
+  // عملية التسجيل
   const handleSignUp = async () => {
     if (formData.password !== formData.confirmPassword) {
       message.error("Passwords do not match");
       return;
     }
-  
+
     const extractedScholarId = validateScholarUrl(formData.googleScholarLink);
     if (!extractedScholarId) {
       message.error("Invalid Google Scholar profile link");
       return;
     }
-  
-    // Ensure college and department are selected
+
+    // التأكد من اختيار الكلية والقسم
     if (!formData.college || !formData.department) {
       message.error("Please select a college and a department");
       return;
     }
-  
+
     console.log(`colleges/${formData.college}/departments/${formData.department}/faculty_members/${extractedScholarId}`);
-  
+
     const docRef = doc(db, `colleges/${formData.college}/departments/${formData.department}/faculty_members/${extractedScholarId}`);
     const docSnap = await getDoc(docRef);
-  
+
     if (!docSnap.exists()) {
       message.error('Scholar ID not found in our records. Please create a Google Scholar account or contact support.');
       return;
     }
-  
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
-  
+
       const userDocRef = doc(db, `users/${user.uid}`);
       await setDoc(userDocRef, {
         uid: user.uid,
@@ -97,20 +102,24 @@ const SignUpPage = () => {
         role: 'researcher',
         college: formData.college,
         department: formData.department,
-        ...formData,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        personalEmail: formData.personalEmail,
+        phoneNumber: formData.phoneNumber,
+        institution: formData.institution,
+        googleScholarLink: formData.googleScholarLink
       });
-  
+
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      setIsModalVisible(true);
+      setIsModalVisible(true); // عرض نافذة التأكيد عند النجاح
     } catch (error) {
       message.error(`Error: ${error.message}`);
     }
   };
-  
 
   const handleConfirm = () => {
     setIsModalVisible(false);
-    navigate('/');
+    navigate('/'); // توجيه المستخدم إلى الصفحة الرئيسية بعد التسجيل
   };
 
   const steps = [
