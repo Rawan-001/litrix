@@ -63,11 +63,9 @@ function SearchTable() {
       for (const collegeDoc of collegesSnapshot.docs) {
         const collegeData = collegeDoc.data();
         const collegeId = collegeDoc.id;
-
         const departmentsRef = collection(db, `colleges/${collegeId}/departments`);
         const departmentsSnapshot = await getDocs(departmentsRef);
         const departmentList = departmentsSnapshot.docs.map(doc => doc.id);
-
         collegeList.push({
           id: collegeId,
           name: collegeData.name,
@@ -144,7 +142,7 @@ function SearchTable() {
 
   const handleCollegeChange = (event) => {
     setSelectedCollege(event.target.value);
-    setSelectedDepartment(""); 
+    setSelectedDepartment("");
   };
 
   const handleDepartmentChange = (event) => {
@@ -224,7 +222,7 @@ function SearchTable() {
                   variant="outlined"
                   fullWidth
                   label="Enter Researcher Name or Publication Title"
-                  size="small" 
+                  size="small"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
@@ -236,8 +234,8 @@ function SearchTable() {
                       </InputAdornment>
                     ),
                     style: { 
-                      borderRadius: '25px', 
-                      padding: '6px 10px', 
+                      borderRadius: '25px',
+                      padding: '6px 10px',
                     },
                   }}
                 />
@@ -250,8 +248,8 @@ function SearchTable() {
                   value={selectedCollege}
                   onChange={handleCollegeChange}
                   variant="outlined"
-                  size="small" 
-                  sx={{ padding: '6px 10px', minHeight: '40px' }} 
+                  size="small"
+                  sx={{ padding: '6px 10px', minHeight: '40px' }}
                 >
                   <MenuItem value="">All Colleges</MenuItem>
                   {colleges.map((college, index) => (
@@ -270,8 +268,8 @@ function SearchTable() {
                     value={selectedDepartment}
                     onChange={handleDepartmentChange}
                     variant="outlined"
-                    size="small" 
-                    sx={{ padding: '6px 10px', minHeight: '40px' }} 
+                    size="small"
+                    sx={{ padding: '6px 10px', minHeight: '40px' }}
                   >
                     <MenuItem value="">All Departments</MenuItem>
                     {colleges
