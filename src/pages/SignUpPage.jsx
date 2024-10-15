@@ -141,6 +141,7 @@ const SignUpPage = () => {
       ),
     },
     {
+      //update
       title: 'Profile Information',
       content: (
         <Form layout="vertical">
