@@ -1,9 +1,7 @@
-/* الصفحة الرئيسية */
 .layout {
   background-color: #f0f2f5;
 }
 
-/* شريط التنقل */
 .navbar {
   background-color: #506d94;
   position: fixed;
@@ -13,7 +11,6 @@
   padding: 0 50px;
 }
 
-/* الشعار */
 .logo {
   width: 120px;
   height: auto;
@@ -21,7 +18,6 @@
   margin-top: 5px;
 }
 
-/* قسم البطل (الجزء الرئيسي من الصفحة) */
 .hero-section {
   display: flex;
   flex-direction: column;
@@ -52,28 +48,25 @@
   top: 80px;
 }
 
-/* البطاقة الخاصة بتسجيل الدخول */
 .login-card {
   background-color: #fff;
   padding: 40px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-top: 30px;
-  width: 100%; /* عرض كامل على الشاشات الصغيرة */
-  max-width: 500px; /* حد أقصى للعرض على الشاشات الأكبر */
+  width: 100%; 
+  max-width: 500px;
   text-align: center;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* تأثير عند التحويم على البطاقة */
 .login-card:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* العنوان داخل بطاقة تسجيل الدخول */
 .login-title {
   font-size: 24px;
   font-weight: bold;
@@ -81,7 +74,6 @@
   color: #000;
 }
 
-/* حقول الإدخال */
 .login-input {
   width: 100%;
   padding: 12px;
@@ -95,7 +87,6 @@
   border-color: #506d94;
 }
 
-/* زر تسجيل الدخول */
 .login-btn-main {
   width: 100%;
   padding: 12px;
@@ -113,7 +104,6 @@
   background-color: #40557a;
 }
 
-/* النص تحت تسجيل الدخول */
 .login-text {
   margin-top: 20px;
   color: #333;
@@ -130,7 +120,6 @@
   color: #b2c6dc;
 }
 
-/* قسم حول المشروع */
 .about-section {
   padding: 80px 20px;
   background-color: #f9f9f9;
@@ -149,7 +138,6 @@
   color: #555;
 }
 
-/* تذييل الصفحة */
 footer {
   background-color: #001529;
   color: #fff;
@@ -158,7 +146,6 @@ footer {
   font-size: 16px;
 }
 
-/* البطاقات المخصصة */
 .custom-card {
   transition: transform 0.3s ease;
   height: 280px;
@@ -174,7 +161,6 @@ footer {
   transform: scale(1.05);
 }
 
-/* جسم البطاقة */
 .ant-card-body {
   overflow: hidden;
   padding: 16px;
@@ -188,7 +174,6 @@ footer {
   margin-top: 1px;
 }
 
-/* النص المتحرك */
 .typewriter-text {
   font-size: 50px;
   letter-spacing: 6px;
@@ -216,19 +201,15 @@ footer {
   }
 }
 
-/* استجابة الشاشات الصغيرة */
 @media (max-width: 768px) {
-  /* تعديل شريط التنقل */
   .navbar {
     padding: 0 20px;
   }
 
-  /* تعديل حجم الشعار */
   .logo {
     width: 80px;
   }
 
-  /* تعديل النص في القسم الرئيسي */
   .hero-title {
     font-size: 28px;
   }
@@ -237,14 +218,12 @@ footer {
     font-size: 14px;
   }
 
-  /* جعل بطاقة تسجيل الدخول تأخذ عرض الشاشة بالكامل */
   .login-card {
     width: 100%;
     max-width: 100%;
     padding: 20px;
   }
 
-  /* تصغير حجم العنوان وزر الدخول */
   .login-title {
     font-size: 20px;
   }
@@ -253,14 +232,12 @@ footer {
     font-size: 14px;
   }
 
-  /* جعل البطاقات المخصصة تأخذ العرض الكامل */
   .custom-card {
     width: 100%;
     height: auto;
     margin-bottom: 20px;
   }
 
-  /* تعديل البادينغ في قسم حول المشروع */
   .about-section {
     padding: 40px 20px;
   }

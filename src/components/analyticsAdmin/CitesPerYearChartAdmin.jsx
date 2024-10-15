@@ -5,7 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../../firebaseConfig"; 
 import { GridLoader } from 'react-spinners'; 
 
-const CitesPerYearChart = () => {
+const CitesPerYearChartAdmin = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scholarId, setScholarId] = useState(null);
@@ -28,8 +28,7 @@ const CitesPerYearChart = () => {
   const fetchCitesPerYear = async (scholarId) => {
     setLoading(true);
     try {
-      const docRef = doc(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}`);
-          
+      const docRef = doc(db, `colleges/faculty_computing/departments/${department}/faculty_members/${scholarId}`);
 
       const docSnap = await getDoc(docRef);
 
@@ -104,4 +103,4 @@ const CitesPerYearChart = () => {
   );
 };
 
-export default CitesPerYearChart;
+export default CitesPerYearChartAdmin;

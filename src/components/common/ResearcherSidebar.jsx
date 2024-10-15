@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LuLayoutDashboard } from "react-icons/lu";
-import { MdOutlineManageSearch, MdSettings } from "react-icons/md"; //MdSettings 
+import { MdOutlineManageSearch, MdSettings } from "react-icons/md"; 
 import { BsStars } from "react-icons/bs";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
 import { FaUserCircle } from "react-icons/fa"; 
@@ -17,7 +17,7 @@ const researcherSidebarItems = [
   { name: "Collaboration", icon: FiUsers, color: "#2a4570", href: "/collaboration" },
   { name: "Litrix Chat", icon: BsStars, color: "#2a4570", href: "/chat" },
   { name: "Analytics", icon: TbBrandGoogleAnalytics, color: "#2a4570", href: "/analytics" },
-  { name: "Settings", icon: MdSettings, color: "#2a4570", href: "/settings" }, //MdSettings
+  { name: "Settings", icon: MdSettings, color: "#2a4570", href: "/settings" }, 
 ];
 
 const ResearcherSidebar = () => {

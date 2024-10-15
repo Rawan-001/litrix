@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import Header from '../components/common/Header';
 import StatCard from '../components/common/StatCard';
-import DistributionChart from '../components/analyticsReseracher/PieChart';
+import PieChartAdmin from '../components/analyticsAdmin/PieChartAdmin';
+import ChannelDataAdmin from '../components/analyticsAdmin/ChannelDataAdmin';
+
 import { LuFileSpreadsheet } from "react-icons/lu";
 import { FaQuoteRight } from "react-icons/fa";
 import { MdOutlinePeopleAlt } from "react-icons/md";
@@ -88,8 +90,8 @@ const AdminDashboard = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <DistributionChart />
-          <RevenueChart />
+          <ChannelDataAdmin />
+          <PieChartAdmin />
         </div>
       </main>
     </div>

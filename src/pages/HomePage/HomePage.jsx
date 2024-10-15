@@ -58,7 +58,10 @@ function HomePage() {
           </Col>
           <Col>
             <Button type="primary" onClick={() => navigate('/signup')}>
-              Sign Up
+              Sign Up as Researcher
+            </Button>
+            <Button type="default" style={{ marginLeft: '10px' }} onClick={() => navigate('/admin-signup')}>
+              Sign Up as Admin
             </Button>
           </Col>
         </Row>

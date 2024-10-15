@@ -9,13 +9,13 @@ import Header from '../components/common/Header';
 import { GridLoader } from 'react-spinners';
 
 const ResearcherProfilePage = () => {
-  const { scholar_id } = useParams(); // احضار Scholar ID من الرابط
+  const { scholar_id } = useParams(); 
   const [researcherData, setResearcherData] = useState(null);
-  const [userData, setUserData] = useState(null); // بيانات التسجيل
+  const [userData, setUserData] = useState(null); 
   const [publications, setPublications] = useState([]);
   const [coauthors, setCoauthors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortOption, setSortOption] = useState({ field: "citations", order: "desc" }); // الافتراضي فرز بناءً على الاستشهادات نزولاً
+  const [sortOption, setSortOption] = useState({ field: "citations", order: "desc" }); 
 
   const fetchResearcherData = async () => {
     if (!scholar_id) {
@@ -28,7 +28,6 @@ const ResearcherProfilePage = () => {
       let publicationsData = [];
       let researcherDataFetched = null;
 
-      // البحث في جميع الكليات والأقسام
       const collegesSnapshot = await getDocs(collection(db, 'colleges'));
       for (const collegeDoc of collegesSnapshot.docs) {
         const collegeId = collegeDoc.id;
@@ -36,7 +35,6 @@ const ResearcherProfilePage = () => {
         for (const departmentDoc of departmentsSnapshot.docs) {
           const departmentId = departmentDoc.id;
 
-          // البحث عن الباحث بناءً على scholar_id
           const researcherRef = doc(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}`);
           const docSnap = await getDoc(researcherRef);
 
@@ -44,7 +42,6 @@ const ResearcherProfilePage = () => {
             researcherDoc = docSnap;
             researcherDataFetched = docSnap.data();
 
-            // جلب الأبحاث الخاصة بالباحث
             const publicationsRef = collection(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}/publications`);
             const publicationsSnapshot = await getDocs(publicationsRef);
             publicationsData = publicationsSnapshot.docs.map((doc) => doc.data());
@@ -63,10 +60,9 @@ const ResearcherProfilePage = () => {
           setCoauthors(researcherDataFetched.coauthors);
         }
       } else {
-        console.error('لا توجد بيانات لهذا الباحث');
+        console.error('مافي بيانات للباحث' );
       }
 
-      // جلب بيانات التسجيل من /users بناءً على `scholar_id`
       const userQuerySnapshot = await getDocs(collection(db, 'users'));
       const foundUser = userQuerySnapshot.docs
         .map(doc => doc.data())
@@ -75,7 +71,7 @@ const ResearcherProfilePage = () => {
       if (foundUser) {
         setUserData(foundUser);
       } else {
-        console.error('لا توجد بيانات تسجيل لهذا الباحث');
+        console.error('مافي بيانات للباحث');
       }
     } catch (error) {
       console.error('Error fetching researcher data:', error);
@@ -87,7 +83,6 @@ const ResearcherProfilePage = () => {
     fetchResearcherData();
   }, [scholar_id]);
 
-  // دالة لفرز الأبحاث
   const sortPublications = () => {
     return publications.sort((a, b) => {
       if (sortOption.field === "citations") {
@@ -105,13 +100,11 @@ const ResearcherProfilePage = () => {
 
   const handleSort = (field) => {
     if (sortOption.field === field) {
-      // إذا كانت نفس الحقل، قم بتغيير ترتيب الفرز
       setSortOption((prev) => ({
         field,
         order: prev.order === "asc" ? "desc" : "asc",
       }));
     } else {
-      // فرز بحقل جديد
       setSortOption({ field, order: "desc" });
     }
   };
@@ -127,7 +120,7 @@ const ResearcherProfilePage = () => {
               aria-label="expand row"
               size="small"
               onClick={() => setOpen(!open)}
-              sx={{ color: open ? 'blue' : 'inherit' }} // يتغير اللون عند الفتح
+              sx={{ color: open ? 'blue' : 'inherit' }} 
             >
               {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
             </IconButton>
@@ -208,7 +201,7 @@ const ResearcherProfilePage = () => {
         transition={{ delay: 0.2 }}
       >
         <Grid container spacing={4}>
-          <Grid item xs={8}> {/* توسيع حجم كارد البيانات والسايتيشن */}
+          <Grid item xs={8}> 
             <motion.div
               className="mb-8 bg-white shadow-lg p-6 rounded-lg"
               initial={{ opacity: 0, y: 20 }}
