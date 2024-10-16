@@ -9,6 +9,8 @@ const CitesPerYearChart = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scholarId, setScholarId] = useState(null);
+  const [college, setCollege] = useState(null); // إضافة
+  const [department, setDepartment] = useState(null); // إضافة
 
   const fetchScholarId = async (uid) => {
     try {
@@ -17,7 +19,7 @@ const CitesPerYearChart = () => {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        return userData.scholar_id; 
+        return { scholar_id: userData.scholar_id, college: userData.college, department: userData.department }; // تعديل
       }
     } catch (error) {
       console.error("Error fetching scholar ID: ", error);
@@ -25,12 +27,10 @@ const CitesPerYearChart = () => {
     return null;
   };
 
-  const fetchCitesPerYear = async (scholarId) => {
+  const fetchCitesPerYear = async (scholarId, college, department) => {
     setLoading(true);
     try {
       const docRef = doc(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}`);
-          
-
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -56,11 +56,13 @@ const CitesPerYearChart = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const scholarId = await fetchScholarId(user.uid);
-        setScholarId(scholarId);
-
-        if (scholarId) {
-          fetchCitesPerYear(scholarId);
+        const userData = await fetchScholarId(user.uid);
+        if (userData) {
+          const { scholar_id, college, department } = userData; // تفكيك البيانات
+          setScholarId(scholar_id);
+          setCollege(college); // تعيين الكلية
+          setDepartment(department); // تعيين القسم
+          fetchCitesPerYear(scholar_id, college, department); // تمرير الكلية والقسم
         }
       }
     });
@@ -74,6 +76,10 @@ const CitesPerYearChart = () => {
         <GridLoader size={15} color={"#123abc"} loading={true} />
       </div>
     );
+  }
+
+  if (data.length === 0) {
+    return <div>No citation data available.</div>; // رسالة توضح عدم توفر البيانات
   }
 
   return (

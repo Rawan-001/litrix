@@ -15,6 +15,9 @@ import ResearcherProfilePage from './pages/ResearcherProfilePage';
 import ResearcherDashboard from './pages/ResearcherDashboard';
 import LitrixChatPage from './pages/LitrixChatPage';
 import CollaborationPage from './pages/CollaborationPage';
+import SignUpPageAdmin from './pages/SignUpPageAdmin'; 
+import AdminCodeGenerator from './AdminCodeGenerator.jsx';  
+
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -78,8 +81,8 @@ const App = () => {
 
   return (
     <div className="flex h-screen bg-white text-gray-800 overflow-hidden">
-      {!['/', '/signup'].includes(location.pathname) && role === 'admin' && <Sidebar />}
-      {!['/', '/signup'].includes(location.pathname) && role === 'researcher' && <ResearcherSidebar />}
+      {!['/', '/signup', '/admin-signup'].includes(location.pathname) && role === 'admin' && <Sidebar />}
+      {!['/', '/signup', '/admin-signup'].includes(location.pathname) && role === 'researcher' && <ResearcherSidebar />}
 
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -92,6 +95,9 @@ const App = () => {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/chat" element={<LitrixChatPage />} />
+        <Route path="/admin-signup" element={<SignUpPageAdmin />} />
+
+        <Route path="/generate-admin-code" element={<AdminCodeGenerator />} />
       </Routes>
     </div>
   );
