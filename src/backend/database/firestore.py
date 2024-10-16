@@ -3,7 +3,7 @@ from firebase_admin import credentials, firestore
 import os
 
 # Firebase Admin Initialization
-cred_path = os.getenv("FIREBASE_CREDENTIALS_PATH", "/Users/ruba/Downloads/litrix-main/litrix-698fe-firebase-adminsdk-9d1cb-6e9330d347.json")
+cred_path = os.getenv("FIREBASE_CREDENTIALS_PATH", "/Users/ruba/Downloads/Majd/litrix/litrix-f06e0-firebase-adminsdk-5uspj-5aecd2badc.json")
 cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
