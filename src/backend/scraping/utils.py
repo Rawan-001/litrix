@@ -1,6 +1,15 @@
 import time
 import random
 import re
+import firebase_admin
+from firebase_admin import credentials, firestore
+import logging
+import traceback
+
+# Initialize Firebase with service account
+cred = credentials.Certificate('/Users/ruba/Downloads/litrix-main/litrix-698fe-firebase-adminsdk-9d1cb-6e9330d347.json')
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 # Delay to avoid rate-limiting issues
 def delay():
