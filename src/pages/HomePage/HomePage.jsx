@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Layout, Button, Row, Col, Typography, Card } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebaseConfig';
 import FYP2 from '../../assets/FYP2.png';
 import './HomePage.css';
 
@@ -20,7 +21,7 @@ function HomePage() {
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
     } catch (error) {
       alert('Login failed: ' + error.message);
@@ -29,9 +30,21 @@ function HomePage() {
 
   const handleAdminLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-      navigate('/admin-dashboard');
+      const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+      const user = userCredential.user;
+
+      // جلب معلومات الإدمن من قاعدة البيانات للتحقق من دوره
+      const adminDocRef = doc(db, `admins/${user.uid}`);
+      const adminDoc = await getDoc(adminDocRef);
+
+      if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+        // الإدمن صحيح ويمكنه الدخول إلى لوحة التحكم
+        navigate('/admin-dashboard');
+      } else {
+        alert('Access denied. This account is not an admin.');
+      }
     } catch (error) {
+      console.error("Error fetching admin data:", error);
       alert('Admin login failed: ' + error.message);
     }
   };

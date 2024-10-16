@@ -254,8 +254,8 @@ function SearchTable() {
                       </InputAdornment>
                     ),
                     style: { 
-                      borderRadius: '25px', // Making search bar smaller and rounded
-                      padding: '6px 10px', // Smaller padding for the search bar
+                      borderRadius: '25px',
+                      padding: '6px 10px', 
                     },
                   }}
                 />
