@@ -107,8 +107,9 @@ cs_authors_list = [
   {"name": "Dr. Mohammed Abdullah Al Qurashi", "scholar_id": "_Eyk9OwAAAAJ", "email":"malqurashi@bu.edu.sa","department_id": "dept_cs"}
 ]
 
+
 # Export all authors in the cs list
-#export_multiple_authors(cs_authors_list)
+export_multiple_authors(cs_authors_list)
 
 
 sn_authors_list = [
@@ -122,7 +123,7 @@ sn_authors_list = [
 ]
 
 # Export all authors in the sn list
-#export_multiple_authors(sn_authors_list)
+export_multiple_authors(sn_authors_list)
 
 it_authors_list = [
   {"name": "Ahmad Alqarni", "scholar_id": "WdKJwQUAAAAJ","email":"aaalqarni@bu.edu.sa"},
@@ -137,18 +138,16 @@ it_authors_list = [
   {"name": "Ali Huseein Tahoun", "scholar_id": "vo8ofv4AAAAJ", "email":"aabutahoun@bu.edu.sa"},
   {"name": "Bader Alghamdi  ", "scholar_id": "bCZ-uAwAAAAJ", "email":"baalghamdi@bu.edu.sa"},
   {"name": "Ahmad Alshaflut  ", "scholar_id": "3Wo0U6gAAAAJ", "email":"a.alshaflut@bu.edu.sa"},
-  {"name": "Moez Krichen  ", "scholar_id": "yaX8Tu4AAAAJ", "email":"mkreishan@bu.edu.sa"},
   {"name": "Ahmad Ali Alshehri", "scholar_id": "AgM-jXIAAAAJ", "email":"a.alyehyawi@bu.edu.sa"} 
 ]
 
 # Export all authors in the sn list
-#export_multiple_authors(it_authors_list)
+export_multiple_authors(it_authors_list)
 
 se_authors_list = [
- #{"name": "Anwar Saeed Saleh Alsokari", "scholar_id": "SknhXP0AAAAJ", "email":"asalsoakri@bu.edu.sa"},
- #{"name":"Yomna Mohammad Ali Ibrahim ", "scholar_id": "RGF5OxIAAAAJ", "email":"y.ibrahim@bu.edu.sa" }
- {"name": "Ikram Mohamed Moalla", "scholar_id": "xKsDNWQAAAAJ", "email":"imoalla@bu.edu.sa","department_id": "dept_cs"}
- #{"name":"Moez Krichen ", "scholar_id": "yaX8Tu4AAAAJ", "email" : "mkreishan@bu.edu.sa"}
+ {"name": "Anwar Saeed Saleh Alsokari", "scholar_id": "SknhXP0AAAAJ", "email":"asalsoakri@bu.edu.sa"},
+ {"name":"Yomna Mohammad Ali Ibrahim ", "scholar_id": "RGF5OxIAAAAJ", "email":"y.ibrahim@bu.edu.sa" },
+ {"name":"Moez Krichen ", "scholar_id": "yaX8Tu4AAAAJ", "email" : "mkreishan@bu.edu.sa"}
 ]  
 # Export all authors in the se list
 export_multiple_authors(se_authors_list)

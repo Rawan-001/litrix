@@ -2,11 +2,10 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
-from scraping.utils import extract_doi
 import re
 
 # Initialize Firebase with your service account credentials
-cred = credentials.Certificate('/Users/majds./Desktop/FYP/litrix-f06e0-firebase-adminsdk-5uspj-aabf4a5ed6.json')
+cred = credentials.Certificate('/Users/ruba/Downloads/Majd/litrix/litrix-f06e0-firebase-adminsdk-5uspj-5aecd2badc.json')
 firebase_admin.initialize_app(cred)
 
 # Initialize Firestore
@@ -138,6 +137,43 @@ def upload_faculty_data(json_folder):
             store_faculty_data(college_id, department_id, faculty_data)
 
 # Run the function to upload all JSON files from the specified folder
-upload_faculty_data('/Users/majds./Documents/GitHub/Litrix/src/backend/scraping/it_json_files')
+#upload_faculty_data('/Users/majds./Documents/GitHub/Litrix/src/backend/scraping/it_json_files')
 
 
+# Function to selectively delete faculty members and their publications
+def delete_selected_faculty(college_id, department_id, scholar_ids_to_delete):
+    faculty_members_ref = db.collection("colleges").document(college_id).collection("departments").document(department_id).collection("faculty_members")
+    
+    # Get all faculty members in the department
+    faculty_members = faculty_members_ref.stream()
+
+    for faculty in faculty_members:
+        if faculty.id in scholar_ids_to_delete:
+            # Delete all publications for the faculty member
+            faculty_ref = faculty_members_ref.document(faculty.id)
+            publications_ref = faculty_ref.collection("publications")
+            publications = publications_ref.stream()
+            
+            for publication in publications:
+                publications_ref.document(publication.id).delete()
+                print(f"Deleted publication {publication.id} for faculty {faculty.id}")
+            
+            # Delete the faculty member
+            faculty_ref.delete()
+            print(f"Deleted faculty member {faculty.id}")
+        else:
+            print(f"Skipped faculty member {faculty.id}, not in deletion list.")
+
+scholar_ids_to_delete =[
+    'AeYwTUYAAAAJ', 'BqE8XJUAAAAJ', 'CiEU7s8AAAAJ', 'Gtbbx1YAAAAJ',
+    'HkgKEAsAAAAJ', 'IzsoS9MAAAAJ', 'JSQbyBgAAAAJ', 'KF-CfgoAAAAJ',
+    'MQeK2TUAAAAJ', 'SknhXP0AAAAJ', 'VS2klEgAAAAJ' , 'Wcoweq8AAAAJ',
+    'YeUTzMwAAAAJ', 'blwPeXQAAAAJ', 'budxbSoAAAAJ', 'g-tdUbYAAAAJ',
+    'jDrt2XUAAAAJ'
+
+]
+
+
+wrong_college_id = "faculty_computing"  
+wrong_department_id = "dept_it"
+delete_selected_faculty(wrong_college_id, wrong_department_id, scholar_ids_to_delete)

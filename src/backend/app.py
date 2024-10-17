@@ -6,6 +6,7 @@ from scholarly import scholarly
 import re
 import logging
 
+
 # Initialize Firebase
 cred = credentials.Certificate('/Users/ruba/Downloads/Majd/litrix/litrix-f06e0-firebase-adminsdk-5uspj-5aecd2badc.json')
 firebase_admin.initialize_app(cred)
@@ -28,15 +29,14 @@ def scrape_data():
     scholar_url = data.get('googleScholarLink')
     college = data.get('college')
     department = data.get('department')
-
     scholar_id = extract_scholar_id(scholar_url)
+
     if not scholar_id:
         return jsonify({"error": "Invalid Google Scholar URL"}), 400
 
     try:
         author = scholarly.search_author_id(scholar_id)
         author_filled = scholarly.fill(author)
-
         faculty_ref = db.collection("colleges").document(college) \
             .collection("departments").document(department) \
             .collection("faculty_members").document(scholar_id)
@@ -64,7 +64,7 @@ def scrape_data():
 
     except Exception as e:
         logging.error(f"Error scraping data: {e}")
-        return jsonify({"error": "Failed to scrape data"}), 500
+        return jsonify({"error": f"Failed to scrape data: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
