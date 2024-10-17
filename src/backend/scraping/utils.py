@@ -133,38 +133,29 @@ def store_publications(scholar_id, publications):
         logging.error(f"Error storing publications: {e}")
         print(f"Full error: {traceback.format_exc()}")
 
-# Function to store author profiles and their publications in Firestore
-def store_faculty_profile(faculty, affiliation, citedby, citedby5y, cites_per_year, coauthors, email_domain, filled, hindex, hindex5y, homepage, i10index, i10index5y, interests, organization, public_access, scholar_id, url_picture, publications):
- try: 
-    # Create Firestore document for faculty
-    faculty_ref = db.collection("departments").document(faculty['department_id']).collection("faculty_members").document(faculty['scholar_id'])
-    faculty_ref.set({
-        "name": faculty['name'],
-        "email": faculty['email'],
-        "affiliation": affiliation,
-        "citedby": citedby,
-        "citedby5y": citedby5y,
-        "cites_per_year": cites_per_year,
-        "coauthors": [{"name": coauthor['name'], "affiliation": coauthor['affiliation'], "scholar_id": coauthor['scholar_id']} for coauthor in coauthors],
-        "email_domain": email_domain,
-        "filled": filled,
-        "hindex": hindex,
-        "hindex5y": hindex5y,
-        "homepage": homepage,
-        "i10index": i10index,
-        "i10index5y": i10index5y,
-        "interests": interests,
-        "organization": organization,
-        "public_access": public_access,
-        "scholar_id": scholar_id,
-        "url_picture": url_picture,
-        "last_updated": firestore.SERVER_TIMESTAMP
-    })
+# Functions to check if documents exist in Firestore
 
-    # Store publications in a sub-collection
-    for pub in publications:
-        faculty_ref.collection("publications").add(pub)
-    logging.info(f"Stored profile and {len(publications)} publications for {faculty['name']}")
- except Exception as e:
-        logging.error(f"Error storing faculty profile: {e}")
-        print(f"Full error: {traceback.format_exc()}")  # Print stack trace for better debugging   '''
+# 1 Check if faculty member exists
+def get_faculty_member_data(faculty_ref):
+    doc = faculty_ref.get()
+    if doc.exists:
+        return doc.to_dict()  # Return existing data if the document exists
+    return None
+
+# 2 Check if a publication exists
+def publication_exists(faculty_ref, pub_id):
+    pub_ref = faculty_ref.collection("publications").document(pub_id)
+    return pub_ref.get().exists
+
+
+def store_publications(college_id, department_id, faculty_data):
+    faculty_ref = db.collection("colleges").document(college_id).collection("departments").document(department_id).collection("faculty_members").document(faculty_data["scholar_id"])
+    faculty_ref.set(faculty_data, merge=True)
+
+    # Storing publications as subcollection
+    batch = db.batch()
+    for pub in faculty_data["publications"]:
+        pub_ref = faculty_ref.collection("publications").document(pub.get("author_pub_id"))
+        batch.set(pub_ref, pub, merge=True)
+
+    batch.commit()
