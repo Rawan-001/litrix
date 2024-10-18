@@ -8,13 +8,12 @@ import ResearcherSidebar from './components/common/ResearcherSidebar';
 import HomePage from './pages/HomePage/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import SearchPage from './pages/SearchPage';
-import AnalyticsPage from './pages/AnalyticsPage';
+import AnalyticsPageAdmin from './pages/AnalyticsPageAdmin';
 import SettingsPage from './pages/SettingsPage';
 import SignUpPage from './pages/SignUpPage';
 import ResearcherProfilePage from './pages/ResearcherProfilePage';
 import ResearcherDashboard from './pages/ResearcherDashboard';
 import LitrixChatPage from './pages/LitrixChatPage';
-import CollaborationPage from './pages/CollaborationPage';
 import SignUpPageAdmin from './pages/SignUpPageAdmin'; 
 import AdminCodeGenerator from './AdminCodeGenerator.jsx';  
 
@@ -27,13 +26,19 @@ const App = () => {
 
   const fetchUserRole = async (uid) => {
     try {
+      const adminDocRef = doc(db, `admins/${uid}`);
+      const adminDoc = await getDoc(adminDocRef);
+      if (adminDoc.exists()) {
+        return adminDoc.data();  
+      }
+
       const userDocRef = doc(db, `users/${uid}`);
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         return userDoc.data();
-      } else {
-        return null;
       }
+
+      return null;  
     } catch (error) {
       console.error('Error fetching user data:', error);
       return null;
@@ -90,13 +95,11 @@ const App = () => {
         <Route path="/admin-dashboard" element={<ProtectedRoute element={<AdminDashboard />} roleRequired="admin" />} />
         <Route path="/profile/:scholar_id" element={<ProtectedRoute element={<ResearcherProfilePage />} roleRequired="researcher" />} />
         <Route path="/dashboard" element={<ProtectedRoute element={<ResearcherDashboard />} roleRequired="researcher" />} />
-        <Route path="/collaboration" element={<ProtectedRoute element={<CollaborationPage />} roleRequired="researcher" />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/analyticsAdmin" element={<AnalyticsPageAdmin />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/chat" element={<LitrixChatPage />} />
         <Route path="/admin-signup" element={<SignUpPageAdmin />} />
-
         <Route path="/generate-admin-code" element={<AdminCodeGenerator />} />
       </Routes>
     </div>

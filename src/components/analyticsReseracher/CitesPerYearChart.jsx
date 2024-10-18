@@ -9,8 +9,8 @@ const CitesPerYearChart = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scholarId, setScholarId] = useState(null);
-  const [college, setCollege] = useState(null); // إضافة
-  const [department, setDepartment] = useState(null); // إضافة
+  const [college, setCollege] = useState(null); 
+  const [department, setDepartment] = useState(null); 
 
   const fetchScholarId = async (uid) => {
     try {
@@ -58,11 +58,11 @@ const CitesPerYearChart = () => {
       if (user) {
         const userData = await fetchScholarId(user.uid);
         if (userData) {
-          const { scholar_id, college, department } = userData; // تفكيك البيانات
+          const { scholar_id, college, department } = userData; 
           setScholarId(scholar_id);
-          setCollege(college); // تعيين الكلية
-          setDepartment(department); // تعيين القسم
-          fetchCitesPerYear(scholar_id, college, department); // تمرير الكلية والقسم
+          setCollege(college);
+          setDepartment(department); 
+          fetchCitesPerYear(scholar_id, college, department); 
         }
       }
     });
@@ -79,7 +79,7 @@ const CitesPerYearChart = () => {
   }
 
   if (data.length === 0) {
-    return <div>No citation data available.</div>; // رسالة توضح عدم توفر البيانات
+    return <div>No citation data available.</div>; 
   }
 
   return (

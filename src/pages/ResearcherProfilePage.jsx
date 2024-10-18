@@ -219,12 +219,13 @@ const ResearcherProfilePage = () => {
                     {userData?.firstName + ' ' + userData?.lastName || "Researcher"}
                   </Typography>
 
-                  <p><strong>Scholar ID:</strong> {researcherData?.scholar_id || userData?.scholar_id || "N/A"}</p>
-                  <p><strong>Institution:</strong> {researcherData?.institution || "N/A"}</p>
-                  <p><strong>Affiliation:</strong> {researcherData?.affiliation || "N/A"}</p>
-                  <p><strong>Email:</strong> {userData?.email || "N/A"}</p>
-                  <p><strong>Phone Number:</strong> {userData?.phoneNumber || "N/A"}</p>
-                  <p><strong>Interests:</strong> {researcherData?.interests ? researcherData.interests.join(", ") : "N/A"}</p>
+                  <p><strong>Affiliation:</strong> {researcherData?.affiliation || ""}</p>
+                                    <p><strong>Institution:</strong> {researcherData?.institution || ""}</p>
+
+                  <p><strong>Email:</strong> {userData?.email || ""}</p>
+                  <p><strong>Interests:</strong> {researcherData?.interests ? researcherData.interests.join(", ") : ""}</p>
+                  <p><strong>Scholar ID:</strong> {researcherData?.scholar_id || userData?.scholar_id || ""}</p>
+
                 </div>
               </div>
             </motion.div>

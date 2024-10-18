@@ -1,27 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { MdOutlineManageSearch, MdSettings } from "react-icons/md"; 
 import { BsStars } from "react-icons/bs";
-import { TbBrandGoogleAnalytics } from "react-icons/tb";
 import { FaUserCircle } from "react-icons/fa"; 
 import { Menu } from "lucide-react"; 
 import { AnimatePresence, motion } from "framer-motion";
-import { FiUsers } from "react-icons/fi";
+import { auth, db } from "../../firebaseConfig"; 
+import { doc, getDoc } from "firebase/firestore"; 
 import logo from "../../assets/FYP.png"; 
 
 const researcherSidebarItems = [
   { name: "Dashboard", icon: LuLayoutDashboard, color: "#2a4570", href: "/dashboard" },
   { name: "Profile", icon: FaUserCircle, color: "#2a4570", href: "/profile" },
   { name: "Search", icon: MdOutlineManageSearch, color: "#2a4570", href: "/search" },
-  { name: "Collaboration", icon: FiUsers, color: "#2a4570", href: "/collaboration" },
   { name: "Litrix Chat", icon: BsStars, color: "#2a4570", href: "/chat" },
-  { name: "Analytics", icon: TbBrandGoogleAnalytics, color: "#2a4570", href: "/analytics" },
   { name: "Settings", icon: MdSettings, color: "#2a4570", href: "/settings" }, 
 ];
 
 const ResearcherSidebar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [researcherData, setResearcherData] = useState(null); 
+
+  useEffect(() => {
+    const fetchResearcherData = async () => {
+      const user = auth.currentUser; 
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid)); 
+        if (userDoc.exists()) {
+          setResearcherData(userDoc.data()); 
+        }
+      }
+    };
+
+    fetchResearcherData(); 
+  }, []);
 
   return (
     <motion.div
@@ -77,6 +90,28 @@ const ResearcherSidebar = () => {
             </Link>
           ))}
         </nav>
+
+        {researcherData && (
+          <motion.div
+            className="mt-auto p-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex items-center">
+              {isSidebarOpen ? (
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {researcherData.firstName} {researcherData.lastName}
+                  </p>
+                  <p className="text-sm text-gray-600">{researcherData.email}</p>
+                </div>
+              ) : (
+                <p className="text-sm font-medium text-gray-900">{researcherData.email}</p>
+              )}
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

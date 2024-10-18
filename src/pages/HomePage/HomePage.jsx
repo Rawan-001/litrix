@@ -33,12 +33,10 @@ function HomePage() {
       const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
       const user = userCredential.user;
 
-      // جلب معلومات الإدمن من قاعدة البيانات للتحقق من دوره
       const adminDocRef = doc(db, `admins/${user.uid}`);
       const adminDoc = await getDoc(adminDocRef);
 
       if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-        // الإدمن صحيح ويمكنه الدخول إلى لوحة التحكم
         navigate('/admin-dashboard');
       } else {
         alert('Access denied. This account is not an admin.');
@@ -190,13 +188,6 @@ function HomePage() {
               <Card className="custom-card" title="Duplication Detection">
                 <Paragraph>
                   The system will leverage AI to detect potential duplicates by analyzing patterns and similarities in the data entries.
-                </Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} md={12} lg={8}>
-              <Card className="custom-card" title="User-Friendly Interface and Training">
-                <Paragraph>
-                  The platform will feature a user-friendly interface and provide comprehensive training resources to ensure smooth adoption.
                 </Paragraph>
               </Card>
             </Col>

@@ -16,13 +16,13 @@ const AdminSignUpPage = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    adminCode: '',
+    adminCode: '', // للتحقق من كود الإدمن
   });
   const navigate = useNavigate();
 
   const handleNext = async () => {
     if (current === 0 && formData.adminCode) {
-      // يمكنك التحقق من كود الإدمن هنا
+      // تأكيد صحة كود الإدمن إذا كان مطلوبًا
       setCurrent(current + 1);
     } else if (current === 1 && formData.password !== formData.confirmPassword) {
       message.error('Passwords do not match');
@@ -47,22 +47,21 @@ const AdminSignUpPage = () => {
     }
 
     try {
-      // إنشاء المستخدم في Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // تخزين بيانات الإدمن في مجموعة `users`
-      const userDocRef = doc(db, `users/${user.uid}`);
-      await setDoc(userDocRef, {
+      // إضافة الحساب إلى كولكشن "admins" عند التسجيل
+      const adminDocRef = doc(db, `admins/${user.uid}`);
+      await setDoc(adminDocRef, {
         uid: user.uid,
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        role: 'admin',  // تحديد الدور كإدمن
+        role: 'admin'  // تعيين الدور كإدمن
       });
 
       message.success('Admin account created successfully!');
-      navigate('/admin-dashboard');  // توجيه الإدمن إلى لوحة التحكم
+      navigate('/admin-dashboard');  // التوجيه إلى لوحة تحكم الإدمن
     } catch (error) {
       message.error(`Error: ${error.message}`);
     }

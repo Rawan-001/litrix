@@ -1,79 +1,143 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message, Modal } from 'antd';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { Steps, Button, Form, Input, message } from 'antd';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
-const SignUpPageForAdministrators = () => {
+const { Step } = Steps;
+
+const AdminSignUpPage = () => {
+  const [current, setCurrent] = useState(0);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    adminCode: '',  // يمكنك استخدام كود التحقق إذا لزم الأمر
   });
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const navigate = useNavigate();
+
+  const handleNext = async () => {
+    if (current === 0 && formData.adminCode) {
+      setCurrent(current + 1);
+    } else if (current === 1 && formData.password !== formData.confirmPassword) {
+      message.error('Passwords do not match');
+    } else {
+      setCurrent(current + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    setCurrent(current - 1);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleAdminSignUp = async () => {
+  const handleSignUp = async () => {
     if (formData.password !== formData.confirmPassword) {
-      message.error("Passwords do not match");
+      message.error('Passwords do not match');
       return;
     }
 
     try {
-      // إنشاء مستخدم جديد باستخدام Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // إضافة بيانات المستخدم إلى Firestore
-      const adminDocRef = doc(db, `users/administrators/${user.uid}`);
+      // تخزين البيانات في مجموعة users
+      const userDocRef = doc(db, `users/${user.uid}`);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: 'admin',  
+      });
+
+      // تخزين البيانات في مجموعة admins
+      const adminDocRef = doc(db, `admins/${user.uid}`);
       await setDoc(adminDocRef, {
         uid: user.uid,
         email: formData.email,
-        role: 'administrator',
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: 'admin',
       });
 
-      // تسجيل دخول الإداري تلقائياً بعد التسجيل
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      setIsModalVisible(true);
+      message.success('Admin account created successfully!');
+      navigate('/admin-dashboard');  // التوجيه إلى لوحة التحكم الخاصة بالإدمن
     } catch (error) {
       message.error(`Error: ${error.message}`);
     }
   };
 
-  const handleConfirm = () => {
-    setIsModalVisible(false);
-    navigate('/');
-  };
+  const steps = [
+    {
+      title: 'Verify Admin Code',
+      content: (
+        <Form layout="vertical">
+          <Form.Item label="Admin Code" required>
+            <Input value={formData.adminCode} name="adminCode" onChange={handleChange} />
+          </Form.Item>
+        </Form>
+      ),
+    },
+    {
+      title: 'Set Account Details',
+      content: (
+        <Form layout="vertical">
+          <div style={styles.gridContainer}>
+            <Form.Item label="First Name" required>
+              <Input value={formData.firstName} name="firstName" onChange={handleChange} />
+            </Form.Item>
+            <Form.Item label="Last Name" required>
+              <Input value={formData.lastName} name="lastName" onChange={handleChange} />
+            </Form.Item>
+          </div>
+          <Form.Item label="Email" required>
+            <Input type="email" value={formData.email} name="email" onChange={handleChange} />
+          </Form.Item>
+          <div style={styles.gridContainer}>
+            <Form.Item label="Password" required>
+              <Input.Password value={formData.password} name="password" onChange={handleChange} />
+            </Form.Item>
+            <Form.Item label="Confirm Password" required>
+              <Input.Password value={formData.confirmPassword} name="confirmPassword" onChange={handleChange} />
+            </Form.Item>
+          </div>
+        </Form>
+      ),
+    },
+  ];
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <Form layout="vertical">
-          <Form.Item label="Email" required>
-            <Input type="email" value={formData.email} name="email" onChange={handleChange} />
-          </Form.Item>
-          <Form.Item label="Password" required>
-            <Input.Password value={formData.password} name="password" onChange={handleChange} />
-          </Form.Item>
-          <Form.Item label="Confirm Password" required>
-            <Input.Password value={formData.confirmPassword} name="confirmPassword" onChange={handleChange} />
-          </Form.Item>
-          <Button type="primary" onClick={handleAdminSignUp}>Sign Up as Administrator</Button>
-        </Form>
-        <Modal
-          title="Admin Profile Confirmation"
-          open={isModalVisible}
-          onOk={handleConfirm}
-          onCancel={() => setIsModalVisible(false)}
+        <Button
+          type="link"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/')}
+          style={styles.backButton}
         >
-          <p><strong>Email:</strong> {formData.email}</p>
-        </Modal>
+          Back to Homepage
+        </Button>
+
+        <Steps current={current} style={{ marginBottom: 20 }}>
+          {steps.map((step, index) => (
+            <Step key={index} title={step.title} />
+          ))}
+        </Steps>
+        <div>{steps[current].content}</div>
+        <div style={styles.buttons}>
+          {current > 0 && <Button onClick={handlePrev}>Previous</Button>}
+          {current < steps.length - 1 && <Button type="primary" onClick={handleNext}>Next</Button>}
+          {current === steps.length - 1 && <Button type="primary" onClick={handleSignUp}>Submit</Button>}
+        </div>
       </div>
     </div>
   );
@@ -91,12 +155,35 @@ const styles = {
   },
   card: {
     width: '100%',
-    maxWidth: '500px',
+    maxWidth: '600px',
     padding: '40px',
     borderRadius: '8px',
     backgroundColor: '#fff',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: '-50px',
+    left: '16px',
+    fontSize: '16px',
+    color: '#1890ff',
+  },
+  gridContainer: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px',
+    width: '100%',
+  },
+  buttons: {
+    marginTop: 24,
+    display: 'flex',
+    justifyContent: 'flex-end',
   },
 };
 
-export default SignUpPageForAdministrators;
+export default AdminSignUpPage;

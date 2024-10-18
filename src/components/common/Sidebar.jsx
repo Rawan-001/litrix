@@ -19,7 +19,6 @@ const SIDEBAR_ITEMS = [
   { name: "Dashboard", icon: LuLayoutDashboard, color: "#2a4570", href: "/admin-dashboard" },
   { name: "Search", icon: MdOutlineManageSearch, color: "#2a4570", href: "/search" },
   { name: "Litrix Chat", icon: BsStars, color: "#2a4570", href: "/chat" },
-  { name: "Analytics", icon: TbBrandGoogleAnalytics, color: "#2a4570", href: "/analyticsAdmin" },
   { name: "Settings", icon: Settings, color: "#2a4570", href: "/settings" },
 ];
 

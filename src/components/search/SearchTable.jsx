@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, getDocs, query, doc, getDoc } from "firebase/firestore";
+import { GridLoader } from "react-spinners";
 import { db, auth } from "../../firebaseConfig";
 import Fuse from "fuse.js";
 import {
@@ -43,10 +44,9 @@ function SearchTable() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentUserScholarId, setCurrentUserScholarId] = useState(null);
-  const [colleges, setColleges] = useState([]);
-  const [selectedCollege, setSelectedCollege] = useState("");
+  const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [openDialog, setOpenDialog] = useState(false); // للتحكم في عرض الـ popup
+  const [openDialog, setOpenDialog] = useState(false);
 
   const navigate = useNavigate();
 
@@ -62,47 +62,29 @@ function SearchTable() {
       }
     };
 
-    const fetchCollegesAndDepartments = async () => {
-      const collegesRef = collection(db, "colleges");
-      const collegesSnapshot = await getDocs(collegesRef);
-      const collegeList = [];
-      for (const collegeDoc of collegesSnapshot.docs) {
-        const collegeData = collegeDoc.data();
-        const collegeId = collegeDoc.id;
-
-        const departmentsRef = collection(db, `colleges/${collegeId}/departments`);
-        const departmentsSnapshot = await getDocs(departmentsRef);
-        const departmentList = departmentsSnapshot.docs.map(doc => doc.id);
-
-        collegeList.push({
-          id: collegeId,
-          name: collegeData.name,
-          departments: departmentList
-        });
-      }
-      setColleges(collegeList);
+    const fetchDepartments = async () => {
+      const departmentsRef = collection(db, `colleges/faculty_computing/departments`);
+      const departmentsSnapshot = await getDocs(departmentsRef);
+      const departmentList = departmentsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name
+      }));
+      setDepartments(departmentList);
     };
 
     fetchCurrentUser();
-    fetchCollegesAndDepartments();
+    fetchDepartments();
   }, []);
 
   const fuseOptions = {
-    keys: ['firstName', 'lastName'], // لا يوجد بحث بالعناوين هنا
+    keys: ['firstName', 'lastName'],
     threshold: 0.4,
   };
 
   const handleSearch = async () => {
-    if (searchTerm || selectedCollege || selectedDepartment) {
+    if (searchTerm || selectedDepartment) {
       setLoading(true);
       setError("");
-
-      // تحقق إذا كان البحث متعلقًا بعناوين البحوث
-      if (searchTerm.includes(" ")) {
-        setOpenDialog(true); // عرض الـ popup
-        setLoading(false);
-        return; // إيقاف البحث هنا لأن البحث بعناوين البحوث لم يتم تفعيله بعد
-      }
 
       try {
         const q = query(collection(db, `users`));
@@ -112,9 +94,6 @@ function SearchTable() {
           .map(doc => ({ id: doc.id, ...doc.data() }))
           .filter(researcher => researcher.scholar_id !== currentUserScholarId);
 
-        if (selectedCollege) {
-          researchers = researchers.filter(researcher => researcher.college === selectedCollege);
-        }
         if (selectedDepartment) {
           researchers = researchers.filter(researcher => researcher.department === selectedDepartment);
         }
@@ -129,12 +108,13 @@ function SearchTable() {
           for (const researcher of results.map(result => result.item)) {
             const publicationsRef = collection(
               db,
-              `colleges/${researcher.college}/departments/${researcher.department}/faculty_members/${researcher.scholar_id}/publications`
+              `colleges/faculty_computing/departments/${researcher.department}/faculty_members/${researcher.scholar_id}/publications`
             );
             const publicationsSnapshot = await getDocs(publicationsRef);
             const researcherPublications = publicationsSnapshot.docs.map(doc => ({
               ...doc.data(),
-              researcherName: researcher.firstName + ' ' + researcher.lastName
+              researcherFirstName: researcher.firstName,
+              researcherLastName: researcher.lastName,
             }));
             allPublications.push(...researcherPublications);
           }
@@ -156,11 +136,6 @@ function SearchTable() {
     navigate(`/profile/${scholar_id}`);
   };
 
-  const handleCollegeChange = (event) => {
-    setSelectedCollege(event.target.value);
-    setSelectedDepartment(""); // Reset department when college changes
-  };
-
   const handleDepartmentChange = (event) => {
     setSelectedDepartment(event.target.value);
   };
@@ -171,6 +146,12 @@ function SearchTable() {
 
   const CollapsibleRow = ({ publication }) => {
     const [open, setOpen] = useState(false);
+
+    const fieldsToShow = Object.keys(publication).filter(field => {
+      const value = publication[field];
+      return value && !["title", "pub_year", "num_citations", "authors", "cites_per_year", "cites_id", "researcherFirstName", "researcherLastName"].includes(field)
+        && !(Array.isArray(value) && value.length === 0) && !(typeof value === 'object' && Object.keys(value).length === 0);
+    });
 
     return (
       <>
@@ -187,7 +168,7 @@ function SearchTable() {
           <TableCell>{publication.title || "No Title"}</TableCell>
           <TableCell>{publication.pub_year || "Unknown Year"}</TableCell>
           <TableCell>{publication.num_citations || 0}</TableCell>
-          <TableCell>{publication.researcherName}</TableCell>
+          <TableCell>{publication.researcherFirstName} {publication.researcherLastName}</TableCell> 
         </TableRow>
         <TableRow>
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -196,24 +177,22 @@ function SearchTable() {
                 <Typography variant="h6" gutterBottom component="div">
                   More Details
                 </Typography>
-                {Object.keys(publication).map(field => {
-                  const value = publication[field];
-                  if (value && !["title", "pub_year", "num_citations", "authors"].includes(field)) {
-                    return (
-                      <Typography key={field} variant="body2">
-                        <strong>{field.replace(/_/g, " ").toUpperCase()}:</strong>{" "}
-                        {field === "pub_url" ? (
-                          <Link href={value} target="_blank" rel="noopener" style={{ color: '#0072e5' }}>
-                            {value}
-                          </Link>
-                        ) : (
-                          typeof value === 'object' ? JSON.stringify(value) : value
-                        )}
-                      </Typography>
-                    );
-                  }
-                  return null;
-                })}
+                {fieldsToShow.length > 0 ? (
+                  fieldsToShow.map(field => (
+                    <Typography key={field} variant="body2">
+                      <strong>{field.replace(/_/g, " ").toUpperCase()}:</strong>{" "}
+                      {field === "pub_url" ? (
+                        <Link href={publication[field]} target="_blank" rel="noopener" style={{ color: '#0072e5' }}>
+                          {publication[field]}
+                        </Link>
+                      ) : (
+                        typeof publication[field] === 'object' ? JSON.stringify(publication[field]) : publication[field]
+                      )}
+                    </Typography>
+                  ))
+                ) : (
+                  <Typography variant="body2">No additional details available.</Typography>
+                )}
               </Box>
             </Collapse>
           </TableCell>
@@ -241,8 +220,8 @@ function SearchTable() {
                 <TextField
                   variant="outlined"
                   fullWidth
-                  label="Enter Researcher Name or Publication Title"
-                  size="small" // Smaller search bar
+                  label="Enter Researcher Name"
+                  size="small"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
@@ -261,70 +240,34 @@ function SearchTable() {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={2}>
+              <Grid item xs={12} sm={4}>
                 <Select
                   fullWidth
-                  label="Select College"
-                  value={selectedCollege}
-                  onChange={handleCollegeChange}
+                  value={selectedDepartment}
+                  onChange={handleDepartmentChange}
                   variant="outlined"
-                  size="small" // Smaller select box
-                  sx={{ padding: '6px 10px', minHeight: '40px' }} // Smaller padding for the select box
+                  size="small"
+                  displayEmpty
+                  sx={{ padding: '6px 10px', minHeight: '40px' }}
                 >
-                  <MenuItem value="">All Colleges</MenuItem>
-                  {colleges.map((college, index) => (
-                    <MenuItem key={index} value={college.id}>
-                      {college.name}
+                  <MenuItem value=""> All Departments</MenuItem>
+                  {departments.map((dept, index) => (
+                    <MenuItem key={index} value={dept.id}>
+                      {dept.name}
                     </MenuItem>
                   ))}
                 </Select>
               </Grid>
-
-              {selectedCollege && (
-                <Grid item xs={12} sm={2}>
-                  <Select
-                    fullWidth
-                    label="Select Department"
-                    value={selectedDepartment}
-                    onChange={handleDepartmentChange}
-                    variant="outlined"
-                    size="small" // Smaller select box
-                    sx={{ padding: '6px 10px', minHeight: '40px' }} // Smaller padding for the select box
-                  >
-                    <MenuItem value="">All Departments</MenuItem>
-                    {colleges
-                      .find(college => college.id === selectedCollege)
-                      ?.departments.map((dept, index) => (
-                        <MenuItem key={index} value={dept}>
-                          {dept}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </Grid>
-              )}
             </Grid>
           </CardContent>
         </Card>
 
-        {/* Dialog popup for title search not being enabled */}
-        <Dialog
-          open={openDialog}
-          onClose={handleCloseDialog}
-        >
-          <DialogTitle>Feature Not Available</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              البحث بعناوين البحوث لم يتم تفعيله بعد.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog} color="primary">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {loading && (
+          <div className="flex justify-center items-center h-64">
+            <GridLoader size={30} color={"#6366F1"} />
+          </div>
+        )}
 
-        {loading && <p className="text-center text-gray-500">Loading...</p>}
         {error && <p className="text-center text-red-500">{error}</p>}
 
         {researcherData.length > 0 && (
