@@ -5,12 +5,24 @@ from firebase_admin import credentials, firestore
 from scholarly import scholarly
 import re
 import logging
+import random
 
 
 # Initialize Firebase
 cred = credentials.Certificate('/Users/ruba/Downloads/Majd/litrix/litrix-f06e0-firebase-adminsdk-5uspj-5aecd2badc.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
+# List of proxies 
+proxy_pool = [
+   '542bd662984a24e6624b__cr.gb,us,no,ie,au:31bb55cc5004a097@gw.dataimpulse.com:823'
+   '542bd662984a24e6624b__cr.gb,us,no,ie,au:31bb55cc5004a097@gw.dataimpulse.com:823'
+   '542bd662984a24e6624b__cr.gb,us,no,ie,au:31bb55cc5004a097@gw.dataimpulse.com:823'
+]
+
+def get_random_proxy():
+    return random.choice(proxy_pool)
+
 
 # Initialize Flask
 app = Flask(__name__)
@@ -23,7 +35,7 @@ def extract_scholar_id(scholar_url):
     match = re.search(pattern, scholar_url)
     return match.group(1) if match else None
 
-@app.route('/api/scrape', methods=['POST'])
+@app.route('/signup', methods=['POST'])
 def scrape_data():
     data = request.json
     scholar_url = data.get('googleScholarLink')

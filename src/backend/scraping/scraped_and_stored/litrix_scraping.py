@@ -1,22 +1,16 @@
 import scholarly
 from scholarly import scholarly
-from scholarly import ProxyGenerator
 import json
 import logging
 import time
 import random
 import requests
-import requests
-import random
-import logging
-import time
-import requests
-from scholarly import scholarly
+
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
-# List of proxies (replace with your actual proxies)
+# List of proxies 
 proxy_pool = [
    '542bd662984a24e6624b__cr.gb,us,no,ie,au:31bb55cc5004a097@gw.dataimpulse.com:823'
    '542bd662984a24e6624b__cr.gb,us,no,ie,au:31bb55cc5004a097@gw.dataimpulse.com:823'
@@ -73,40 +67,38 @@ def export_multiple_authors(authors_data, batch_size=5):
         logging.info(f"Waiting for {batch_delay:.2f} seconds before the next batch...")
         time.sleep(batch_delay)
 
-
 # data for multiple authors
 cs_authors_list = [
-  {"name": "Abdul Hannan Abdul Mannan Shaikh", "scholar_id": "blwPeXQAAAAJ", "email":"ahannan@bu.edu.sa","department_id": "dept_cs" },
-  {"name": "Abdulkareem Aodah Alzahrani", "scholar_id": "JSQbyBgAAAAJ", "email":"ao.alzahrani@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Abdullah Alomari", "scholar_id": "1u1Vah8AAAAJ", "email":"alomari@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Eidah Mohamed Alzahrani", "scholar_id": "MQeK2TUAAAAJ", "email":"em.alzahrani@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Esam Alzahrani", "scholar_id": "05Jx6QkAAAAJ", "email":"esalzahrani@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Fahad Ali Ghamdi", "scholar_id": "BqE8XJUAAAAJ", "email": "fghamdi@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Hani Ali Harb", "scholar_id": "VS2klEgAAAAJ", "email":"haharb@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Hassan Alkhiri", "scholar_id": "jDrt2XUAAAAJ", "email": "halkhiri@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Ibrahim Alghamdi", "scholar_id": "-Ee7QMYAAAAJ", "email":"ia.alghamdi@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Majzoob Kamalaldin Omer", "scholar_id": "KF-CfgoAAAAJ", "email": "mkomer@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Mohammed Abdulrahman Alliheedi", "scholar_id": "Wcoweq8AAAAJ", "email":"malliheedi@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Mohammed Alghamdi", "scholar_id": "Gtbbx1YAAAAJ", "email":"mialmushilah@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Musaad Alzahrani", "scholar_id": "g-tdUbYAAAAJ", "email":"malzahr@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Nizar Hasan Alsharif", "scholar_id": "budxbSoAAAAJ", "email":"nizar@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Rahmat Budiarto", "scholar_id": "Qi24UpwAAAAJ", "email":"rahmat@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Rami Jamaan Saeed Alzahrani", "scholar_id": "IzsoS9MAAAAJ", "email":"rjsaeed@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Saad Alqithami", "scholar_id": "HkgKEAsAAAAJ", "email":"salqithami@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Sami Abdulrahman Alghamdi", "scholar_id": "CiEU7s8AAAAJ","email":"samialghamdi@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Walid Kamal Ghamry Elsayed", "scholar_id": "YeUTzMwAAAAJ","email":"wkamal@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Taghreed Abdalwahab Alghamdi", "scholar_id":"32NV4n4AAAAJ", "email":"talshurihi@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Muhammad Qaiser Saleem", "scholar_id": "XCxbNmoAAAAJ", "email":"qsaleem@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Ikram Mohamed Moalla", "scholar_id": "xKsDNWQAAAAJ", "email":"imoalla@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Adil Fahad Al harthi", "scholar_id": "0_1pixgAAAAJ", "email":"afalharthi@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Muneer Abdullah Saif Saeed", "scholar_id": "Ut7IZtYAAAAJ", "email":"masaeed@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Ahmed S. Khalaf", "scholar_id": "vySNGjYAAAAJ", "email":"akhalaf@bu.edu.s","department_id": "dept_cs"},
-  {"name": "Abdullah Saeed Ibrahim Alghotmi Alghamdi", "scholar_id": "UFX6LxEAAAAJ", "email":"aalghotmi@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Mohammad Eid Alzahrani", "scholar_id": "0rfEfNkAAAAJ", "email":"meid@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Amel Ben Slimane", "scholar_id": "_Eyk9OwAAAAJ", "email":"aslimane@bu.edu.sa","department_id": "dept_cs"},
-  {"name": "Dr. Mohammed Abdullah Al Qurashi", "scholar_id": "_Eyk9OwAAAAJ", "email":"malqurashi@bu.edu.sa","department_id": "dept_cs"}
+  {"name": "Abdul Hannan Abdul Mannan Shaikh", "scholar_id": "blwPeXQAAAAJ", "email":"ahannan@bu.edu.sa" },
+  {"name": "Abdulkareem Aodah Alzahrani", "scholar_id": "JSQbyBgAAAAJ", "email":"ao.alzahrani@bu.edu.sa"},
+  {"name": "Abdullah Alomari", "scholar_id": "1u1Vah8AAAAJ", "email":"alomari@bu.edu.sa"},
+  {"name": "Eidah Mohamed Alzahrani", "scholar_id": "MQeK2TUAAAAJ", "email":"em.alzahrani@bu.edu.sa"},
+  {"name": "Esam Alzahrani", "scholar_id": "05Jx6QkAAAAJ", "email":"esalzahrani@bu.edu.sa"},
+  {"name": "Fahad Ali Ghamdi", "scholar_id": "BqE8XJUAAAAJ", "email": "fghamdi@bu.edu.sa"},
+  {"name": "Hani Ali Harb", "scholar_id": "VS2klEgAAAAJ", "email":"haharb@bu.edu.sa"},
+  {"name": "Hassan Alkhiri", "scholar_id": "jDrt2XUAAAAJ", "email": "halkhiri@bu.edu.sa"},
+  {"name": "Ibrahim Alghamdi", "scholar_id": "-Ee7QMYAAAAJ", "email":"ia.alghamdi@bu.edu.sa"},
+  {"name": "Majzoob Kamalaldin Omer", "scholar_id": "KF-CfgoAAAAJ", "email": "mkomer@bu.edu.sa"},
+  {"name": "Mohammed Abdulrahman Alliheedi", "scholar_id": "Wcoweq8AAAAJ", "email":"malliheedi@bu.edu.sa"},
+  {"name": "Mohammed Alghamdi", "scholar_id": "Gtbbx1YAAAAJ", "email":"mialmushilah@bu.edu.sa"},
+  {"name": "Musaad Alzahrani", "scholar_id": "g-tdUbYAAAAJ", "email":"malzahr@bu.edu.sa"},
+  {"name": "Nizar Hasan Alsharif", "scholar_id": "budxbSoAAAAJ", "email":"nizar@bu.edu.sa"},
+  {"name": "Rahmat Budiarto", "scholar_id": "Qi24UpwAAAAJ", "email":"rahmat@bu.edu.sa"},
+  {"name": "Rami Jamaan Saeed Alzahrani", "scholar_id": "IzsoS9MAAAAJ", "email":"rjsaeed@bu.edu.sa"},
+  {"name": "Saad Alqithami", "scholar_id": "HkgKEAsAAAAJ", "email":"salqithami@bu.edu.sa"},
+  {"name": "Sami Abdulrahman Alghamdi", "scholar_id": "CiEU7s8AAAAJ","email":"samialghamdi@bu.edu.sa"},
+  {"name": "Walid Kamal Ghamry Elsayed", "scholar_id": "YeUTzMwAAAAJ","email":"wkamal@bu.edu.sa"},
+  {"name": "Taghreed Abdalwahab Alghamdi", "scholar_id":"32NV4n4AAAAJ", "email":"talshurihi@bu.edu.sa"},
+  {"name": "Muhammad Qaiser Saleem", "scholar_id": "XCxbNmoAAAAJ", "email":"qsaleem@bu.edu.sa"},
+  {"name": "Ikram Mohamed Moalla", "scholar_id": "xKsDNWQAAAAJ", "email":"imoalla@bu.edu.sa"},
+  {"name": "Adil Fahad Al harthi", "scholar_id": "0_1pixgAAAAJ", "email":"afalharthi@bu.edu.sa"},
+  {"name": "Muneer Abdullah Saif Saeed", "scholar_id": "Ut7IZtYAAAAJ", "email":"masaeed@bu.edu.sa"},
+  {"name": "Ahmed S. Khalaf", "scholar_id": "vySNGjYAAAAJ", "email":"akhalaf@bu.edu.s"},
+  {"name": "Abdullah Saeed Ibrahim Alghotmi Alghamdi", "scholar_id": "UFX6LxEAAAAJ", "email":"aalghotmi@bu.edu.sa"},
+  {"name": "Mohammad Eid Alzahrani", "scholar_id": "0rfEfNkAAAAJ", "email":"meid@bu.edu.sa"},
+  {"name": "Amel Ben Slimane", "scholar_id": "_Eyk9OwAAAAJ", "email":"aslimane@bu.edu.sa"},
+  {"name": "Dr. Mohammed Abdullah Al Qurashi", "scholar_id": "_Eyk9OwAAAAJ", "email":"malqurashi@bu.edu.sa"}
 ]
-
 
 # Export all authors in the cs list
 export_multiple_authors(cs_authors_list)
