@@ -72,6 +72,26 @@ const SignUpPage = () => {
       message.error("Invalid Google Scholar profile link");
       return;
     }
+    try {
+      const response = await fetch('http://localhost:5000/api/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scholar_id: scholarId,
+          college: formData.college,
+          department: formData.department
+        })
+      });
+  
+      if (response.ok) {
+        message.success('Scraping started successfully');
+      } else {
+        const errorData = await response.json();
+        message.error(`Error: ${errorData.error}`);
+      }
+    } catch (error) {
+      message.error(`Error: ${error.message}`);
+    }
 
     
     if (!formData.college || !formData.department) {

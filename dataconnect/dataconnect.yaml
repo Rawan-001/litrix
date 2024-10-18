@@ -1,0 +1,12 @@
+specVersion: "v1beta"
+serviceId: "litrix"
+location: "europe-west3"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "litrix "
+      cloudSql:
+        instanceId: "litrix-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
