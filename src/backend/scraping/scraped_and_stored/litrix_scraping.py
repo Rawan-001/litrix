@@ -6,7 +6,6 @@ import time
 import random
 import requests
 
-
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
@@ -16,7 +15,6 @@ proxy_pool = [
    '542bd662984a24e6624b__cr.gb,us,no,ie,au:31bb55cc5004a097@gw.dataimpulse.com:823'
    '542bd662984a24e6624b__cr.gb,us,no,ie,au:31bb55cc5004a097@gw.dataimpulse.com:823'
 ]
-
 def get_random_proxy():
     return random.choice(proxy_pool)
 
@@ -55,13 +53,11 @@ def export_multiple_authors(authors_data, batch_size=5):
     for start_idx in range(0, total_authors, batch_size):
         end_idx = min(start_idx + batch_size, total_authors)
         logging.info(f"Processing batch {start_idx + 1} to {end_idx}")
-
         # Process each author in the batch
         for author in authors_data[start_idx:end_idx]:
             scholar_id = author['scholar_id']
             filename = f"{author['name'].replace(' ', '_')}_data.json"  # Create a filename based on the author's name
-            fetch_author_and_publications(scholar_id, filename)
-        
+            fetch_author_and_publications(scholar_id, filename) 
         # Delay between batches
         batch_delay = random.uniform(5, 7)  # Delay between 5 to 7 seconds between batches
         logging.info(f"Waiting for {batch_delay:.2f} seconds before the next batch...")
@@ -99,9 +95,8 @@ cs_authors_list = [
   {"name": "Amel Ben Slimane", "scholar_id": "_Eyk9OwAAAAJ", "email":"aslimane@bu.edu.sa"},
   {"name": "Dr. Mohammed Abdullah Al Qurashi", "scholar_id": "_Eyk9OwAAAAJ", "email":"malqurashi@bu.edu.sa"}
 ]
-
 # Export all authors in the cs list
-export_multiple_authors(cs_authors_list)
+#export_multiple_authors(cs_authors_list)
 
 
 sn_authors_list = [
@@ -115,7 +110,7 @@ sn_authors_list = [
 ]
 
 # Export all authors in the sn list
-export_multiple_authors(sn_authors_list)
+#export_multiple_authors(sn_authors_list)
 
 it_authors_list = [
   {"name": "Ahmad Alqarni", "scholar_id": "WdKJwQUAAAAJ","email":"aaalqarni@bu.edu.sa"},
@@ -134,7 +129,7 @@ it_authors_list = [
 ]
 
 # Export all authors in the sn list
-export_multiple_authors(it_authors_list)
+#export_multiple_authors(it_authors_list)
 
 se_authors_list = [
  {"name": "Anwar Saeed Saleh Alsokari", "scholar_id": "SknhXP0AAAAJ", "email":"asalsoakri@bu.edu.sa"},
@@ -142,4 +137,9 @@ se_authors_list = [
  {"name":"Moez Krichen ", "scholar_id": "yaX8Tu4AAAAJ", "email" : "mkreishan@bu.edu.sa"}
 ]  
 # Export all authors in the se list
-export_multiple_authors(se_authors_list)
+#export_multiple_authors(se_authors_list)
+
+new_authors = [
+ {"name":"Bader Abdulrhaman Alghamdi", "scholar_id": "xXziNLwAAAAJ", "email" : "baalghamdi@bu.edu.sa"} 
+]
+export_multiple_authors(new_authors)
