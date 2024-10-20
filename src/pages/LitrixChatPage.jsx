@@ -62,7 +62,7 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer YOUR_OPENAI_API_KEY`
+                    'Authorization': `Bearer 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`
                 },
                 body: JSON.stringify({
                     prompt: prompt,
