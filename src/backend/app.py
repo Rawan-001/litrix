@@ -35,7 +35,7 @@ def extract_scholar_id(scholar_url):
     match = re.search(pattern, scholar_url)
     return match.group(1) if match else None
 
-@app.route('/signup', methods=['POST'])
+@app.route('/api/scrape', methods=['POST'])
 def scrape_data():
     data = request.json
     scholar_url = data.get('googleScholarLink')
@@ -79,4 +79,4 @@ def scrape_data():
         return jsonify({"error": f"Failed to scrape data: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+      app.run(debug=False)

@@ -16,25 +16,27 @@ import LitrixChatPage from './pages/LitrixChatPage';
 import SignUpPageAdmin from './pages/SignUpPageAdmin'; 
 import Collaboration from './pages/collaboration';
 
-
 const App = () => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+  const [college, setCollege] = useState('');
+  const [department, setDepartment] = useState('');
+  const [scholarId, setScholarId] = useState('');
 
   const fetchUserRole = async (uid) => {
     try {
       const adminDocRef = doc(db, `admins/${uid}`);
       const adminDoc = await getDoc(adminDocRef);
       if (adminDoc.exists()) {
-        return adminDoc.data();  
+        return { ...adminDoc.data(), role: 'admin' };  
       }
 
       const userDocRef = doc(db, `users/${uid}`);
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
-        return userDoc.data();
+        return { ...userDoc.data(), role: 'researcher' };
       }
 
       return null;  
@@ -51,6 +53,9 @@ const App = () => {
         if (userData) {
           setUser(user);
           setRole(userData.role);
+          setCollege(userData.college || ''); // Set college
+          setDepartment(userData.department || ''); // Set department
+          setScholarId(userData.scholar_id || user.uid); // Set scholarId
 
           if (location.pathname === '/profile' && userData.scholar_id) {
             navigate(`/profile/${userData.scholar_id}`);
@@ -67,6 +72,7 @@ const App = () => {
     return () => unsubscribe();
   }, [location.pathname, navigate]);
 
+  // Protected route logic to prevent unauthorized access
   const ProtectedRoute = ({ element, roleRequired }) => {
     useEffect(() => {
       if (!user) {
@@ -85,8 +91,9 @@ const App = () => {
 
   return (
     <div className="flex h-screen bg-white text-gray-800 overflow-hidden">
-      {!['/', '/signup', '/admin-signup'].includes(location.pathname) && role === 'admin' && <Sidebar />}
-      {!['/', '/signup', '/admin-signup'].includes(location.pathname) && role === 'researcher' && <ResearcherSidebar />}
+      {/* Conditionally render sidebar based on role */}
+      {!['/', '/signup', '/admin-signup'].includes(location.pathname) &&
+        (role === 'admin' ? <Sidebar /> : role === 'researcher' ? <ResearcherSidebar /> : null)}
 
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -97,7 +104,8 @@ const App = () => {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/collab" element={<Collaboration/>} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/chat" element={<LitrixChatPage />} />
+        {/* Pass college, department, and scholarId to LitrixChatPage */}
+        <Route path="/chat" element={<LitrixChatPage college={college} department={department} scholarId={scholarId} />} />
         <Route path="/admin-signup" element={<SignUpPageAdmin />} />
       </Routes>
     </div>

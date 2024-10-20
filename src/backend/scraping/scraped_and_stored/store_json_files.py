@@ -2,6 +2,7 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
+#from backend.scraping.utils import extract_doi
 import re
 
 # Initialize Firebase with your service account credentials
@@ -10,6 +11,14 @@ firebase_admin.initialize_app(cred)
 
 # Initialize Firestore
 db = firestore.client()
+
+# Extract DOI from publication URL
+def extract_doi(pub_url):
+    if not pub_url:
+        return None
+    doi_pattern = r'10.\d{4,9}/[-._;()/:A-Z0-9]+'
+    match = re.search(doi_pattern, pub_url, re.IGNORECASE)
+    return match.group(0) if match else None
 
 # Function to check if a faculty member exists and retrieve their data
 def get_faculty_member_data(faculty_ref):
@@ -137,7 +146,7 @@ def upload_faculty_data(json_folder):
             store_faculty_data(college_id, department_id, faculty_data)
 
 # Run the function to upload all JSON files from the specified folder
-#upload_faculty_data('/Users/majds./Documents/GitHub/Litrix/src/backend/scraping/it_json_files')
+upload_faculty_data('/Users/ruba/Documents/GitHub/litrix/src/backend/scraping/scraped_and_stored/json_files/it_json_files')
 
 
 # Function to selectively delete faculty members and their publications
@@ -176,4 +185,4 @@ scholar_ids_to_delete =[
 
 wrong_college_id = "faculty_computing"  
 wrong_department_id = "dept_it"
-delete_selected_faculty(wrong_college_id, wrong_department_id, scholar_ids_to_delete)
+#delete_selected_faculty(wrong_college_id, wrong_department_id, scholar_ids_to_delete)
