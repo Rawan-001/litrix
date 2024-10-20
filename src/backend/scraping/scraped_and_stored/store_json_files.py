@@ -2,23 +2,16 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
-#from backend.scraping.utils import extract_doi
-import re
+from backend.scraping.utils import extract_doi
 
-# Initialize Firebase with your service account credentials
+
+# Initialize Firebase 
 cred = credentials.Certificate('/Users/ruba/Downloads/Majd/litrix/litrix-f06e0-firebase-adminsdk-5uspj-5aecd2badc.json')
 firebase_admin.initialize_app(cred)
 
 # Initialize Firestore
 db = firestore.client()
 
-# Extract DOI from publication URL
-def extract_doi(pub_url):
-    if not pub_url:
-        return None
-    doi_pattern = r'10.\d{4,9}/[-._;()/:A-Z0-9]+'
-    match = re.search(doi_pattern, pub_url, re.IGNORECASE)
-    return match.group(0) if match else None
 
 # Function to check if a faculty member exists and retrieve their data
 def get_faculty_member_data(faculty_ref):
@@ -50,7 +43,7 @@ def store_faculty_data(college_id, department_id, faculty_data):
     else:
         print(f"Storing new faculty member {scholar_id}.")
 
-    # Add or update faculty member data (using merge=True to avoid overwriting existing fields)
+    # Add or update faculty member data 
     faculty_ref.set({
         "scholar_id": faculty_data.get("scholar_id"),
         "name": faculty_data.get("name"),
@@ -148,41 +141,3 @@ def upload_faculty_data(json_folder):
 # Run the function to upload all JSON files from the specified folder
 upload_faculty_data('/Users/ruba/Documents/GitHub/litrix/src/backend/scraping/scraped_and_stored/json_files/it_json_files')
 
-
-# Function to selectively delete faculty members and their publications
-def delete_selected_faculty(college_id, department_id, scholar_ids_to_delete):
-    faculty_members_ref = db.collection("colleges").document(college_id).collection("departments").document(department_id).collection("faculty_members")
-    
-    # Get all faculty members in the department
-    faculty_members = faculty_members_ref.stream()
-
-    for faculty in faculty_members:
-        if faculty.id in scholar_ids_to_delete:
-            # Delete all publications for the faculty member
-            faculty_ref = faculty_members_ref.document(faculty.id)
-            publications_ref = faculty_ref.collection("publications")
-            publications = publications_ref.stream()
-            
-            for publication in publications:
-                publications_ref.document(publication.id).delete()
-                print(f"Deleted publication {publication.id} for faculty {faculty.id}")
-            
-            # Delete the faculty member
-            faculty_ref.delete()
-            print(f"Deleted faculty member {faculty.id}")
-        else:
-            print(f"Skipped faculty member {faculty.id}, not in deletion list.")
-
-scholar_ids_to_delete =[
-    'AeYwTUYAAAAJ', 'BqE8XJUAAAAJ', 'CiEU7s8AAAAJ', 'Gtbbx1YAAAAJ',
-    'HkgKEAsAAAAJ', 'IzsoS9MAAAAJ', 'JSQbyBgAAAAJ', 'KF-CfgoAAAAJ',
-    'MQeK2TUAAAAJ', 'SknhXP0AAAAJ', 'VS2klEgAAAAJ' , 'Wcoweq8AAAAJ',
-    'YeUTzMwAAAAJ', 'blwPeXQAAAAJ', 'budxbSoAAAAJ', 'g-tdUbYAAAAJ',
-    'jDrt2XUAAAAJ'
-
-]
-
-
-wrong_college_id = "faculty_computing"  
-wrong_department_id = "dept_it"
-#delete_selected_faculty(wrong_college_id, wrong_department_id, scholar_ids_to_delete)

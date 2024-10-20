@@ -1,7 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
-# Initialize Firebase with your service account credentials
+# Initialize Firebase 
 cred = credentials.Certificate('/Users/majds./Downloads/litrix-698fe-firebase-adminsdk-9d1cb-e0f2bf25bd.json')
 firebase_admin.initialize_app(cred)
 
