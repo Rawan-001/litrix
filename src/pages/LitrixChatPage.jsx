@@ -8,46 +8,56 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
 
     // Fetch recent publications by scholarId
     const fetchRecentPublications = async (scholarId) => {
-        try {
-            const publicationsRef = collection(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}/publications`);
-            const publicationsSnapshot = await getDocs(publicationsRef);
-            return publicationsSnapshot.docs
-                .map(doc => doc.year())
-                .sort((a, b) => new Date(b.year) - new Date(a.yera)); 
-        } catch (error) {
-            console.error("Error fetching recent publications:", error);
-            return [];
-        }
-    };
+      try {
+          const publicationsRef = collection(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}/publications`);
+          const publicationsSnapshot = await getDocs(publicationsRef);
+  
+          // Filter publications for the year 2024
+          const recentPublications = publicationsSnapshot.docs
+              .map(doc => doc.data())
+              .filter(pub => pub.pub_year === 2024) // Filter by pub_year
+              .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date if needed
+  
+          return recentPublications;
+      } catch (error) {
+          console.error("Error fetching recent publications:", error);
+          return [];
+      }
+  };
 
     // Find collaborators in AI research
     const findCollaboratorsInAI = async () => {
-        try {
-            const facultyMembersRef = collection(db, `colleges/${college}/departments/${department}/faculty_members`);
-            const facultyMembersSnapshot = await getDocs(facultyMembersRef);
-            return facultyMembersSnapshot.docs.filter(doc => {
-                const data = doc.data();
-                return data.researchInterests && data.researchInterests.includes('Artificial Intelligence');
-            }).map(doc => doc.data());
-        } catch (error) {
-            console.error("Error finding collaborators:", error);
-            return [];
-        }
-    };
-
-    // Summarize research output for the department
-    const summarizeResearchOutput = async () => {
-        try {
-            const publicationsRef = collection(db, `colleges/${college}/departments/${department}/publications`);
-            const publicationsSnapshot = await getDocs(publicationsRef);
-            return { totalPublications: publicationsSnapshot.size };
-        } catch (error) {
-            console.error("Error summarizing research output:", error);
-            return { totalPublications: 0 };
-        }
-    };
-
-    // Generate response using OpenAI API
+      try {
+          const facultyMembersRef = collection(db, `colleges/${college}/departments/${department}/faculty_members`);
+          const facultyMembersSnapshot = await getDocs(facultyMembersRef);
+          console.log(`Total faculty members found: ${facultyMembersSnapshot.size}`); // Log count of faculty members
+  
+          const collaboratorsSet = new Set(); // To avoid duplicates
+  
+          // Iterate through each faculty member
+          for (const facultyDoc of facultyMembersSnapshot.docs) {
+              const facultyData = facultyDoc.data();
+              console.log(`Checking publications for: ${facultyData.name}`); // Log faculty name
+              const publicationsRef = collection(facultyMembersRef, facultyDoc.id, 'publications');
+              const publicationsSnapshot = await getDocs(publicationsRef);
+              console.log(`Total publications found for ${facultyData.name}: ${publicationsSnapshot.size}`); // Log count of publications
+  
+              // Check each publication for relevant keywords in the abstract
+              publicationsSnapshot.docs.forEach(pubDoc => {
+                  const publicationData = pubDoc.data();
+                  if (publicationData.abstract && publicationData.abstract.includes("Artificial Intelligence")) {
+                      collaboratorsSet.add(facultyData.name); // Add unique collaborator
+                      console.log(`Found collaborator: ${facultyData.name}`); // Log found collaborator
+                  }
+              });
+          }
+  
+          return Array.from(collaboratorsSet); // Convert Set back to Array
+      } catch (error) {
+          console.error("Error finding collaborators:", error);
+          return [];
+      }
+  };    // Generate response using OpenAI API
     const generateResponse = async (input, relevantData) => {
         if (relevantData.length === 0) {
             return "I'm sorry, I couldn't find any relevant publications.";
