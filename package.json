@@ -12,11 +12,8 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-<<<<<<< HEAD
-    "@heroicons/react": "^2.1.5",
-=======
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
->>>>>>> 68fa2f680be02419a6a3c441b38e907666f6be6f
+    "@heroicons/react": "^2.1.5",
     "@mui/icons-material": "^6.1.2",
     "@mui/material": "^6.1.2",
     "antd": "^5.21.1",
@@ -43,6 +40,7 @@
     "react-router-dom": "^6.27.0",
     "react-spinners": "^0.14.1",
     "recharts": "^2.12.7",
+    "uuid": "^10.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

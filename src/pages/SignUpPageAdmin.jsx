@@ -16,13 +16,11 @@ const AdminSignUpPage = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    adminCode: '', // للتحقق من كود الإدمن
   });
   const navigate = useNavigate();
 
   const handleNext = async () => {
     if (current === 0 && formData.adminCode) {
-      // تأكيد صحة كود الإدمن إذا كان مطلوبًا
       setCurrent(current + 1);
     } else if (current === 1 && formData.password !== formData.confirmPassword) {
       message.error('Passwords do not match');
@@ -50,34 +48,23 @@ const AdminSignUpPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // إضافة الحساب إلى كولكشن "admins" عند التسجيل
       const adminDocRef = doc(db, `admins/${user.uid}`);
       await setDoc(adminDocRef, {
         uid: user.uid,
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        role: 'admin'  // تعيين الدور كإدمن
+        role: 'admin'  
       });
 
       message.success('Admin account created successfully!');
-      navigate('/admin-dashboard');  // التوجيه إلى لوحة تحكم الإدمن
+      navigate('/admin-dashboard');  
     } catch (error) {
       message.error(`Error: ${error.message}`);
     }
   };
 
   const steps = [
-    {
-      title: 'Verify Admin Code',
-      content: (
-        <Form layout="vertical">
-          <Form.Item label="Admin Code" required>
-            <Input value={formData.adminCode} name="adminCode" onChange={handleChange} />
-          </Form.Item>
-        </Form>
-      ),
-    },
     {
       title: 'Set Account Details',
       content: (

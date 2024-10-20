@@ -5,7 +5,7 @@ import { auth, db } from "../../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 
 const Profile = () => {
-  const [userData, setUserData] = useState(null); // لتخزين بيانات المستخدم
+  const [userData, setUserData] = useState(null); 
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -13,7 +13,7 @@ const Profile = () => {
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-          setUserData(userDoc.data()); // تخزين البيانات المسترجعة
+          setUserData(userDoc.data()); 
         }
       }
     };

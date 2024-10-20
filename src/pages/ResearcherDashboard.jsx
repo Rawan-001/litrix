@@ -6,7 +6,6 @@ import { FaQuoteRight } from "react-icons/fa";
 import { motion } from 'framer-motion';
 import Data from '../components/analyticsReseracher/PublicationsOverTime';
 import RevenueChart from '../components/analyticsReseracher/CitesPerYearChart'; 
-import CollaborationDiscovery from '../components/Collaboration/CollaborationDiscovery'; 
 import { auth, db } from '../firebaseConfig'; 
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { GridLoader } from 'react-spinners';
@@ -199,7 +198,6 @@ const ResearcherDashboard = () => {
   <RevenueChart researcher={researcher} />
 
   <div className="lg:col-span-2"> 
-    <CollaborationDiscovery researcher={researcher} />
   </div>
 </div>
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth'; 
 import { auth } from '../../firebaseConfig';
-import { FiLogOut, FiBell } from 'react-icons/fi';  // استيراد أيقونة الإشعارات
+import { FiLogOut, FiBell } from 'react-icons/fi';  
 
 
 const Header = ({ title }) => {

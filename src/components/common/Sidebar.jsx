@@ -12,7 +12,6 @@ import { Link } from "react-router-dom";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { MdOutlineManageSearch } from "react-icons/md";
 import { BsStars } from "react-icons/bs";
-import { TbBrandGoogleAnalytics } from "react-icons/tb";
 import logo from "../../assets/FYP.png"; 
 
 const SIDEBAR_ITEMS = [

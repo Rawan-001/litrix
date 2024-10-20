@@ -4,6 +4,7 @@ import { db } from "../firebaseConfig";
 import Header from "../components/common/Header";
 import StatCard from "../components/common/StatCard";
 import PieChartAdmin from "../components/analyticsAdmin/PieChartAdmin";
+import KPI from "../components/KPI/KPI";
 import PublicationsOverTimeAdmin from "../components/analyticsAdmin/PublicationsOverTimeAdmin";
 import {
   Table,
@@ -109,17 +110,15 @@ const AdminDashboard = () => {
           if (publicationData.num_citations) {
             allPublications.push({
               id: doc.id,
-              researcherName: facultyDoc.data().name, // Get Researcher Name
+              researcherName: facultyDoc.data().name, 
               ...publicationData,
             });
           }
         });
       }
 
-      // ترتيب البيانات حسب عدد الاستشهادات من الأكبر إلى الأصغر
       allPublications.sort((a, b) => b.num_citations - a.num_citations);
 
-      // عرض أول 30 بحث فقط
       setMostCitedPubs(allPublications.slice(0, 30)); 
     } catch (error) {
       console.error("Error fetching most cited publications: ", error);
@@ -238,7 +237,7 @@ const AdminDashboard = () => {
                 color="#F59E0B"
               />
             </motion.div>
-
+     <KPI statistics={statistics} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <PieChartAdmin selectedDepartment={selectedDepartment} />
               <PublicationsOverTimeAdmin selectedDepartment={selectedDepartment} />

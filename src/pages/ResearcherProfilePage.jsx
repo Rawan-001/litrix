@@ -60,7 +60,7 @@ const ResearcherProfilePage = () => {
           setCoauthors(researcherDataFetched.coauthors);
         }
       } else {
-        console.error('مافي بيانات للباحث' );
+        console.error('لايوجد بيانات للباحث' );
       }
 
       const userQuerySnapshot = await getDocs(collection(db, 'users'));
@@ -71,7 +71,7 @@ const ResearcherProfilePage = () => {
       if (foundUser) {
         setUserData(foundUser);
       } else {
-        console.error('مافي بيانات للباحث');
+        console.error('لايوجد بيانات للباحث');
       }
     } catch (error) {
       console.error('Error fetching researcher data:', error);
@@ -220,8 +220,7 @@ const ResearcherProfilePage = () => {
                   </Typography>
 
                   <p><strong>Affiliation:</strong> {researcherData?.affiliation || ""}</p>
-                                    <p><strong>Institution:</strong> {researcherData?.institution || ""}</p>
-
+                 <p><strong>Institution:</strong> {researcherData?.institution || ""}</p>
                   <p><strong>Email:</strong> {userData?.email || ""}</p>
                   <p><strong>Interests:</strong> {researcherData?.interests ? researcherData.interests.join(", ") : ""}</p>
                   <p><strong>Scholar ID:</strong> {researcherData?.scholar_id || userData?.scholar_id || ""}</p>
@@ -340,5 +339,4 @@ const ResearcherProfilePage = () => {
     </div>
   );
 };
-
 export default ResearcherProfilePage;

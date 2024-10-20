@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, getDocs, query, doc, getDoc } from "firebase/firestore";
 import { GridLoader } from "react-spinners";
+
 import { db, auth } from "../../firebaseConfig";
 import Fuse from "fuse.js";
 import {
@@ -113,8 +114,8 @@ function SearchTable() {
             const publicationsSnapshot = await getDocs(publicationsRef);
             const researcherPublications = publicationsSnapshot.docs.map(doc => ({
               ...doc.data(),
-              researcherFirstName: researcher.firstName,
-              researcherLastName: researcher.lastName,
+              researcherFirstName: researcher.firstName, // فصل الاسم الأول
+              researcherLastName: researcher.lastName, // فصل الاسم الأخير
             }));
             allPublications.push(...researcherPublications);
           }
@@ -149,8 +150,8 @@ function SearchTable() {
 
     const fieldsToShow = Object.keys(publication).filter(field => {
       const value = publication[field];
-      return value && !["title", "pub_year", "num_citations", "authors", "cites_per_year", "cites_id", "researcherFirstName", "researcherLastName"].includes(field)
-        && !(Array.isArray(value) && value.length === 0) && !(typeof value === 'object' && Object.keys(value).length === 0);
+      return value && !["title", "pub_year", "num_citations", "authors", "cites_per_year", "cites_id"].includes(field)
+             && !(Array.isArray(value) && value.length === 0) && !(typeof value === 'object' && Object.keys(value).length === 0);
     });
 
     return (
@@ -168,7 +169,7 @@ function SearchTable() {
           <TableCell>{publication.title || "No Title"}</TableCell>
           <TableCell>{publication.pub_year || "Unknown Year"}</TableCell>
           <TableCell>{publication.num_citations || 0}</TableCell>
-          <TableCell>{publication.researcherFirstName} {publication.researcherLastName}</TableCell> 
+          <TableCell>{publication.researcherFirstName} {publication.researcherLastName}</TableCell> {/* فصل الاسم */}
         </TableRow>
         <TableRow>
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -263,12 +264,13 @@ function SearchTable() {
         </Card>
 
         {loading && (
-          <div className="flex justify-center items-center h-64">
-            <GridLoader size={30} color={"#6366F1"} />
-          </div>
-        )}
+  <div className="flex justify-center items-center h-64">
+    <GridLoader size={30} color={"#6366F1"} />
+  </div>
+)}
 
-        {error && <p className="text-center text-red-500">{error}</p>}
+{error && <p className="text-center text-red-500">{error}</p>}
+
 
         {researcherData.length > 0 && (
           <Grid container spacing={2}>

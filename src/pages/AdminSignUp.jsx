@@ -16,7 +16,7 @@ const AdminSignUpPage = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    adminCode: '',  // يمكنك استخدام كود التحقق إذا لزم الأمر
+    adminCode: '',  
   });
   const navigate = useNavigate();
 
@@ -49,7 +49,6 @@ const AdminSignUpPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // تخزين البيانات في مجموعة users
       const userDocRef = doc(db, `users/${user.uid}`);
       await setDoc(userDocRef, {
         uid: user.uid,
@@ -59,7 +58,6 @@ const AdminSignUpPage = () => {
         role: 'admin',  
       });
 
-      // تخزين البيانات في مجموعة admins
       const adminDocRef = doc(db, `admins/${user.uid}`);
       await setDoc(adminDocRef, {
         uid: user.uid,
@@ -70,7 +68,7 @@ const AdminSignUpPage = () => {
       });
 
       message.success('Admin account created successfully!');
-      navigate('/admin-dashboard');  // التوجيه إلى لوحة التحكم الخاصة بالإدمن
+      navigate('/admin-dashboard');  
     } catch (error) {
       message.error(`Error: ${error.message}`);
     }

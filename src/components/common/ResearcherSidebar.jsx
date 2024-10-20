@@ -9,13 +9,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { auth, db } from "../../firebaseConfig"; 
 import { doc, getDoc } from "firebase/firestore"; 
 import logo from "../../assets/FYP.png"; 
+import { AiOutlineTeam } from 'react-icons/ai'; 
 
 const researcherSidebarItems = [
   { name: "Dashboard", icon: LuLayoutDashboard, color: "#2a4570", href: "/dashboard" },
   { name: "Profile", icon: FaUserCircle, color: "#2a4570", href: "/profile" },
+  { name: "Collaboration", icon: AiOutlineTeam  , color: "#2a4570", href: "/collab" }, 
   { name: "Search", icon: MdOutlineManageSearch, color: "#2a4570", href: "/search" },
   { name: "Litrix Chat", icon: BsStars, color: "#2a4570", href: "/chat" },
   { name: "Settings", icon: MdSettings, color: "#2a4570", href: "/settings" }, 
+
 ];
 
 const ResearcherSidebar = () => {

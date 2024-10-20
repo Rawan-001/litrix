@@ -5,7 +5,7 @@ import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebaseConfig';
 import { GridLoader } from 'react-spinners';
 
-const UserRetention = () => {
+const charttime = () => {
   const [data, setData] = useState([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState("Yearly");
   const [loading, setLoading] = useState(true);
@@ -104,8 +104,6 @@ const UserRetention = () => {
       <div className="mb-4">
         <select value={selectedTimeRange} onChange={handleTimeRangeChange} className="border rounded px-3 py-1 text-gray-700">
           <option value="Yearly">Yearly</option>
-          <option value="Monthly">Monthly</option>
-          <option value="Weekly">Weekly</option>
         </select>
       </div>
 
@@ -132,4 +130,4 @@ const UserRetention = () => {
   );
 };
 
-export default UserRetention;
+export default charttime;

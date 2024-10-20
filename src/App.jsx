@@ -8,14 +8,13 @@ import ResearcherSidebar from './components/common/ResearcherSidebar';
 import HomePage from './pages/HomePage/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import SearchPage from './pages/SearchPage';
-import AnalyticsPageAdmin from './pages/AnalyticsPageAdmin';
 import SettingsPage from './pages/SettingsPage';
 import SignUpPage from './pages/SignUpPage';
 import ResearcherProfilePage from './pages/ResearcherProfilePage';
 import ResearcherDashboard from './pages/ResearcherDashboard';
 import LitrixChatPage from './pages/LitrixChatPage';
 import SignUpPageAdmin from './pages/SignUpPageAdmin'; 
-import AdminCodeGenerator from './AdminCodeGenerator.jsx';  
+import Collaboration from './pages/collaboration';
 
 
 const App = () => {
@@ -96,11 +95,10 @@ const App = () => {
         <Route path="/profile/:scholar_id" element={<ProtectedRoute element={<ResearcherProfilePage />} roleRequired="researcher" />} />
         <Route path="/dashboard" element={<ProtectedRoute element={<ResearcherDashboard />} roleRequired="researcher" />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/analyticsAdmin" element={<AnalyticsPageAdmin />} />
+        <Route path="/collab" element={<Collaboration/>} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/chat" element={<LitrixChatPage />} />
         <Route path="/admin-signup" element={<SignUpPageAdmin />} />
-        <Route path="/generate-admin-code" element={<AdminCodeGenerator />} />
       </Routes>
     </div>
   );

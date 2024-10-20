@@ -92,15 +92,13 @@ const PublicationsOverTimeAdmin = ({ selectedDepartment }) => {
       <div className="mb-4">
         <select value={selectedTimeRange} onChange={handleTimeRangeChange} className="border rounded px-3 py-1 text-gray-700">
           <option value="Yearly">Yearly</option>
-          <option value="Monthly">Monthly</option>
-          <option value="Weekly">Weekly</option>
         </select>
       </div>
 
       <div style={{ width: "100%", height: 300 }}>
         {data.length > 0 ? (
           <ResponsiveContainer>
-            <LineChart data={data} onClick={handleBarClick}> {/* تفعيل النقر على الرسم البياني */}
+            <LineChart data={data} onClick={handleBarClick}> 
               <CartesianGrid strokeDasharray='3 3' stroke='#ccc' />
               <XAxis dataKey='name' stroke='#333' />
               <YAxis stroke='#333' />
@@ -123,5 +121,4 @@ const PublicationsOverTimeAdmin = ({ selectedDepartment }) => {
     </motion.div>
   );
 };
-
 export default PublicationsOverTimeAdmin;
