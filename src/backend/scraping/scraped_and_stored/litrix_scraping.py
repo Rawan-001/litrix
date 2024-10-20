@@ -96,7 +96,7 @@ cs_authors_list = [
   {"name": "Dr. Mohammed Abdullah Al Qurashi", "scholar_id": "_Eyk9OwAAAAJ", "email":"malqurashi@bu.edu.sa"}
 ]
 # Export all authors in the cs list
-#export_multiple_authors(cs_authors_list)
+export_multiple_authors(cs_authors_list)
 
 
 sn_authors_list = [
@@ -110,7 +110,7 @@ sn_authors_list = [
 ]
 
 # Export all authors in the sn list
-#export_multiple_authors(sn_authors_list)
+export_multiple_authors(sn_authors_list)
 
 it_authors_list = [
   {"name": "Ahmad Alqarni", "scholar_id": "WdKJwQUAAAAJ","email":"aaalqarni@bu.edu.sa"},
@@ -129,7 +129,7 @@ it_authors_list = [
 ]
 
 # Export all authors in the sn list
-#export_multiple_authors(it_authors_list)
+export_multiple_authors(it_authors_list)
 
 se_authors_list = [
  {"name": "Anwar Saeed Saleh Alsokari", "scholar_id": "SknhXP0AAAAJ", "email":"asalsoakri@bu.edu.sa"},
@@ -137,9 +137,5 @@ se_authors_list = [
  {"name":"Moez Krichen ", "scholar_id": "yaX8Tu4AAAAJ", "email" : "mkreishan@bu.edu.sa"}
 ]  
 # Export all authors in the se list
-#export_multiple_authors(se_authors_list)
+export_multiple_authors(se_authors_list)
 
-new_authors = [
- {"name":"Bader Abdulrhaman Alghamdi", "scholar_id": "xXziNLwAAAAJ", "email" : "baalghamdi@bu.edu.sa"} 
-]
-export_multiple_authors(new_authors)
