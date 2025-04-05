@@ -102,7 +102,6 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-// Tema principal para la aplicación
 const theme = createTheme({
   palette: {
     primary: {
@@ -118,7 +117,6 @@ const theme = createTheme({
   },
 });
 
-// Componentes estilizados
 const StyledResearcherCard = styled(Card)(({ theme }) => ({
   borderRadius: 12,
   boxShadow: "0 8px 24px rgba(0,0,0,0.07)",
@@ -369,7 +367,6 @@ const ModernSlider = styled(Slider)(({ theme }) => ({
   },
 }));
 
-// Componente de detalle de publicación
 const PublicationDetailDialog = ({ open, onClose, publication }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -675,7 +672,6 @@ const PublicationDetailDialog = ({ open, onClose, publication }) => {
   );
 };
 
-// Componente principal SearchTable
 function SearchTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [researcherData, setResearcherData] = useState([]);

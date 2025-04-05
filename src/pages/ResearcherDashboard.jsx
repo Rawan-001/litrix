@@ -9,7 +9,6 @@ import { doc, getDoc, collection, getDocs, query, limit } from 'firebase/firesto
 import { GridLoader } from 'react-spinners';
 import { Button, Menu, MenuItem, Skeleton } from '@mui/material';
 
-// Lazy load heavy components
 const Data = lazy(() => import('../components/analyticsReseracher/PublicationsOverTime'));
 const RevenueChart = lazy(() => import('../components/analyticsReseracher/CitesPerYearChart'));
 
@@ -22,7 +21,6 @@ const ResearcherDashboard = () => {
   const [exportAnchorEl, setExportAnchorEl] = useState(null);
   const [userData, setUserData] = useState(null);
   
-  // Use parallel data fetching
   useEffect(() => {
     const fetchInitialData = async () => {
       if (!auth.currentUser) {
@@ -31,7 +29,6 @@ const ResearcherDashboard = () => {
       }
       
       try {
-        // Get user document
         const userDocRef = doc(db, `users/${auth.currentUser.uid}`);
         const userDoc = await getDoc(userDocRef);
         
@@ -44,7 +41,6 @@ const ResearcherDashboard = () => {
         const userData = userDoc.data();
         setUserData(userData);
         
-        // Quick stats - show as soon as we have them
         if (userData.publications_count) {
           setPublicationsCount(userData.publications_count);
         }
@@ -53,10 +49,8 @@ const ResearcherDashboard = () => {
           setCitationsCount(userData.citations_count);
         }
         
-        // Show the UI even while we're still loading detailed data
         setLoading(false);
         
-        // Continue loading the rest in the background
         fetchDetailedData(userData);
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -67,12 +61,10 @@ const ResearcherDashboard = () => {
     fetchInitialData();
   }, []);
   
-  // Secondary data fetch - runs after the UI is shown
   const fetchDetailedData = async (userData) => {
     try {
       const { scholar_id, college, department } = userData;
       
-      // Fetch researcher profile in parallel with publication data
       const [researcherDoc, publicationsSnapshot] = await Promise.all([
         getDoc(doc(db, `colleges/${college}/departments/${department}/faculty_members/${scholar_id}`)),
         getDocs(query(collection(db, `colleges/${college}/departments/${department}/faculty_members/${scholar_id}/publications`), limit(100)))
@@ -82,7 +74,6 @@ const ResearcherDashboard = () => {
         const researcherData = researcherDoc.data();
         setResearcher(researcherData);
         
-        // Update counts with more accurate data
         setPublicationsCount(publicationsSnapshot.size);
         setCitationsCount(researcherData.citedby || 0);
       }
@@ -172,7 +163,6 @@ const ResearcherDashboard = () => {
     handleExportClose();
   };
 
-  // Calculate dashboard statistics with useMemo to prevent unnecessary recalculations
   const dashboardStats = useMemo(() => {
     return [
       {
@@ -219,7 +209,7 @@ const ResearcherDashboard = () => {
             className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }} // Reduced animation time
+            transition={{ duration: 0.3 }}
           >
             {dashboardStats.map((stat, index) => (
               <StatCard 

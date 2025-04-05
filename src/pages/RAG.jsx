@@ -1,6 +1,5 @@
-// src/pages/LitrixChatPage.jsx
 import React, { useState } from 'react';
-import { db } from '../firebaseConfig'; // Adjust the path as necessary
+import { db } from '../firebaseConfig'; 
 import { collection, getDocs } from 'firebase/firestore';
 
 const LitrixChatPage = () => {
@@ -11,19 +10,16 @@ const LitrixChatPage = () => {
     const retrieveRelevantData = async (input, college, department) => {
         const keywords = input.toLowerCase().split(' ');
 
-        // Fetching faculty members from Firestore
         const facultyMembersRef = collection(db, 'colleges', college, 'departments', department, 'faculty_members');
         const facultyMembersSnapshot = await getDocs(facultyMembersRef);
         
         let relevantPublications = [];
 
-        // Iterate through each faculty member
         for (const facultyDoc of facultyMembersSnapshot.docs) {
             const scholarId = facultyDoc.id;
             const publicationsRef = collection(facultyMembersRef, scholarId, 'publications');
             const publicationsSnapshot = await getDocs(publicationsRef);
             
-            // Check each publication for relevant data
             publicationsSnapshot.docs.forEach(pubDoc => {
                 const publicationData = pubDoc.data();
                 if (keywords.some(keyword => 
@@ -67,14 +63,11 @@ const LitrixChatPage = () => {
         const newMessage = { role: 'user', text: input };
         setMessages([...messages, newMessage]);
 
-        // Specify the college and department based on user context or hardcoded values
         const college = "Faculty of Computing and Information"; 
         const department = "Department of Computer Science"; 
 
-        // Fetch relevant publications
         const relevantData = await retrieveRelevantData(input, college, department);
         
-        // Generate response based on relevant data
         const response = await generateResponse(input, relevantData);
         setMessages([...messages, newMessage, { role: 'bot', text: response }]);
         setInput('');

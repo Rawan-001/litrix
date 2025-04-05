@@ -211,7 +211,6 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
             <Header title="Litrix Chat" />
             
             <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto p-4 h-[calc(100vh-64px)]">
-                {/* Error message display */}
                 {error && (
                     <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 shadow-sm border border-red-200 animate-fade-in">
                         <div className="flex items-center">
@@ -223,10 +222,8 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
                     </div>
                 )}
             
-                {/* Chat container */}
                 <div className="flex-1 overflow-y-auto mb-4 pr-2">
                     <div className="space-y-4 py-2">
-                        {/* Welcome message */}
                         {messages.length === 0 && (
                             <div className="flex justify-center my-8">
                                 <div className="bg-white rounded-lg p-6 shadow-md max-w-lg">
@@ -252,7 +249,6 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
                             </div>
                         )}
 
-                        {/* Messages */}
                         {messages.map((message, index) => (
                             <div 
                                 key={index} 
@@ -291,7 +287,6 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
                             </div>
                         ))}
 
-                        {/* Loading indicator */}
                         {isLoading && (
                             <div className="flex justify-start animate-fade-in">
                                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium shadow-md mr-2">
@@ -311,7 +306,6 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
                     </div>
                 </div>
 
-                {/* Selected file preview */}
                 {selectedFile && (
                     <div className="bg-blue-50 p-2 rounded-lg mb-2 flex items-center justify-between">
                         <div className="flex items-center">
@@ -331,10 +325,8 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
                     </div>
                 )}
 
-                {/* Input area */}
                 <div className="sticky bottom-0 bg-white rounded-2xl shadow-lg p-2 border border-gray-200">
                     <div className="flex items-center">
-                        {/* Hidden file input */}
                         <input 
                             type="file" 
                             ref={fileInputRef}
@@ -343,7 +335,6 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
                             accept="image/*,.pdf,.doc,.docx,.xlsx,.xls,.csv,.txt"
                         />
                         
-                        {/* Attachment button */}
                         <button 
                             onClick={handleAttachmentClick}
                             className="p-2 text-gray-500 hover:text-blue-500 transition"
@@ -383,7 +374,6 @@ const LitrixChatPage = ({ college, department, scholarId }) => {
     );
 };
 
-// Add CSS animation for fade-in effect
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeInUp {

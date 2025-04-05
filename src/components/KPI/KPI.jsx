@@ -50,11 +50,9 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
   const [deptForCurrentResearchers, setDeptForCurrentResearchers] = useState(null);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   
-  // Year dropdown anchor
   const [yearDropdownAnchorEl, setYearDropdownAnchorEl] = useState(null);
   const yearDropdownOpen = Boolean(yearDropdownAnchorEl);
   
-  // Memoize available years to avoid recalculation
   const availableYears = useMemo(() => {
     const years = [];
     for (let year = currentYear; year >= 2015; year--) {
@@ -63,7 +61,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     return years;
   }, [currentYear]);
   
-  // Open year dropdown
   const handleYearClick = (event) => {
     setYearDropdownAnchorEl(event.currentTarget);
   };
@@ -77,7 +74,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     setYearDropdownAnchorEl(null);
   };
   
-  // Optimized fetch function with year filtering in the query
   const fetchResearchers = useCallback(async () => {
     if (!selectedDepartment) return;
     
@@ -86,12 +82,10 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
       const basePath = "colleges/faculty_computing/departments";
       let fetchedResearchers = [];
       
-      // Build query to get faculty members
       const fetchDepartmentResearchers = async (deptId) => {
         const facultyRef = collection(db, `${basePath}/${deptId}/faculty_members`);
         const facultySnapshot = await getDocs(facultyRef);
         
-        // Use Promise.all to parallelize publication fetching
         const researchersPromises = facultySnapshot.docs.map(async (facultyDoc) => {
           const faculty = {
             id: facultyDoc.id,
@@ -105,13 +99,11 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
             citations: 0
           };
           
-          // Get publications for this faculty
           const publicationsRef = collection(
             db,
             `${basePath}/${deptId}/faculty_members/${facultyDoc.id}/publications`
           );
           
-          // Use query to filter publications by year if needed
           let publicationsSnapshot;
           if (selectedYear) {
             const publicationsQuery = query(
@@ -125,7 +117,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
             publicationsSnapshot = await getDocs(publicationsRef);
           }
           
-          // Count total publications and citations
           const allPublicationsSnapshot = await getDocs(publicationsRef);
           faculty.publications = allPublicationsSnapshot.size;
           
@@ -195,13 +186,10 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
       return totalPublications > 0 ? totalCitations / totalPublications : 0;
     };
     
-    // Publications count
     const totalPublications = researchers.reduce((sum, r) => sum + r.publicationsInSelectedYear, 0);
     
-    // Citations count (approximation)
     const totalCitations = researchers.reduce((sum, r) => sum + r.citations, 0);
     
-    // Count of researchers with publications
     const researchersWithPublicationsCount = researchers.filter(r => r.hasPublishedInSelectedYear).length;
     
     return {
@@ -215,7 +203,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     };
   }, [researchers]);
   
-  // Update filtered researchers when either researchers or searchQuery changes
   useEffect(() => {
     const filtered = researchers.filter(r => 
       r.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -223,7 +210,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     setFilteredResearchers(filtered);
   }, [researchers, searchQuery]);
   
-  // When opening the dialog, check if we need to fetch new data
   useEffect(() => {
     if (researcherDialogOpen) {
       if (deptForCurrentResearchers !== selectedDepartment) {
@@ -234,7 +220,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     }
   }, [researcherDialogOpen, selectedDepartment, deptForCurrentResearchers, fetchResearchers]);
   
-  // Close dialog when department changes
   useEffect(() => {
     if (deptForCurrentResearchers && deptForCurrentResearchers !== selectedDepartment) {
       if (researcherDialogOpen) {
@@ -245,7 +230,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     }
   }, [selectedDepartment, deptForCurrentResearchers, researcherDialogOpen]);
   
-  // Initial data load and reload when year changes
   useEffect(() => {
     fetchResearchers();
   }, [selectedYear, fetchResearchers]);
@@ -260,7 +244,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     setSearchQuery('');
   };
 
-  // Memoized KPI data to prevent unnecessary re-renders
   const kpiData = useMemo(() => [
     {
       id: "KPI-I-13",
@@ -299,7 +282,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     }
   ], [kpiCalculations, selectedYear]);
 
-  // Function to get filtered researchers count for the dialog header
   const getFilteredResearchersCount = () => {
     if (viewingKpi === "KPI-I-13") {
       return filteredResearchers.filter(r => 
@@ -315,7 +297,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
 
   return (
     <>
-      {/* Section Header and Year Filter */}
       <div className="flex justify-between items-center mb-4">
         <Typography variant="h5" className="text-gray-800 font-bold">
           Research Performance Metrics
@@ -339,7 +320,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
       
       <Divider className="mb-5" />
     
-      {/* Year dropdown popover */}
       <Popover
         open={yearDropdownOpen}
         anchorEl={yearDropdownAnchorEl}
@@ -513,7 +493,7 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
                     mb: { xs: 1, sm: 0 }, 
                     cursor: 'pointer',
                     '&:hover': { opacity: 0.9 },
-                    bgcolor: '#6366F1 ' // Purple color
+                    bgcolor: '#6366F1 ' 
                   }}
                 />
                 

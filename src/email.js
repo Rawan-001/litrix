@@ -15,7 +15,7 @@ const App = () => {
     emailjs.send('service_xwxd76g', 'template_ot7w717', templateParams, 'TogpmdmQpVJE5hH3Y')
       .then((response) => {
         console.log('SUCCESS!', response.status, response.text);
-        message.success(`Email sent to ${userEmail}`); // رسالة نجاح
+        message.success(`Email sent to ${userEmail}`); 
       }, (error) => {
         console.error('FAILED...', error);
         message.error(`Failed to send email: ${error.message}`);
@@ -31,7 +31,7 @@ const App = () => {
     const uniqueID = uuidv4();
     const registrationLink = `https://litrix-f06e0.web.app/admin-signup?token=${uniqueID}`;
     sendEmail(adminEmail, registrationLink);  
-    setAdminEmail(''); // إعادة تعيين الحقل بعد الإرسال
+    setAdminEmail(''); 
   };
 
   return (

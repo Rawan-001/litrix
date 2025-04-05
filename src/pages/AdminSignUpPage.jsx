@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'; // إضافة signInWithEmailAndPassword
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'; 
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +11,7 @@ const AdminSignUpPage = () => {
     password: '',
     confirmPassword: '',
     firstName: '',
-    role: 'admin', // ثابت على admin
+    role: 'admin', 
   });
   
   const navigate = useNavigate();
@@ -28,25 +28,21 @@ const AdminSignUpPage = () => {
     }
 
     try {
-      // إنشاء حساب في Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // تخزين البيانات في Firestore
       const userDocRef = doc(db, `users/${user.uid}`);
       await setDoc(userDocRef, {
         uid: user.uid,
         email: formData.email,
         firstName: formData.firstName,
-        role: formData.role, // تخزين الـ role كـ admin
+        role: formData.role, 
       });
 
       message.success('Admin account created successfully!');
 
-      // تسجيل الدخول مباشرة بعد إنشاء الحساب
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
 
-      // إعادة توجيه المستخدم إلى صفحة الهوم بعد تسجيل الدخول
       navigate('/');
 
     } catch (error) {

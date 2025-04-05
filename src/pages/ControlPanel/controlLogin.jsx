@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebaseConfig'; // تأكد من المسار الصحيح
+import { db } from '../../firebaseConfig'; 
 
 const ControlPanel = () => {
   const [users, setUsers] = useState([]);
@@ -12,18 +12,16 @@ const ControlPanel = () => {
       const usersRef = collection(db, 'users');
       const adminsRef = collection(db, 'admins');
 
-      // جلب بيانات المستخدمين
       const userSnapshot = await getDocs(usersRef);
       const adminSnapshot = await getDocs(adminsRef);
 
-      // دمج البيانات من المستخدمين والإداريين
       const userList = userSnapshot.docs.map(doc => ({
         id: doc.id,
         email: doc.data().email || 'N/A',
         firstName: doc.data().firstName || 'N/A',
         lastName: doc.data().lastName || 'N/A',
         role: 'User',
-        createdAt: doc.data().createdAt || new Date().toISOString(), // تأكد من وجود تاريخ التسجيل
+        createdAt: doc.data().createdAt || new Date().toISOString(), 
       }));
 
       const adminList = adminSnapshot.docs.map(doc => ({
@@ -32,10 +30,9 @@ const ControlPanel = () => {
         firstName: doc.data().firstName || 'N/A',
         lastName: doc.data().lastName || 'N/A',
         role: 'Admin',
-        createdAt: doc.data().createdAt || new Date().toISOString(), // تأكد من وجود تاريخ التسجيل
+        createdAt: doc.data().createdAt || new Date().toISOString(), 
       }));
 
-      // دمج القائمتين
       const allUsers = [...userList, ...adminList];
       setUsers(allUsers);
     } catch (error) {

@@ -5,7 +5,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { motion } from "framer-motion";
 import html2canvas from 'html2canvas';
 
-// Simplified department list
 const departments = [
   { value: "dept_cs", label: "Computer Science" },
   { value: "dept_it", label: "Information Technology" },
@@ -20,14 +19,14 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
   
   const chartRef = React.useRef(null);
 
-  // Modern color theme
+ 
   const colors = {
-    primary: "#0ea5e9",      // Sky blue
-    text: "#0f172a",         // Slate 900
-    background: "#f8fafc",   // Slate 50
-    cardBg: "#ffffff",       // White
-    border: "#e2e8f0",       // Slate 200
-    highlight: "#f43f5e",    // Rose 500
+    text: "#0f172a",         
+    background: "#f8fafc",   
+    primary: "#0ea5e9",      
+    cardBg: "#ffffff",       
+    border: "#e2e8f0",       
+    highlight: "#f43f5e",    
   };
 
   const downloadChart = () => {
@@ -79,12 +78,10 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
       const facultyData = facultyDoc.data();
       const facultyCitesPerYear = facultyData.cites_per_year || {};
 
-      // Add to total citations per year
       for (const year in facultyCitesPerYear) {
         citesPerYear[year] = (citesPerYear[year] || 0) + facultyCitesPerYear[year];
       }
 
-      // Fetch publications to count by year
       const publicationsRef = collection(
         db,
         `colleges/faculty_computing/departments/${department}/faculty_members/${facultyDoc.id}/publications`
@@ -142,7 +139,6 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
     return filteredData.reduce((max, item) => item.citations > max.citations ? item : max, filteredData[0]);
   }, [filteredData]);
 
-  // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -191,7 +187,7 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
         justifyContent: 'center',
         alignItems: 'center',
         height: '500px',
-        width: '100%' // Ensure full width
+        width: '100%' 
       }}>
         <div style={{ textAlign: 'center' }}>
           <div className="loader" style={{
@@ -222,7 +218,7 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
         justifyContent: 'center',
         alignItems: 'center',
         height: '500px',
-        width: '100%' // Ensure full width
+        width: '100%' 
       }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ 
@@ -241,7 +237,6 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
     );
   }
 
-  // Main component with fixed height regardless of content
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -255,21 +250,19 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
         border: `1px solid ${colors.border}`,
         marginBottom: '24px',
         width: '100%',
-        height: '500px', // Fixed height regardless of content
-        position: 'relative',
+        height: '500px', 
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden' // Prevent overflow outside boundaries
+        overflow: 'hidden' 
       }}
     >
-      {/* Header section */}
       <div style={{ 
         padding: '20px 24px', 
         borderBottom: `1px solid ${colors.border}`,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        flexShrink: 0 // Don't allow this section to shrink
+        flexShrink: 0 
       }}>
         <div>
           <h2 style={{ 
@@ -291,7 +284,6 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
         </div>
         
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          {/* Simple time range selector */}
           <select 
             value={dateRange} 
             onChange={(e) => setDateRange(e.target.value)}
@@ -310,7 +302,6 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
             <option value="all">All Time</option>
           </select>
           
-          {/* Download button */}
           <button 
             onClick={downloadChart}
             style={{
@@ -334,13 +325,12 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
         </div>
       </div>
       
-      {/* Stats tiles */}
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '20px',
         padding: '20px 24px',
-        flexShrink: 0 // Don't allow this section to shrink
+        flexShrink: 0 
       }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: '14px', margin: 0, color: colors.text, opacity: 0.7 }}>Total Citations</p>
@@ -364,11 +354,10 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
         </div>
       </div>
       
-      {/* Chart - full height since we're not showing publications */}
       <div style={{ 
         padding: '0 16px 24px 0', 
-        flex: 1, // Take remaining space
-        minHeight: '220px' // Minimum height for the chart
+        flex: 1, 
+        minHeight: '220px' 
       }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
@@ -401,14 +390,13 @@ const ModernCitationsChart = ({ selectedDepartment }) => {
         </ResponsiveContainer>
       </div>
       
-      {/* Footer with peak year */}
       {maxCitationsYear && (
         <div style={{ 
           borderTop: `1px solid ${colors.border}`,
           padding: '16px 24px',
           fontSize: '14px',
           color: colors.text,
-          flexShrink: 0 // Don't allow this section to shrink
+          flexShrink: 0 
         }}>
           <strong>Peak Year:</strong> {maxCitationsYear.year} with {maxCitationsYear.citations.toLocaleString()} citations
         </div>
