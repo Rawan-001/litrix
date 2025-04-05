@@ -1,97 +1,420 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { collection, getDocs } from "firebase/firestore";
+import React, { useState, useEffect, useMemo } from "react";
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
-import { GridLoader } from 'react-spinners';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { motion } from "framer-motion";
+import html2canvas from 'html2canvas';
 
-const CitesPerYearChartDepartment = ({ selectedCollege, selectedDepartment }) => {
+// Simplified department list
+const departments = [
+  { value: "dept_cs", label: "Computer Science" },
+  { value: "dept_it", label: "Information Technology" },
+  { value: "dept_se", label: "Software Engineering" },
+  { value: "dept_sn", label: "Network Systems" },
+];
+
+const ModernCitationsChart = ({ selectedDepartment }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState("5years");
+  
+  const chartRef = React.useRef(null);
 
-  // جلب بيانات الاستشهادات لكل قسم
-  const fetchCitesPerYearByDepartment = async (college, department) => {
+  // Modern color theme
+  const colors = {
+    primary: "#0ea5e9",      // Sky blue
+    text: "#0f172a",         // Slate 900
+    background: "#f8fafc",   // Slate 50
+    cardBg: "#ffffff",       // White
+    border: "#e2e8f0",       // Slate 200
+    highlight: "#f43f5e",    // Rose 500
+  };
+
+  const downloadChart = () => {
+    if (chartRef.current) {
+      html2canvas(chartRef.current).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `citations-${selectedDepartment}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  };
+
+  const fetchCitesPerYear = async (department) => {
     setLoading(true);
     try {
-      const facultyRef = collection(db, `colleges/${college}/departments/${department}/faculty_members`);
-      const facultySnapshot = await getDocs(facultyRef);
-
       let citesPerYear = {};
+      let publicationsPerYear = {};
 
-      // حساب الاستشهادات لكل عام
-      facultySnapshot.forEach((facultyDoc) => {
-        const facultyData = facultyDoc.data();
-        const facultyCitesPerYear = facultyData.cites_per_year || {};
-
-        // تحديث بيانات الاستشهادات للسنة المحددة
-        for (const year in facultyCitesPerYear) {
-          citesPerYear[year] = (citesPerYear[year] || 0) + facultyCitesPerYear[year];
+      if (department === "all") {
+        for (const dept of departments) {
+          await fetchDepartmentData(dept.value, citesPerYear, publicationsPerYear);
         }
-      });
+      } else {
+        await fetchDepartmentData(department, citesPerYear, publicationsPerYear);
+      }
 
-      // تحويل البيانات لشكل مناسب للرسم البياني
-      const formattedData = Object.keys(citesPerYear)
-        .sort((a, b) => parseInt(a) - parseInt(b))
-        .map((year) => ({
-          year: parseInt(year),
-          cites: citesPerYear[year],
-        }));
+      const years = Object.keys(citesPerYear).map(year => parseInt(year)).sort();
+      
+      const formattedData = years.map((year) => ({
+        year,
+        citations: citesPerYear[year] || 0,
+        publications: publicationsPerYear[year] || 0,
+      }));
 
-      console.log("Formatted Data:", formattedData); // للتأكد من البيانات
       setData(formattedData);
     } catch (error) {
-      console.error("Error fetching cites_per_year by department:", error);
+      console.error("Error fetching citation data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (selectedCollege && selectedDepartment) {
-      fetchCitesPerYearByDepartment(selectedCollege, selectedDepartment);
-    }
-  }, [selectedCollege, selectedDepartment]);
+  const fetchDepartmentData = async (department, citesPerYear, publicationsPerYear) => {
+    const facultyRef = collection(db, `colleges/faculty_computing/departments/${department}/faculty_members`);
+    const facultySnapshot = await getDocs(facultyRef);
 
-  // عرض لودر عند التحميل
+    const publicationsPromises = facultySnapshot.docs.map(async (facultyDoc) => {
+      const facultyData = facultyDoc.data();
+      const facultyCitesPerYear = facultyData.cites_per_year || {};
+
+      // Add to total citations per year
+      for (const year in facultyCitesPerYear) {
+        citesPerYear[year] = (citesPerYear[year] || 0) + facultyCitesPerYear[year];
+      }
+
+      // Fetch publications to count by year
+      const publicationsRef = collection(
+        db,
+        `colleges/faculty_computing/departments/${department}/faculty_members/${facultyDoc.id}/publications`
+      );
+      const publicationsSnapshot = await getDocs(publicationsRef);
+
+      publicationsSnapshot.docs.forEach(pubDoc => {
+        const pubData = pubDoc.data();
+        const pubYear = pubData.pub_year;
+        
+        if (pubYear) {
+          publicationsPerYear[pubYear] = (publicationsPerYear[pubYear] || 0) + 1;
+        }
+      });
+    });
+
+    await Promise.all(publicationsPromises);
+  };
+
+  useEffect(() => {
+    if (selectedDepartment) {
+      fetchCitesPerYear(selectedDepartment);
+    }
+  }, [selectedDepartment]);
+
+  const filteredData = useMemo(() => {
+    if (dateRange === "all") return data;
+    
+    const currentYear = new Date().getFullYear();
+    
+    switch(dateRange) {
+      case "5years":
+        return data.filter(item => item.year >= currentYear - 5);
+      case "10years":
+        return data.filter(item => item.year >= currentYear - 10);
+      default:
+        return data;
+    }
+  }, [data, dateRange]);
+  
+  const totalCitations = useMemo(() => {
+    return filteredData.reduce((sum, item) => sum + item.citations, 0);
+  }, [filteredData]);
+  
+  const totalPublications = useMemo(() => {
+    return filteredData.reduce((sum, item) => sum + item.publications, 0);
+  }, [filteredData]);
+  
+  const averageCitationsPerYear = useMemo(() => {
+    return filteredData.length > 0 ? Math.round(totalCitations / filteredData.length) : 0;
+  }, [filteredData, totalCitations]);
+  
+  const maxCitationsYear = useMemo(() => {
+    if (filteredData.length === 0) return null;
+    return filteredData.reduce((max, item) => item.citations > max.citations ? item : max, filteredData[0]);
+  }, [filteredData]);
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-tooltip" style={{ 
+          backgroundColor: 'white', 
+          padding: '10px', 
+          border: `1px solid ${colors.border}`,
+          borderRadius: '4px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
+        }}>
+          <p className="label" style={{ 
+            margin: 0, 
+            fontWeight: 600, 
+            fontSize: '14px',
+            color: colors.text 
+          }}>{`Year: ${label}`}</p>
+          <p style={{ 
+            margin: '5px 0 0 0', 
+            fontSize: '14px',
+            color: colors.primary 
+          }}>{`Citations: ${payload[0].value}`}</p>
+          {payload[0].payload.publications && (
+            <p style={{ 
+              margin: '5px 0 0 0', 
+              fontSize: '14px',
+              color: colors.text,
+              opacity: 0.8
+            }}>{`Publications: ${payload[0].payload.publications}`}</p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <GridLoader size={15} color={"#123abc"} loading={true} />
+      <div style={{ 
+        backgroundColor: colors.cardBg,
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        border: `1px solid ${colors.border}`,
+        padding: '24px',
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '500px',
+        width: '100%' // Ensure full width
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="loader" style={{
+            border: '3px solid #f3f3f3',
+            borderTop: `3px solid ${colors.primary}`,
+            borderRadius: '50%',
+            width: '30px',
+            height: '30px',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto'
+          }}></div>
+          <p style={{ marginTop: '12px', color: colors.text, opacity: 0.7 }}>Loading citation data...</p>
+        </div>
       </div>
     );
   }
 
-  // عرض رسالة في حال عدم وجود بيانات
-  if (!data || data.length === 0) {
-    return <div>No citation data available for this department.</div>;
+  if (data.length === 0) {
+    return (
+      <div style={{ 
+        backgroundColor: colors.cardBg,
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        border: `1px solid ${colors.border}`,
+        padding: '24px',
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '500px',
+        width: '100%' // Ensure full width
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ 
+            fontSize: '16px', 
+            fontWeight: 500, 
+            color: colors.text, 
+            margin: 0 
+          }}>
+            No citation data available
+          </p>
+          <p style={{ fontSize: '14px', color: colors.text, opacity: 0.7, marginTop: '8px' }}>
+            Please select another department
+          </p>
+        </div>
+      </div>
+    );
   }
 
+  // Main component with fixed height regardless of content
   return (
     <motion.div
-      className="bg-white shadow-lg rounded-xl p-6 border border-gray-300 mb-8"
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
+      transition={{ duration: 0.3 }}
+      ref={chartRef}
+      style={{
+        backgroundColor: colors.cardBg,
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        border: `1px solid ${colors.border}`,
+        marginBottom: '24px',
+        width: '100%',
+        height: '500px', // Fixed height regardless of content
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden' // Prevent overflow outside boundaries
+      }}
     >
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Citations Per Year for Department</h2>
-
-      <div style={{ width: "100%", height: 400 }}>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-            <XAxis dataKey="year" stroke="#333" />
-            <YAxis stroke="#333" />
-            <Tooltip
-              contentStyle={{ backgroundColor: "white", borderColor: "#ccc", color: "#333" }}
-              itemStyle={{ color: "#333" }}
+      {/* Header section */}
+      <div style={{ 
+        padding: '20px 24px', 
+        borderBottom: `1px solid ${colors.border}`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexShrink: 0 // Don't allow this section to shrink
+      }}>
+        <div>
+          <h2 style={{ 
+            margin: 0, 
+            fontSize: '18px', 
+            fontWeight: 600, 
+            color: colors.text 
+          }}>
+            Citations Overview
+          </h2>
+          <p style={{ 
+            margin: '5px 0 0 0', 
+            fontSize: '14px', 
+            color: colors.text, 
+            opacity: 0.7 
+          }}>
+            {departments.find(d => d.value === selectedDepartment)?.label || 'All Departments'}
+          </p>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* Simple time range selector */}
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: colors.background,
+              fontSize: '14px',
+              color: colors.text,
+              cursor: 'pointer'
+            }}
+          >
+            <option value="5years">Last 5 Years</option>
+            <option value="10years">Last 10 Years</option>
+            <option value="all">All Time</option>
+          </select>
+          
+          {/* Download button */}
+          <button 
+            onClick={downloadChart}
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px',
+              borderRadius: '6px'
+            }}
+            title="Download as image"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={colors.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Stats tiles */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '20px',
+        padding: '20px 24px',
+        flexShrink: 0 // Don't allow this section to shrink
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '14px', margin: 0, color: colors.text, opacity: 0.7 }}>Total Citations</p>
+          <h3 style={{ fontSize: '28px', margin: '8px 0 0 0', fontWeight: 600, color: colors.primary }}>
+            {totalCitations.toLocaleString()}
+          </h3>
+        </div>
+        
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '14px', margin: 0, color: colors.text, opacity: 0.7 }}>Avg. Per Year</p>
+          <h3 style={{ fontSize: '28px', margin: '8px 0 0 0', fontWeight: 600, color: colors.primary }}>
+            {averageCitationsPerYear.toLocaleString()}
+          </h3>
+        </div>
+        
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '14px', margin: 0, color: colors.text, opacity: 0.7 }}>Publications</p>
+          <h3 style={{ fontSize: '28px', margin: '8px 0 0 0', fontWeight: 600, color: colors.primary }}>
+            {totalPublications.toLocaleString()}
+          </h3>
+        </div>
+      </div>
+      
+      {/* Chart - full height since we're not showing publications */}
+      <div style={{ 
+        padding: '0 16px 24px 0', 
+        flex: 1, // Take remaining space
+        minHeight: '220px' // Minimum height for the chart
+      }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={filteredData}
+            margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={colors.border} />
+            <XAxis 
+              dataKey="year" 
+              tick={{ fontSize: 12, fill: colors.text }}
+              tickLine={{ stroke: colors.border }}
+              axisLine={{ stroke: colors.border }}
             />
-            <Legend />
-            <Bar dataKey="cites" fill="#4da7d0" barSize={30} />
-          </BarChart>
+            <YAxis 
+              tick={{ fontSize: 12, fill: colors.text }}
+              tickLine={{ stroke: colors.border }}
+              axisLine={{ stroke: colors.border }}
+              tickFormatter={(value) => value.toLocaleString()}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Line
+              type="monotone"
+              dataKey="citations"
+              stroke={colors.primary}
+              strokeWidth={3}
+              dot={{ r: 4, fill: colors.primary, strokeWidth: 0 }}
+              activeDot={{ r: 6, fill: colors.primary, strokeWidth: 2, stroke: 'white' }}
+            />
+          </LineChart>
         </ResponsiveContainer>
       </div>
+      
+      {/* Footer with peak year */}
+      {maxCitationsYear && (
+        <div style={{ 
+          borderTop: `1px solid ${colors.border}`,
+          padding: '16px 24px',
+          fontSize: '14px',
+          color: colors.text,
+          flexShrink: 0 // Don't allow this section to shrink
+        }}>
+          <strong>Peak Year:</strong> {maxCitationsYear.year} with {maxCitationsYear.citations.toLocaleString()} citations
+        </div>
+      )}
     </motion.div>
   );
 };
 
-export default CitesPerYearChartDepartment;
+export default ModernCitationsChart;

@@ -1,86 +1,270 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { db } from '../firebaseConfig';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Avatar, Card, CardContent, Grid, Link } from "@mui/material";
-import { KeyboardArrowDown, KeyboardArrowUp, ArrowUpward, ArrowDownward } from "@mui/icons-material";
-import Header from '../components/common/Header';
+import { doc, getDoc, collection, getDocs, collectionGroup } from 'firebase/firestore';
 import { GridLoader } from 'react-spinners';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  Paper, 
+  IconButton, 
+  Collapse, 
+  Box, 
+  Typography, 
+  Avatar, 
+  Card, 
+  CardContent, 
+  Grid, 
+  Link,
+  Chip,
+  Button,
+  Stack,
+  Divider,
+  alpha,
+  createTheme,
+  ThemeProvider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tabs,
+  Tab
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { 
+  KeyboardArrowDown, 
+  KeyboardArrowUp, 
+  ArrowUpward, 
+  ArrowDownward,
+  School,
+  Email,
+  Business,
+  LocationOn,
+  BookOutlined, 
+  Subject,
+  MenuBook,
+  Groups,
+  Bookmark,
+  FileCopy,
+  Link as LinkIcon,
+  Language,
+  LocalOffer,
+  Info,
+  ArticleOutlined,
+  FormatQuote,
+  VisibilityOutlined,
+  Add,
+  ContentCopy
+} from "@mui/icons-material";
+import Header from '../components/common/Header';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: 'rgb(77, 167, 208)',
+      light: 'rgb(126, 195, 223)',
+      dark: 'rgb(54, 116, 145)',
+    },
+    secondary: {
+      main: 'rgb(77, 167, 208)',
+      light: 'rgb(126, 195, 223)',
+      dark: 'rgb(54, 116, 145)',
+    },
+  },
+});
+
+const PublicationCard = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+  borderRadius: 8,
+  transition: 'box-shadow 0.3s',
+  overflow: 'hidden',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+  }
+}));
+
+const PublicationChip = styled(Chip)(({ theme, clickable }) => ({
+  margin: theme.spacing(0.5),
+  fontSize: '0.75rem',
+  height: 24,
+  cursor: clickable ? 'pointer' : 'default',
+  '&:hover': clickable ? {
+    backgroundColor: alpha(theme.palette.primary.main, 0.1),
+    borderColor: theme.palette.primary.main,
+  } : {}
+}));
+
+const MetricsCard = styled(Card)(({ theme }) => ({
+  backgroundColor: alpha(theme.palette.primary.light, 0.06),
+  padding: theme.spacing(1.5),
+  textAlign: 'center',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  boxShadow: 'none',
+  borderRadius: 8
+}));
+
+const CollaboratorBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: theme.spacing(2),
+  padding: theme.spacing(1),
+  borderRadius: theme.spacing(1),
+  transition: 'background-color 0.2s',
+  cursor: 'pointer',
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+  }
+}));
+
+const ProfileSection = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  borderRadius: 8,
+  overflow: 'hidden',
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+  marginBottom: theme.spacing(2),
+  color: theme.palette.primary.main,
+  borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+  paddingBottom: theme.spacing(1),
+}));
+
+const LoadMoreButton = styled(Button)(({ theme }) => ({
+  width: '100%',
+  marginTop: theme.spacing(1),
+  borderRadius: theme.spacing(1),
+  textTransform: 'none',
+  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+  color: theme.palette.primary.main,
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.light, 0.2),
+  },
+}));
 
 const ResearcherProfilePage = () => {
   const { scholar_id } = useParams(); 
+  const navigate = useNavigate();
   const [researcherData, setResearcherData] = useState(null);
   const [userData, setUserData] = useState(null); 
   const [publications, setPublications] = useState([]);
   const [coauthors, setCoauthors] = useState([]);
+  const [allResearchers, setAllResearchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortOption, setSortOption] = useState({ field: "citations", order: "desc" }); 
-
-  const fetchResearcherData = async () => {
-    if (!scholar_id) {
-      console.error('Scholar ID غير موجود في الرابط');
-      return;
-    }
-
-    try {
-      let researcherDoc = null;
-      let publicationsData = [];
-      let researcherDataFetched = null;
-
-      const collegesSnapshot = await getDocs(collection(db, 'colleges'));
-      for (const collegeDoc of collegesSnapshot.docs) {
-        const collegeId = collegeDoc.id;
-        const departmentsSnapshot = await getDocs(collection(db, `colleges/${collegeId}/departments`));
-        for (const departmentDoc of departmentsSnapshot.docs) {
-          const departmentId = departmentDoc.id;
-
-          const researcherRef = doc(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}`);
-          const docSnap = await getDoc(researcherRef);
-
-          if (docSnap.exists()) {
-            researcherDoc = docSnap;
-            researcherDataFetched = docSnap.data();
-
-            const publicationsRef = collection(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}/publications`);
-            const publicationsSnapshot = await getDocs(publicationsRef);
-            publicationsData = publicationsSnapshot.docs.map((doc) => doc.data());
-
-            break;
-          }
-        }
-        if (researcherDoc) break;
-      }
-
-      if (researcherDoc && researcherDataFetched) {
-        setResearcherData(researcherDataFetched);
-        setPublications(publicationsData);
-
-        if (researcherDataFetched.coauthors) {
-          setCoauthors(researcherDataFetched.coauthors);
-        }
-      } else {
-        console.error('لايوجد بيانات للباحث' );
-      }
-
-      const userQuerySnapshot = await getDocs(collection(db, 'users'));
-      const foundUser = userQuerySnapshot.docs
-        .map(doc => doc.data())
-        .find(user => user.scholar_id === scholar_id);
-      
-      if (foundUser) {
-        setUserData(foundUser);
-      } else {
-        console.error('لايوجد بيانات للباحث');
-      }
-    } catch (error) {
-      console.error('Error fetching researcher data:', error);
-    }
-    setLoading(false);
-  };
+  const [expandedAbstracts, setExpandedAbstracts] = useState({});
+  const [expandedRows, setExpandedRows] = useState({});
+  const [displayedCoauthorsCount, setDisplayedCoauthorsCount] = useState(5);
+  const [selectedPublication, setSelectedPublication] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
+    setLoading(true);
+    
+    const fetchResearcherData = async () => {
+      if (!scholar_id) {
+        console.error('Scholar ID not found in URL');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const facultyRef = collectionGroup(db, "faculty_members");
+        const facultySnapshot = await getDocs(facultyRef);
+        const allResearchersData = facultySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          department: doc.ref.parent.parent.id,
+          ...doc.data(),
+        }));
+        
+        if (!isMounted.current) return;
+        setAllResearchers(allResearchersData);
+
+        let researcherDoc = null;
+        let publicationsData = [];
+        let researcherDataFetched = null;
+        
+        const collegesSnapshot = await getDocs(collection(db, 'colleges'));
+        for (const collegeDoc of collegesSnapshot.docs) {
+          if (!isMounted.current) return;
+          
+          const collegeId = collegeDoc.id;
+          const departmentsSnapshot = await getDocs(collection(db, `colleges/${collegeId}/departments`));
+          
+          for (const departmentDoc of departmentsSnapshot.docs) {
+            if (!isMounted.current) return;
+            
+            const departmentId = departmentDoc.id;
+            const researcherRef = doc(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}`);
+            const docSnap = await getDoc(researcherRef);
+
+            if (docSnap.exists()) {
+              researcherDoc = docSnap;
+              researcherDataFetched = docSnap.data();
+
+              const publicationsRef = collection(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members/${scholar_id}/publications`);
+              const publicationsSnapshot = await getDocs(publicationsRef);
+              publicationsData = publicationsSnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+                authors: doc.data().authors || researcherDataFetched.name || ''
+              }));
+              
+              break;
+            }
+          }
+          if (researcherDoc) break;
+        }
+
+        if (!isMounted.current) return;
+
+        if (researcherDoc && researcherDataFetched) {
+          setResearcherData(researcherDataFetched);
+          setPublications(publicationsData);
+
+          if (researcherDataFetched.coauthors) {
+            setCoauthors(researcherDataFetched.coauthors);
+          }
+        }
+
+        const userQuerySnapshot = await getDocs(collection(db, 'users'));
+        if (!isMounted.current) return;
+        
+        const foundUser = userQuerySnapshot.docs
+          .map(doc => doc.data())
+          .find(user => user.scholar_id === scholar_id);
+        
+        if (foundUser) {
+          setUserData(foundUser);
+        }
+      } catch (error) {
+        console.error('Error fetching researcher data:', error);
+      } finally {
+        if (isMounted.current) {
+          setLoading(false);
+        }
+      }
+    };
+
     fetchResearcherData();
+
+    return () => {
+      isMounted.current = false;
+    };
   }, [scholar_id]);
 
   const sortPublications = () => {
@@ -109,234 +293,1026 @@ const ResearcherProfilePage = () => {
     }
   };
 
-  const CollapsibleRow = ({ publication }) => {
-    const [open, setOpen] = useState(false);
+  const toggleAbstract = (pubId) => {
+    setExpandedAbstracts(prev => ({
+      ...prev,
+      [pubId]: !prev[pubId]
+    }));
+  };
 
-    return (
-      <>
-        <TableRow>
-          <TableCell>
-            <IconButton
-              aria-label="expand row"
-              size="small"
-              onClick={() => setOpen(!open)}
-              sx={{ color: open ? 'blue' : 'inherit' }} 
-            >
-              {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-            </IconButton>
-          </TableCell>
-          <TableCell>
-            <Typography variant="body1" fontWeight="bold">{publication.title || "No Title"}</Typography>
-            {publication.authors && (
-              <Typography variant="body2" color="textSecondary">
-                Authors: {Array.isArray(publication.authors) ? publication.authors.join(', ') : publication.authors}
-              </Typography>
-            )}
-            {publication.publisher && (
-              <Typography variant="body2" style={{ color: "#4F46E5" }}>
-                Publisher: {publication.publisher}
-              </Typography>
-            )}
-          </TableCell>
-          <TableCell>{publication.pub_year || "Unknown Year"}</TableCell>
-          <TableCell>{publication.num_citations || 0}</TableCell>
-        </TableRow>
-        <TableRow>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-            <Collapse in={open} timeout="auto" unmountOnExit>
-              <Box margin={1}>
-                <Typography variant="h6" gutterBottom component="div">
-                  More Details
-                </Typography>
-                {Object.keys(publication).map(
-                  (field) =>
-                    !["title", "pub_year", "publisher", "num_citations", "authors", "pub_url"].includes(field) && (
-                      <Typography key={field} variant="body2">
-                        <strong>{field.replace(/_/g, " ").toUpperCase()}:</strong>{" "}
-                        {typeof publication[field] === 'object' ? JSON.stringify(publication[field]) : publication[field]}
-                      </Typography>
-                    )
-                )}
-                {publication.pub_url && (
-                  <Typography variant="body2">
-                    <strong>Pub URL: </strong>
-                    <Link href={publication.pub_url} target="_blank" rel="noopener" style={{ color: '#0072e5' }}>
-                      {publication.pub_url}
-                    </Link>
-                  </Typography>
-                )}
-              </Box>
-            </Collapse>
-          </TableCell>
-        </TableRow>
-      </>
+  const toggleExpandRow = (pubId) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [pubId]: !prev[pubId]
+    }));
+  };
+
+  const findScholarIdByName = async (name) => {
+    if (!name) return null;
+    
+    const cleanName = name.trim().replace(/[.*()[\]{}]/g, '').toLowerCase();
+    
+    if (coauthors.length > 0) {
+      const coauthorMatch = coauthors.find(co => 
+        co.name && co.name.toLowerCase().includes(cleanName) || cleanName.includes(co.name.toLowerCase())
+      );
+      if (coauthorMatch?.scholar_id) return coauthorMatch.scholar_id;
+    }
+    
+    if (allResearchers.length > 0) {
+      const researcherMatch = allResearchers.find(r => 
+        r.name && r.name.toLowerCase().includes(cleanName) || cleanName.includes(r.name.toLowerCase())
+      );
+      if (researcherMatch?.scholar_id) return researcherMatch.scholar_id;
+    }
+    
+    try {
+      const userQuerySnapshot = await getDocs(collection(db, 'users'));
+      const foundUser = userQuerySnapshot.docs
+        .map(doc => doc.data())
+        .find(user => {
+          const fullName = (user.firstName + ' ' + user.lastName).toLowerCase();
+          return fullName.includes(cleanName) || cleanName.includes(fullName);
+        });
+      
+      if (foundUser?.scholar_id) return foundUser.scholar_id;
+      
+      const collegesSnapshot = await getDocs(collection(db, 'colleges'));
+      
+      for (const collegeDoc of collegesSnapshot.docs) {
+        const collegeId = collegeDoc.id;
+        const departmentsSnapshot = await getDocs(collection(db, `colleges/${collegeId}/departments`));
+        
+        for (const departmentDoc of departmentsSnapshot.docs) {
+          const departmentId = departmentDoc.id;
+          const facultySnapshot = await getDocs(
+            collection(db, `colleges/${collegeId}/departments/${departmentId}/faculty_members`)
+          );
+          
+          const foundFaculty = facultySnapshot.docs.find(doc => {
+            const faculty = doc.data();
+            return faculty.name && (
+              faculty.name.toLowerCase().includes(cleanName) || 
+              cleanName.includes(faculty.name.toLowerCase())
+            );
+          });
+          
+          if (foundFaculty) return foundFaculty.id;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error searching for scholar:", error);
+      return null;
+    }
+  };
+
+  const handleAuthorClick = async (authorName) => {
+    if (!authorName) return;
+    
+    if (researcherData?.name && 
+        (researcherData.name.toLowerCase().includes(authorName.toLowerCase()) || 
+         authorName.toLowerCase().includes(researcherData.name.toLowerCase()))) {
+      navigate(`/researcher/${scholar_id}`);
+      return;
+    }
+    
+    setLoading(true);
+    
+    const foundScholarId = await findScholarIdByName(authorName);
+    
+    if (foundScholarId) {
+      console.log(`Found scholar ID for ${authorName}: ${foundScholarId}`);
+      navigate(`/researcher/${foundScholarId}`);
+    } else {
+      console.log(`No scholar ID found for ${authorName}`);
+    }
+    
+    setLoading(false);
+  };
+
+  const handleCoauthorClick = (coauthor) => {
+    if (coauthor && coauthor.scholar_id) {
+      navigate(`/researcher/${coauthor.scholar_id}`);
+    } else {
+      console.log(`No scholar_id found for coauthor`);
+    }
+  };
+
+  const handleLoadMoreCoauthors = () => {
+    setDisplayedCoauthorsCount(prevCount => 
+      Math.min(prevCount + 5, coauthors.length)
     );
   };
 
-  if (loading) {
+  const openPublicationDetails = (publication) => {
+    setSelectedPublication(publication);
+    setDetailDialogOpen(true);
+  };
+
+  const PublicationDetailDialog = ({ open, onClose, publication }) => {
+    const [activeTab, setActiveTab] = useState(0);
+    
+    if (!publication) return null;
+    
+    const handleTabChange = (event, newValue) => {
+      setActiveTab(newValue);
+    };
+    
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="absolute inset-0 flex justify-center items-center">
-          <GridLoader size={30} color={"#123abc"} />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 bg-gray-50 min-h-screen overflow-y-auto">
-      <motion.div
-        className="bg-white shadow-lg border-b border-gray-300"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+      <Dialog 
+        open={open} 
+        onClose={onClose} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
+          }
+        }}
       >
-        <Header title="Researcher Profile" />
-      </motion.div>
-
-      <motion.div
-        className="p-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Grid container spacing={4}>
-          <Grid item xs={8}> 
-            <motion.div
-              className="mb-8 bg-white shadow-lg p-6 rounded-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="flex items-center mb-3">
-                <Avatar
-                  alt="Researcher Profile Picture"
-                  src={researcherData?.url_picture || "/default-avatar.png"}
-                  sx={{ width: 120, height: 120, marginRight: '20px' }}
-                />
-                <div>
-                  <Typography variant="h5" gutterBottom>
-                    {userData?.firstName + ' ' + userData?.lastName || "Researcher"}
-                  </Typography>
-
-                  <p><strong>Affiliation:</strong> {researcherData?.affiliation || ""}</p>
-                 <p><strong>Institution:</strong> {researcherData?.institution || ""}</p>
-                  <p><strong>Email:</strong> {userData?.email || ""}</p>
-                  <p><strong>Interests:</strong> {researcherData?.interests ? researcherData.interests.join(", ") : ""}</p>
-                  <p><strong>Scholar ID:</strong> {researcherData?.scholar_id || userData?.scholar_id || ""}</p>
-
-                </div>
-              </div>
-            </motion.div>
-          </Grid>
-
-          <Grid item xs={4}>
-            <motion.div
-              className="mb-8 bg-white shadow-lg p-6 rounded-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Citation Metrics
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>H-index:</strong> {researcherData?.hindex || "N/A"}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>H-index (Last 5 years):</strong> {researcherData?.hindex5y || "N/A"}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>i10-index:</strong> {researcherData?.i10index || "N/A"}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>i10-index (Last 5 years):</strong> {researcherData?.i10index5y || "N/A"}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Cited By:</strong> {researcherData?.citedby || "N/A"}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
-
-          <Grid item xs={coauthors.length > 0 ? 9 : 11}> 
-            <motion.div
-              className="bg-white shadow-lg p-6 rounded-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <h3 className="text-lg font-medium mb-2">Publications</h3>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell />
-                      <TableCell>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }} onClick={() => handleSort("year")}>
-                          <span style={{ fontSize: "12px", marginRight: "5px" }}>Year</span>
-                          <ArrowUpward fontSize="small" style={{ opacity: sortOption.field === "year" && sortOption.order === "asc" ? 1 : 0.2 }} />
-                          <ArrowDownward fontSize="small" style={{ opacity: sortOption.field === "year" && sortOption.order === "desc" ? 1 : 0.2 }} />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }} onClick={() => handleSort("citations")}>
-                          <span style={{ fontSize: "12px", marginRight: "5px" }}>Citations</span>
-                          <ArrowUpward fontSize="small" style={{ opacity: sortOption.field === "citations" && sortOption.order === "asc" ? 1 : 0.2 }} />
-                          <ArrowDownward fontSize="small" style={{ opacity: sortOption.field === "citations" && sortOption.order === "desc" ? 1 : 0.2 }} />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {sortPublications().map((publication, index) => (
-                      <CollapsibleRow key={index} publication={publication} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </motion.div>
-          </Grid>
-
-          {coauthors.length > 0 && (
-            <Grid item xs={3}> 
-              <motion.div
-                className="bg-white shadow-lg p-6 rounded-lg"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <h3 className="text-lg font-medium mb-2">Coauthors</h3>
-                <Card style={{ padding: '10px', fontSize: '0.85rem', maxWidth: '100%' }}>
-                  <CardContent>
-                    {coauthors.map((coauthor, index) => (
-                      <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-                        <Avatar
-                          alt={coauthor.name}
-                          src="/default-avatar.png"
-                          sx={{ width: 30, height: 30, marginRight: '10px' }}
-                        />
-                        <div>
-                          <Typography variant="body2" style={{ fontSize: '0.85rem' }}>
-                            <strong>Name:</strong> {coauthor.name}
-                          </Typography>
-                          <Typography variant="body2" style={{ fontSize: '0.85rem', color: "#666" }}>
-                            <strong>Affiliation:</strong> {coauthor.affiliation}
-                          </Typography>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </motion.div>
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: alpha(theme.palette.primary.main, 0.05)
+        }}>
+          <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+            {publication.title}
+          </Typography>
+          
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {typeof publication.authors === 'string' 
+              ? publication.authors 
+              : Array.isArray(publication.authors) 
+                ? publication.authors.join(', ')
+                : "Unknown Authors"}
+          </Typography>
+        </DialogTitle>
+        
+        <DialogContent>
+          <Tabs 
+            value={activeTab} 
+            onChange={handleTabChange} 
+            sx={{ mb: 3, mt: 1 }}
+            variant="scrollable"
+            scrollButtons="auto"
+            textColor="primary"
+            indicatorColor="primary"
+          >
+            <Tab label="Details" icon={<Info />} iconPosition="start" />
+            <Tab label="Abstract" icon={<Subject />} iconPosition="start" />
+            {publication.keywords && <Tab label="Keywords" icon={<LocalOffer />} iconPosition="start" />}
+          </Tabs>
+          
+          {activeTab === 0 && (
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  Publication Information
+                </Typography>
+                
+                <Stack spacing={2} sx={{ mb: 3 }}>
+                  {publication.pub_year && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <BookOutlined color="primary" sx={{ fontSize: '1.1rem' }} />
+                      <Typography variant="body2">
+                        Year: {publication.pub_year}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {publication.journal_name && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <MenuBook color="primary" sx={{ fontSize: '1.1rem' }} />
+                      <Typography variant="body2">
+                        Journal: {publication.journal_name}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {publication.num_citations !== undefined && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <FormatQuote color="primary" sx={{ fontSize: '1.1rem' }} />
+                      <Typography variant="body2">
+                        Citations: {publication.num_citations}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {publication.doi && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <LinkIcon color="primary" sx={{ fontSize: '1.1rem' }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          textDecoration: 'underline', 
+                          cursor: 'pointer',
+                          '&:hover': { color: 'primary.main' } 
+                        }}
+                        onClick={() => window.open(`https://doi.org/${publication.doi}`, '_blank')}
+                      >
+                        DOI: {publication.doi}
+                      </Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  Additional Information
+                </Typography>
+                
+                <Stack spacing={2}>
+                  {publication.publisher && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Bookmark color="primary" sx={{ fontSize: '1.1rem' }} />
+                      <Typography variant="body2">
+                        Publisher: {publication.publisher}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {publication.pub_type && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <FileCopy color="primary" sx={{ fontSize: '1.1rem' }} />
+                      <Typography variant="body2">
+                        Type: {publication.pub_type}
+                      </Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </Grid>
+              
+              <Grid item xs={12}>
+                {publication.pub_url && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Language />}
+                    href={publication.pub_url}
+                    target="_blank"
+                    rel="noopener"
+                    sx={{ 
+                      mt: 2,
+                      borderRadius: 8,
+                      textTransform: 'none'
+                    }}
+                  >
+                    View Full Publication
+                  </Button>
+                )}
+              </Grid>
             </Grid>
           )}
-        </Grid>
-      </motion.div>
-    </div>
+          
+          {activeTab === 1 && (
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+                Abstract
+              </Typography>
+              
+              {publication.abstract ? (
+                <Typography variant="body2" paragraph sx={{ lineHeight: 1.7 }}>
+                  {publication.abstract}
+                </Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No abstract available for this publication.
+                </Typography>
+              )}
+            </Box>
+          )}
+          
+          {activeTab === 2 && publication.keywords && (
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+                Keywords
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {typeof publication.keywords === 'string' ? (
+                  publication.keywords.split(/[,;]/).map((keyword, idx) => (
+                    <Chip
+                      key={idx}
+                      label={keyword.trim()}
+                      size="small"
+                      sx={{ 
+                        fontSize: '0.75rem',
+                        borderRadius: 8,
+                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                        color: theme.palette.primary.main
+                      }}
+                    />
+                  ))
+                ) : Array.isArray(publication.keywords) ? (
+                  publication.keywords.map((keyword, idx) => (
+                    <Chip
+                      key={idx}
+                      label={keyword}
+                      size="small"
+                      sx={{ 
+                        fontSize: '0.75rem',
+                        borderRadius: 8,
+                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                        color: theme.palette.primary.main
+                      }}
+                    />
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No keywords available.
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 8 }}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  const PublicationItem = ({ publication }) => {
+    const isAbstractExpanded = expandedAbstracts[publication.id] || false;
+    const isRowExpanded = expandedRows[publication.id] || false;
+    const hasLongAbstract = publication.abstract && publication.abstract.length > 200;
+    
+    const fieldsToShow = Object.keys(publication).filter((field) => {
+      const value = publication[field];
+      return (
+        value &&
+        typeof value !== "function" &&
+        ![
+          "title",
+          "pub_year",
+          "num_citations",
+          "authors",
+          "cites_per_year",
+          "cites_id",
+          "id",
+        ].includes(field)
+      );
+    });
+
+    return (
+      <PublicationCard>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box sx={{ width: '100%' }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  mb: 1, 
+                  fontWeight: 500, 
+                  color: theme.palette.primary.main,
+                  fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
+                  cursor: 'pointer',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+                onClick={() => openPublicationDetails(publication)}
+              >
+                {publication.title || "Untitled Publication"}
+              </Typography>
+              
+              <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.5 }}>
+                {publication.authors && (
+                  typeof publication.authors === 'string' ? 
+                    publication.authors.split(/[,;]\s*|(?:\s+and\s+)/).filter(author => author.trim()).map((author, idx) => (
+                      <PublicationChip
+                        key={idx}
+                        label={author.trim()}
+                        size="small"
+                        variant="outlined"
+                        clickable={true}
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          handleAuthorClick(author.trim());
+                        }}
+                        sx={{
+                          borderColor: theme.palette.primary.main,
+                          '&:hover': {
+                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                            color: theme.palette.primary.dark
+                          }
+                        }}
+                      />
+                    )) :
+                    Array.isArray(publication.authors) ? 
+                      publication.authors.filter(author => author).map((author, idx) => (
+                        <PublicationChip
+                          key={idx}
+                          label={author}
+                          size="small"
+                          variant="outlined"
+                          clickable={true}
+                          onClick={(e) => {
+                            e.stopPropagation(); 
+                            handleAuthorClick(author);
+                          }}
+                          sx={{
+                            borderColor: theme.palette.primary.main,
+                            '&:hover': {
+                              backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                              color: theme.palette.primary.dark
+                            }
+                          }}
+                        />
+                      )) :
+                      <PublicationChip
+                        label={publication.authors}
+                        size="small"
+                        variant="outlined"
+                        clickable={true}
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          handleAuthorClick(publication.authors);
+                        }}
+                        sx={{
+                          borderColor: theme.palette.primary.main,
+                          '&:hover': {
+                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                            color: theme.palette.primary.dark
+                          }
+                        }}
+                      />
+                )}
+              </Stack>
+              
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 1 }}>
+                {publication.pub_year && (
+                  <Chip
+                    icon={<BookOutlined fontSize="small" />}
+                    label={publication.pub_year}
+                    size="small"
+                    sx={{ 
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: 'text.primary',
+                      fontSize: '0.75rem'
+                    }}
+                  />
+                )}
+                
+                {publication.publisher && (
+                  <Chip
+                    icon={<Bookmark fontSize="small" />}
+                    label={publication.publisher}
+                    size="small"
+                    sx={{ 
+                      color: 'text.secondary',
+                      fontSize: '0.75rem'
+                    }}
+                    variant="outlined"
+                  />
+                )}
+                
+                {publication.journal_name && (
+                  <Chip
+                    icon={<MenuBook fontSize="small" />}
+                    label={publication.journal_name}
+                    size="small"
+                    sx={{ 
+                      color: 'text.secondary',
+                      fontSize: '0.75rem'
+                    }}
+                    variant="outlined"
+                  />
+                )}
+                
+                {publication.num_citations !== undefined && (
+                  <Chip
+                    icon={<FormatQuote fontSize="small" />}
+                    label={`${publication.num_citations} Citations`}
+                    size="small"
+                    sx={{ 
+                      color: theme.palette.primary.main,
+                      fontSize: '0.75rem',
+                      fontWeight: 500
+                    }}
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+              
+              {publication.abstract && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography 
+                    variant="subtitle2" 
+                    color="primary"
+                    sx={{ 
+                      mb: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}
+                  >
+                    <Subject fontSize="small" />
+                    Abstract
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ 
+                    ...(hasLongAbstract && !isAbstractExpanded ? {
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    } : {})
+                  }}>
+                    {publication.abstract}
+                  </Typography>
+                  
+                  {hasLongAbstract && (
+                    <Button 
+                      size="small" 
+                      onClick={() => toggleAbstract(publication.id)}
+                      sx={{ mt: 1, fontSize: '0.75rem' }}
+                    >
+                      {isAbstractExpanded ? "Show Less" : "Show More"}
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </Box>
+            
+            <IconButton
+              aria-label="expand publication"
+              size="small"
+              onClick={() => toggleExpandRow(publication.id)}
+              sx={{ ml: 1 }}
+            >
+              {isRowExpanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+            </IconButton>
+          </Box>
+          
+          <Collapse in={isRowExpanded} timeout="auto" unmountOnExit>
+            <Box sx={{ mt: 2 }}>
+              <Divider sx={{ mb: 2 }} />
+              
+              <Grid container spacing={2}>
+                {fieldsToShow.map((field) => (
+                  field !== 'abstract' && (
+                    <Grid item xs={12} sm={6} key={field}>
+                      <Typography 
+                        variant="subtitle2" 
+                        color="primary"
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5
+                        }}
+                      >
+                        {field === 'keywords' && <LocalOffer fontSize="small" />}
+                        {field === 'doi' && <LinkIcon fontSize="small" />}
+                        {field === 'pub_url' && <Language fontSize="small" />}
+                        {!['keywords', 'doi', 'pub_url'].includes(field) && <Info fontSize="small" />}
+                        
+                        {field.replace(/_/g, " ").toUpperCase()}
+                      </Typography>
+                      <Box sx={{ mt: 0.5 }}>
+                        {field === 'keywords' ? (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {typeof publication[field] === 'string' ? (
+                              publication[field].split(/[,;]/).map((keyword, idx) => (
+                                <Chip
+                                  key={idx}
+                                  label={keyword.trim()}
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: '0.7rem',
+                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                    color: theme.palette.primary.main
+                                  }}
+                                />
+                              ))
+                            ) : Array.isArray(publication[field]) ? (
+                              publication[field].map((keyword, idx) => (
+                                <Chip
+                                  key={idx}
+                                  label={keyword}
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: '0.7rem',
+                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                    color: theme.palette.primary.main
+                                  }}
+                                />
+                              ))
+                            ) : (
+                              <Typography variant="body2">{publication[field]}</Typography>
+                            )}
+                          </Box>
+                        ) : field === 'pub_url' || field === 'doi' ? (
+                          <Link 
+                            href={field === 'doi' ? `https://doi.org/${publication[field]}` : publication[field]} 
+                            target="_blank" 
+                            rel="noopener"
+                            variant="body2"
+                            sx={{ 
+                              color: theme.palette.primary.main,
+                              wordBreak: 'break-all'
+                            }}
+                          >
+                            {publication[field]}
+                          </Link>
+                        ) : (
+                          <Typography variant="body2">
+                            {typeof publication[field] === 'object' ? 
+                              JSON.stringify(publication[field]) : 
+                              publication[field]}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                  )
+                ))}
+              </Grid>
+              
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                {publication.pub_url && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Language />}
+                    href={publication.pub_url}
+                    target="_blank"
+                    rel="noopener"
+                    sx={{ 
+                      borderRadius: 8,
+                      textTransform: 'none'
+                    }}
+                  >
+                    View Publication
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          </Collapse>
+        </CardContent>
+      </PublicationCard>
+    );
+  };
+  
+  return (
+    <ThemeProvider theme={theme}>
+      <div className="flex-1 bg-gray-50 min-h-screen overflow-y-auto">
+        <motion.div
+          className="bg-white shadow-lg border-b border-gray-300"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Header title="Researcher Profile" />
+        </motion.div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <GridLoader size={30} color={"#6366F1"} />
+          </div>
+        ) : (
+          <motion.div
+            className="p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Grid container spacing={4}>
+              <Grid item xs={12}> 
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <ProfileSection>
+                    <Card elevation={1}>
+                      <Box sx={{ 
+                        bgcolor: alpha(theme.palette.primary.main, 0.04),
+                        p: { xs: 2, sm: 3 },
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'center', sm: 'flex-start' },
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
+                      }}>
+                        <Avatar
+                          alt="Researcher Profile Picture"
+                          src={researcherData?.url_picture || "/default-avatar.png"}
+                          sx={{ 
+                            width: { xs: 100, sm: 120 },
+                            height: { xs: 100, sm: 120 },
+                            border: '3px solid white',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            mb: { xs: 2, sm: 0 },
+                            mr: { sm: 3 }
+                          }}
+                        />
+                        <Box>
+                          <Typography 
+                            variant="h5" 
+                            gutterBottom
+                            sx={{ 
+                              color: theme.palette.primary.main,
+                              fontSize: { xs: '1.3rem', sm: '1.5rem' }
+                            }}
+                          >
+                            {userData?.firstName && userData?.lastName 
+                              ? `${userData.firstName} ${userData.lastName}` 
+                              : researcherData?.name || "Researcher"}
+                          </Typography>
+
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Business fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2">
+                                <strong>Affiliation:</strong> {researcherData?.affiliation || "Not provided"}
+                              </Typography>
+                            </Box>
+                            
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <LocationOn fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2">
+                                <strong>Institution:</strong> {researcherData?.institution || "Not provided"}
+                              </Typography>
+                            </Box>
+                            
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Email fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2">
+                                <strong>Email:</strong> {userData?.email || "Not provided"}
+                              </Typography>
+                            </Box>
+                            
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <School fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2">
+                                <strong>Scholar ID:</strong> {researcherData?.scholar_id || userData?.scholar_id || "Not provided"}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Box>
+                      
+                      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                        <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+                          Research Interests
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, minHeight: 32 }}>
+                          {researcherData?.interests && researcherData.interests.length > 0 ? (
+                            researcherData.interests.map((interest, index) => (
+                              <Chip 
+                                key={index}
+                                label={interest}
+                                size="small"
+                                sx={{ 
+                                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                  color: theme.palette.primary.main,
+                                  borderRadius: '8px',
+                                  fontSize: '0.75rem'
+                                }}
+                              />
+                            ))
+                          ) : (
+                            <Typography variant="body2" color="text.secondary" sx={{ p: 1, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 1, width: '100%', textAlign: 'center' }}>
+                              No research interests provided
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    </Card>
+                  </ProfileSection>
+                </motion.div>
+              </Grid>
+
+              <Grid item xs={12}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <ProfileSection>
+                    <Card elevation={1}>
+                      <CardContent>
+                        <SectionTitle variant="subtitle1" gutterBottom fontWeight="medium">
+                          <BookOutlined fontSize="small" />
+                          Citation Metrics
+                        </SectionTitle>
+                        
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} sm={4}>
+                            <MetricsCard>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                H-index
+                              </Typography>
+                              <Typography variant="h6" color={theme.palette.primary.main} fontWeight="bold">
+                                {researcherData?.hindex || "N/A"}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                5 year: {researcherData?.hindex5y || "N/A"}
+                              </Typography>
+                            </MetricsCard>
+                          </Grid>
+                          
+                          <Grid item xs={12} sm={4}>
+                            <MetricsCard>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                i10-index
+                              </Typography>
+                              <Typography variant="h6" color={theme.palette.primary.main} fontWeight="bold">
+                                {researcherData?.i10index || "N/A"}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                5 year: {researcherData?.i10index5y || "N/A"}
+                              </Typography>
+                            </MetricsCard>
+                          </Grid>
+                          
+                          <Grid item xs={12} sm={4}>
+                            <MetricsCard>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                Total Citations
+                              </Typography>
+                              <Typography variant="h6" color={theme.palette.primary.main} fontWeight="bold">
+                                {researcherData?.citedby || "N/A"}
+                              </Typography>
+                            </MetricsCard>
+                          </Grid>
+                        </Grid>
+                      </CardContent>
+                    </Card>
+                  </ProfileSection>
+                </motion.div>
+              </Grid>
+
+              <Grid container item xs={12} spacing={4}>
+                <Grid item xs={12} md={8}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <ProfileSection>
+                      <Card elevation={1}>
+                        <CardContent>
+                          <Box sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            mb: 2
+                          }}>
+                            <SectionTitle variant="subtitle1" gutterBottom fontWeight="medium" sx={{ mb: 0 }}>
+                              <ArticleOutlined fontSize="small" />
+                              Publications ({publications.length})
+                            </SectionTitle>
+                            
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Typography variant="body2" sx={{ mr: 1 }}>Sort by:</Typography>
+                              <Box sx={{ 
+                                display: 'flex',
+                                alignItems: 'center',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1,
+                                overflow: 'hidden'
+                              }}>
+                                <Button 
+                                  size="small"
+                                  onClick={() => handleSort("year")}
+                                  sx={{ 
+                                    px:.5,
+                                    color: sortOption.field === "year" ? 'primary.main' : 'text.secondary',
+                                    borderRadius: 0,
+                                    fontWeight: sortOption.field === "year" ? 'bold' : 'normal',
+                                    textTransform: 'none',
+                                    fontSize: '0.75rem'
+                                  }}
+                                  endIcon={
+                                    sortOption.field === "year" ? 
+                                      (sortOption.order === "asc" ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />) : 
+                                      null
+                                  }
+                                >
+                                  Year
+                                </Button>
+                                <Divider orientation="vertical" flexItem />
+                                <Button 
+                                  size="small"
+                                  onClick={() => handleSort("citations")}
+                                  sx={{ 
+                                    px: 1.5,
+                                    color: sortOption.field === "citations" ? 'primary.main' : 'text.secondary',
+                                    borderRadius: 0,
+                                    fontWeight: sortOption.field === "citations" ? 'bold' : 'normal',
+                                    textTransform: 'none',
+                                    fontSize: '0.75rem'
+                                  }}
+                                  endIcon={
+                                    sortOption.field === "citations" ? 
+                                      (sortOption.order === "asc" ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />) : 
+                                      null
+                                  }
+                                >
+                                  Citations
+                                </Button>
+                              </Box>
+                            </Box>
+                          </Box>
+                          
+                          {publications.length > 0 ? (
+                            <Box>
+                              {sortPublications().map((publication, index) => (
+                                <PublicationItem key={index} publication={publication} />
+                              ))}
+                            </Box>
+                          ) : (
+                            <Box sx={{ 
+                              py: 4, 
+                              display: 'flex', 
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              bgcolor: alpha(theme.palette.primary.main, 0.04),
+                              borderRadius: 2
+                            }}>
+                              <Typography variant="body1" color="text.secondary">
+                                No publications found for this researcher
+                              </Typography>
+                            </Box>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </ProfileSection>
+                  </motion.div>
+                </Grid>
+
+                <Grid item xs={12} md={4}>
+                  {coauthors.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <ProfileSection>
+                        <Card elevation={1}>
+                          <CardContent>
+                            <SectionTitle variant="subtitle1" gutterBottom fontWeight="medium">
+                              <Groups fontSize="small" />
+                              Co-authors
+                            </SectionTitle>
+                            
+                            <Box>
+                              {coauthors.slice(0, displayedCoauthorsCount).map((coauthor, index) => (
+                                <CollaboratorBox 
+                                  key={index}
+                                  onClick={() => handleCoauthorClick(coauthor)}
+                                >
+                                  <Avatar
+                                    alt={coauthor.name}
+                                    src="/default-avatar.png"
+                                    sx={{ width: 36, height: 36, mr: 1.5 }}
+                                  />
+                                  <Box>
+                                    <Typography variant="body2" fontWeight="medium">
+                                      {coauthor.name}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {coauthor.affiliation}
+                                    </Typography>
+                                  </Box>
+                                </CollaboratorBox>
+                              ))}
+                              
+                              {displayedCoauthorsCount < coauthors.length && (
+                                <LoadMoreButton 
+                                  startIcon={<Add fontSize="small" />}
+                                  onClick={handleLoadMoreCoauthors}
+                                >
+                                  Load More ({coauthors.length - displayedCoauthorsCount} more)
+                                </LoadMoreButton>
+                              )}
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </ProfileSection>
+                    </motion.div>
+                  )}
+                </Grid>
+              </Grid>
+            </Grid>
+          </motion.div>
+        )}
+
+        <PublicationDetailDialog 
+          open={detailDialogOpen} 
+          onClose={() => setDetailDialogOpen(false)}
+          publication={selectedPublication}
+        />
+      </div>
+    </ThemeProvider>
   );
 };
+
 export default ResearcherProfilePage;

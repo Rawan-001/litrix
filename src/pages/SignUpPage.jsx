@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Steps, Button, Form, Input, message, Modal, Select } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Steps, Button, Form, Input, message, Modal, Select, Alert, Tooltip, Typography } from 'antd';
+import { ArrowLeftOutlined, InfoCircleOutlined, LinkOutlined } from '@ant-design/icons';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
+
 const { Step } = Steps;
 const { Option } = Select;
-
-
+const { Paragraph, Text } = Typography;
 
 const SignUpPage = () => {
   const [current, setCurrent] = useState(0);
@@ -47,11 +47,9 @@ const SignUpPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-
   const handleSelectChange = (value, name) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
 
   const validateScholarUrl = (url) => {
     const regex = /^https?:\/\/scholar\.google\.com\/citations\?(?:.*&)?user=([a-zA-Z0-9_-]+)(?:&.*)?$/;
@@ -59,56 +57,45 @@ const SignUpPage = () => {
     return match ? match[1] : null;
   };
 
-
   const handleSignUp = async () => {
     if (formData.password !== formData.confirmPassword) {
       message.error("Passwords do not match");
       return;
     }
 
-
     const extractedScholarId = validateScholarUrl(formData.googleScholarLink);
     if (!extractedScholarId) {
+      setScholarIdError("Invalid Google Scholar profile link. Please verify the correct format.");
       message.error("Invalid Google Scholar profile link");
       return;
     }
-    try {
-      const response = await fetch('http://localhost:5000/api/scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          scholar_id: scholarId,
-          college: formData.college,
-          department: formData.department
-        })
-      });
-  
-      if (response.ok) {
-        message.success('Scraping started successfully');
-      } else {
-        const errorData = await response.json();
-        message.error(`Error: ${errorData.error}`);
-      }
-    } catch (error) {
-      message.error(`Error: ${error.message}`);
-    }
-
-    
-    if (!formData.college || !formData.department) {
-      message.error("Please select a college and a department");
-      return;
-    }
-
-    console.log(`colleges/${formData.college}/departments/${formData.department}/faculty_members/${extractedScholarId}`);
 
     const docRef = doc(db, `colleges/${formData.college}/departments/${formData.department}/faculty_members/${extractedScholarId}`);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
-      message.error('Scholar ID not found in our records. Please create a Google Scholar account or contact support.');
-      return;
+      
+      try {
+        const pendingDocRef = doc(db, 'pending_profiles', extractedScholarId);
+        await setDoc(pendingDocRef, {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          googleScholarLink: formData.googleScholarLink,
+          college: formData.college,
+          department: formData.department,
+          status: 'pending', 
+        });
+
+        message.success('Profile link is pending approval. We will scrape the information soon.');
+        return; 
+      } catch (error) {
+        message.error(`Error saving pending profile: ${error.message}`);
+        return;
+      }
     }
 
+   
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
@@ -130,7 +117,7 @@ const SignUpPage = () => {
       });
 
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      setIsModalVisible(true); 
+      setIsModalVisible(true);
     } catch (error) {
       message.error(`Error: ${error.message}`);
     }
@@ -138,7 +125,7 @@ const SignUpPage = () => {
 
   const handleConfirm = () => {
     setIsModalVisible(false);
-    navigate('/'); 
+    navigate('/');
   };
 
   const steps = [
@@ -161,7 +148,6 @@ const SignUpPage = () => {
       ),
     },
     {
-      //update
       title: 'Profile Information',
       content: (
         <Form layout="vertical">
@@ -172,7 +158,6 @@ const SignUpPage = () => {
             <Form.Item label="Last Name" required>
               <Input value={formData.lastName} name="lastName" onChange={handleChange} />
             </Form.Item>
-
           </div>
           <div style={styles.gridContainer}>
             <Form.Item label="Phone Number">
@@ -220,11 +205,57 @@ const SignUpPage = () => {
       title: 'Google Scholar Verification',
       content: (
         <Form layout="vertical">
-          <Form.Item label="Google Scholar Profile Link" required validateStatus={scholarIdError ? 'error' : ''} help={scholarIdError}>
-            <Input value={formData.googleScholarLink} name="googleScholarLink" onChange={(e) => {
-              handleChange(e);
-              setScholarIdError('');
-            }} />
+          <Alert
+            message="How to Get the Correct Google Scholar Link"
+            description={
+              <div style={styles.scholarInstructions}>
+                <Paragraph>
+                  <Text strong>Steps:</Text>
+                </Paragraph>
+                <ol style={styles.instructionsList}>
+                  <li>Visit <a href="https://scholar.google.com/" target="_blank" rel="noopener noreferrer">Google Scholar</a></li>
+                  <li>Click on "My Profile" in the top menu</li>
+                  <li>Copy the URL from your browser's address bar</li>
+                </ol>
+                <Paragraph>
+                  <Text strong>The correct link format should look like this:</Text>
+                  <div style={styles.urlExample}>
+                    <LinkOutlined /> https://scholar.google.com/citations?user=XXXXXXXX
+                  </div>
+                </Paragraph>
+                <Paragraph>
+                  <Text type="danger">Note: Make sure the link contains "user=" followed by your unique identifier.</Text>
+                </Paragraph>
+              </div>
+            }
+            type="info"
+            showIcon
+            style={styles.alertBox}
+          />
+          
+          <Form.Item 
+            label={
+              <span>
+                Google Scholar Profile Link
+                <Tooltip title="The link should be in the format https://scholar.google.com/citations?user=XXXXXXXX">
+                  <InfoCircleOutlined style={{ marginLeft: 8 }} />
+                </Tooltip>
+              </span>
+            } 
+            required 
+            validateStatus={scholarIdError ? 'error' : ''} 
+            help={scholarIdError}
+          >
+            <Input 
+              placeholder="https://scholar.google.com/citations?user=XXXXXXXX" 
+              value={formData.googleScholarLink} 
+              name="googleScholarLink" 
+              onChange={(e) => {
+                handleChange(e);
+                setScholarIdError('');
+              }} 
+              prefix={<LinkOutlined />}
+            />
           </Form.Item>
           <p>Verify your Google Scholar profile to continue.</p>
         </Form>
@@ -239,12 +270,14 @@ const SignUpPage = () => {
           Back to Homepage
         </Button>
 
-        <Steps current={current} style={{ marginBottom: 20 }}>
+        <Typography.Title level={2} style={styles.pageTitle}>Create New Account</Typography.Title>
+
+        <Steps current={current} style={{ marginBottom: 30, width: '100%' }} progressDot>
           {steps.map((step, index) => (
             <Step key={index} title={step.title} />
           ))}
         </Steps>
-        <div>{steps[current].content}</div>
+        <div style={styles.formContainer}>{steps[current].content}</div>
         <div style={styles.buttons}>
           {current > 0 && <Button style={{ margin: '0 8px' }} onClick={handlePrev}>Previous</Button>}
           {current < steps.length - 1 && <Button type="primary" onClick={handleNext}>Next</Button>}
@@ -267,28 +300,32 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    height: '100vh',
+    minHeight: '100vh',
     width: '100vw',
     backgroundColor: '#f0f2f5',
-    position: 'relative',
+    padding: '20px 0',
   },
   card: {
     width: '100%',
     maxWidth: '1000px',
     padding: '40px',
-    borderRadius: '8px',
+    borderRadius: '12px',
     backgroundColor: '#fff',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 6px 24px rgba(0, 0, 0, 0.12)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
     position: 'relative',
   },
+  pageTitle: {
+    marginBottom: '30px',
+    color: '#1890ff',
+  },
   backButton: {
     position: 'absolute',
-    top: '-50px',
-    left: '16px',
+    top: '20px',
+    left: '20px',
     fontSize: '16px',
     color: '#1890ff',
   },
@@ -298,11 +335,35 @@ const styles = {
     gap: '16px',
     width: '100%',
   },
+  formContainer: {
+    width: '100%',
+    maxWidth: '800px',
+  },
   buttons: {
-    marginTop: 24,
+    marginTop: 30,
     display: 'flex',
     justifyContent: 'flex-end',
+    width: '100%',
+    maxWidth: '800px',
   },
+  alertBox: {
+    marginBottom: '24px',
+  },
+  scholarInstructions: {
+    padding: '10px',
+  },
+  instructionsList: {
+    margin: '10px 0',
+    paddingLeft: '20px',
+  },
+  urlExample: {
+    backgroundColor: '#f5f5f5',
+    padding: '8px 12px',
+    borderRadius: '4px',
+    marginTop: '8px',
+    fontFamily: 'monospace',
+    display: 'inline-block',
+  }
 };
 
 export default SignUpPage;

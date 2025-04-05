@@ -1,43 +1,45 @@
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+const axios = require('axios');
+const cors = require('cors');
 
-export const fetchResearcherDataById = async (scholarId, college, department) => {
-  const researcherDocRef = doc(
-    db,
-    `colleges/${college}/departments/${department}/faculty_members/${scholarId}`
-  );
-  const researcherDoc = await getDoc(researcherDocRef);
-  return researcherDoc.exists() ? researcherDoc.data() : null;
+admin.initializeApp();
+
+const corsOptions = {
+    origin: true, // السماح لأي أصل بالوصول
+    methods: ['GET', 'POST'], // السماح بطرق GET و POST
 };
 
-export const fetchPublicationsByScholarId = async (scholarId, college, department) => {
-  const publicationsCollection = collection(
-    db,
-    `colleges/${college}/departments/${department}/faculty_members/${scholarId}/publications`
-  );
-  const publicationsSnapshot = await getDocs(publicationsCollection);
+exports.sendEmail = functions.https.onRequest((req, res) => {
+    cors(corsOptions)(req, res, async () => {
+        const { email, registration_link } = req.body;
 
-  const publicationsByYear = {};
+        try {
+            const response = await axios.post('https://api.sendgrid.com/v3/mail/send', {
+                personalizations: [
+                    {
+                        to: [{ email }],
+                        subject: "Registration Link",
+                    },
+                ],
+                from: { email: "litrix.team@gmail.com" }, // تأكد من أن هذا البريد مرتبط بحساب SendGrid
+                content: [
+                    {
+                        type: "text/plain",
+                        value: `Hello, here is your registration link: ${registration_link}`,
+                    },
+                ],
+            }, {
+                headers: {
+                    'Authorization': `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`, // تأكد من استخدام مفتاح API الصحيح
+                    'Content-Type': 'application/json',
+                },
+            });
 
-  publicationsSnapshot.forEach(doc => {
-    const publication = doc.data();
-    const pubYear = publication.pub_year;
-
-    if (pubYear && pubYear > 1970) {
-      if (!publicationsByYear[pubYear]) {
-        publicationsByYear[pubYear] = 1;
-      } else {
-        publicationsByYear[pubYear] += 1;
-      }
-    }
-  });
-
-  const sortedYears = Object.keys(publicationsByYear).sort((a, b) => a - b);
-
-  const formattedData = sortedYears.map(year => ({
-    name: year,
-    publications: publicationsByYear[year]
-  }));
-
-  return formattedData;
-};
+            return res.status(200).send(response.data);
+        } catch (error) {
+            console.error("Error sending email:", error);
+            return res.status(500).send("Error sending email");
+        }
+    });
+});

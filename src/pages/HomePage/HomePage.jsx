@@ -1,206 +1,467 @@
-import React, { useState } from 'react';
-import { Layout, Button, Row, Col, Typography, Card } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Layout, Button, Modal, Form, Input, notification, Spin, Switch, Tooltip, Select } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
-import FYP2 from '../../assets/FYP2.png';
+import { 
+  UserOutlined, 
+  LockOutlined, 
+  LoginOutlined,
+  BulbOutlined,
+  BulbFilled
+} from '@ant-design/icons';
 import './HomePage.css';
 
 const { Header, Content } = Layout;
-const { Title, Paragraph } = Typography;
+const { Option } = Select;
 
 function HomePage() {
-  const [isAdminLogin, setIsAdminLogin] = useState(false);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [showEmail, setShowEmail] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [scrollDirection, setScrollDirection] = useState('none');
+  const [lastScrollTop, setLastScrollTop] = useState(0);
+  const [headerSolid, setHeaderSolid] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [backgroundDarkness, setBackgroundDarkness] = useState(0);
+  
+  const contentRef = useRef(null);
+  const aboutRef = useRef(null);
+  const featuresRef = useRef(null);
+  const impactRef = useRef(null);
+  
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  useEffect(() => {
+    const savedMode = localStorage.getItem('litrix-theme-mode');
+    if (savedMode) {
+      setIsDarkMode(savedMode === 'dark');
+    }
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle('light-mode', !isDarkMode);
+    localStorage.setItem('litrix-theme-mode', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      setScrollPosition(currentScrollPos);
+      
+      if (currentScrollPos > 80) {
+        setHeaderSolid(true);
+      } else {
+        setHeaderSolid(false);
+      }
+      
+      if (currentScrollPos > lastScrollTop) {
+        setScrollDirection('down');
+      } else if (currentScrollPos < lastScrollTop) {
+        setScrollDirection('up');
+      }
+      
+      setLastScrollTop(currentScrollPos <= 0 ? 0 : currentScrollPos);
+      
+      const aboutOffset = aboutRef.current?.offsetTop - 200 || 0;
+      const featuresOffset = featuresRef.current?.offsetTop - 200 || 0;
+      const impactOffset = impactRef.current?.offsetTop - 200 || 0;
+      
+      if (currentScrollPos < aboutOffset) {
+        setActiveSection('hero');
+      } else if (currentScrollPos < featuresOffset) {
+        setActiveSection('about');
+      } else if (currentScrollPos < impactOffset) {
+        setActiveSection('features');
+      } else {
+        setActiveSection('impact');
+      }
+      
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const darkness = Math.min(currentScrollPos / maxScroll * 0.7, 0.7);
+      setBackgroundDarkness(darkness);
+    };
+
+    const handleMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [lastScrollTop]);
+
+  const handleUnifiedLogin = async () => {
+    if (!email || !password) {
+      notification.error({
+        message: 'Error',
+        description: 'Please enter both email and password',
+        duration: 3
+      });
+      return;
+    }
+
+    if (isLoggingIn) {
+      return;
+    }
+
+    setIsLoggingIn(true);
+    
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      navigate('/dashboard');
-    } catch (error) {
-      alert('Login failed: ' + error.message);
-    }
-  };
-
-  const handleAdminLogin = async () => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
       const user = userCredential.user;
 
-      const adminDocRef = doc(db, `admins/${user.uid}`);
-      const adminDoc = await getDoc(adminDocRef);
+      if (user) {
+        const adminDocRef = doc(db, `admins/${user.uid}`);
+        const adminDoc = await getDoc(adminDocRef);
 
-      if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-        navigate('/admin-dashboard');
-      } else {
-        alert('Access denied. This account is not an admin.');
+        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+          setIsLoginModalVisible(false);
+          clearForm();
+          
+          notification.success({
+            message: 'Success',
+            description: 'Admin login successful!',
+            duration: 2
+          });
+          
+          navigate('/admin-dashboard');
+        } else {
+          setIsLoginModalVisible(false);
+          clearForm();
+          
+          notification.success({
+            message: 'Success',
+            description: 'Login successful!',
+            duration: 2
+          });
+          
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
-      console.error("Error fetching admin data:", error);
-      alert('Admin login failed: ' + error.message);
+      console.error("Login error:", error);
+      
+      let errorMessage = 'Login failed. Please try again.';
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Email not registered';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your connection';
+      }
+      
+      notification.error({
+        message: 'Login Failed',
+        description: errorMessage,
+        duration: 4
+      });
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  const scrollToAbout = () => {
-    const aboutSection = document.getElementById('about');
-    aboutSection.scrollIntoView({ behavior: 'smooth' });
+  const clearForm = () => {
+    setEmail('');
+    setPassword('');
+  };
+
+  const scrollToSection = (sectionId) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const getSquareStyles = (index) => {
+    const mouseFactorX = (mousePosition.x / window.innerWidth - 0.5) * 10;
+    const mouseFactorY = (mousePosition.y / window.innerHeight - 0.5) * 10;
+    
+    const scrollFactor = scrollPosition * 0.05;
+    
+    const baseSpeed = 0.05;
+    const positionSpeed = baseSpeed * (index + 1);
+    
+    const translateY = scrollPosition * positionSpeed;
+    const translateX = mouseFactorX * (index + 1);
+    const translateZ = scrollDirection === 'down' ? -50 : 0;
+    const rotation = 10 + (scrollDirection === 'down' ? 1 : -1) * scrollPosition * 0.02 * (index + 1);
+    const scale = 1 + Math.sin(scrollPosition * 0.001) * 0.05;
+    
+    const hue = (index * 30 + scrollPosition * 0.05) % 360;
+    const saturation = 70 + Math.sin(scrollPosition * 0.001) * 20;
+    const lightness = isDarkMode ? 
+      (50 + Math.cos(scrollPosition * 0.002) * 10) - (backgroundDarkness * 30) : 
+      (80 + Math.cos(scrollPosition * 0.002) * 10) - (backgroundDarkness * 30);
+    const opacity = isDarkMode ? 
+      (0.07 + Math.sin(scrollPosition * 0.001) * 0.03) : 
+      (0.1 + Math.sin(scrollPosition * 0.001) * 0.05);
+    
+    return {
+      transform: `translate3d(${translateX}px, ${translateY}px, ${translateZ}px) rotate(${rotation}deg) scale(${scale})`,
+      backgroundColor: `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity})`,
+      boxShadow: isDarkMode ?
+        `0 0 ${30 + Math.sin(scrollPosition * 0.01) * 20}px rgba(255, 255, 255, 0.1)` :
+        `0 0 ${30 + Math.sin(scrollPosition * 0.01) * 20}px rgba(0, 0, 0, 0.1)`,
+      filter: `blur(${scrollDirection === 'down' ? 3 : 0}px)`,
+      transition: 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.5s, filter 0.5s',
+    };
+  };
+
+  const toggleThemeMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
+  
+  const getBackgroundStyle = () => {
+    const darkenFactor = isDarkMode ? 
+      `rgba(0, 0, 0, ${backgroundDarkness})` : 
+      `rgba(0, 0, 0, ${backgroundDarkness * 0.5})`;
+    
+    return {
+      background: `linear-gradient(${darkenFactor}, ${darkenFactor}), var(--bg-primary)`,
+      transition: 'background 0.3s ease-out'
+    };
+  };
+
+  const handleLoginKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleUnifiedLogin();
+    }
   };
 
   return (
-    <Layout className="layout">
-      <Header className="navbar">
-        <Row justify="space-between" align="middle">
-          <Col>
-            <div className="flex items-center">
-              <img src={FYP2} alt="Litrix Logo" className="logo" />
-              <Button type="link" style={{ color: 'white', marginLeft: '30px' }} onClick={scrollToAbout}>
+    <Layout className={`gradient-layout ${isDarkMode ? 'dark-mode' : 'light-mode'}`} style={getBackgroundStyle()}>
+      <div className="background-squares">
+        <div className="square square-1" style={getSquareStyles(0)}></div>
+        <div className="square square-2" style={getSquareStyles(1)}></div>
+        <div className="square square-3" style={getSquareStyles(2)}></div>
+        <div className="square square-4" style={getSquareStyles(3)}></div>
+        <div className="square square-5" style={getSquareStyles(4)}></div>
+        
+        <div className="particles-container">
+          {Array.from({ length: 30 }).map((_, index) => (
+            <div key={index} className={`particle particle-${index % 4}`}></div>
+          ))}
+        </div>
+      </div>
+      
+      <Header className={`transparent-header ${headerSolid ? 'header-solid' : ''}`}>
+        <div className="header-content">
+          <div className="logo">
+            <span className="logo-text">Litrix</span>
+            <div className="logo-icon-container"></div>
+          </div>
+          <div className="header-right">
+            <nav className="nav-menu">
+              <Button 
+                type="link" 
+                className={`nav-link ${activeSection === 'about' ? 'active' : ''}`} 
+                onClick={() => scrollToSection('about')}
+              >
                 About Us
               </Button>
-              <Button type="link" style={{ color: 'white', marginLeft: '20px' }} onClick={() => setShowEmail(true)}>
-                Contact Us
+              <Button 
+                type="link" 
+                className={`nav-link ${activeSection === 'features' ? 'active' : ''}`} 
+                onClick={() => scrollToSection('features')}
+              >
+                Features
               </Button>
-            </div>
-          </Col>
-          <Col>
-            <Button type="primary" onClick={() => navigate('/signup')}>
-              Sign Up as Researcher
-            </Button>
-          </Col>
-        </Row>
+              <Button 
+                type="link" 
+                className={`nav-link ${activeSection === 'impact' ? 'active' : ''}`} 
+                onClick={() => scrollToSection('impact')}
+              >
+                Impact
+              </Button>
+            </nav>
+            
+            <Tooltip title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+              <div className="theme-toggle">
+                <Switch 
+                  checked={isDarkMode}
+                  onChange={toggleThemeMode}
+                  checkedChildren={<BulbFilled />}
+                  unCheckedChildren={<BulbOutlined />}
+                  className="theme-switch"
+                />
+              </div>
+            </Tooltip>
+          </div>
+        </div>
       </Header>
 
-      <Content style={{ padding: '0 50px', marginTop: '64px', overflow: 'auto' }}>
-        <Row gutter={[24, 24]} align="middle">
-          <Col xs={24} md={12}>
-            <div className="hero-section">
-              <div className="typewriter">
-                <h1 className="typewriter-text">Litrix</h1>
-              </div>
-              <Title level={1} className="hero-title">
-                Automating Research Data with Precision and Intelligence
-              </Title>
-              <Paragraph className="hero-subtitle">
-                We provide innovative solutions for research data management, supported by AI technologies to streamline research processes and reduce errors.
-              </Paragraph>
+      <Content className="main-content" ref={contentRef}>
+        <section className="hero-section" id="hero">
+          <div className="hero-content fade-in-element">
+            <h1 className="main-title">
+              <span className="animate-text">Automating</span>
+            </h1>
+            <h2 className="subtitle">
+              <span className="animate-text-delay">Research Data with</span> <br /> 
+              <span className="animate-text-delay-2">Precision & Intelligence</span>
+            </h2>
+            
+            <div className="action-buttons">
+              {/* Unified login button */}
+              <Button 
+                className="animated-button researcher-btn" 
+                onClick={() => setIsLoginModalVisible(true)}
+              >
+                Login
+              </Button>
             </div>
-          </Col>
-
-          <Col xs={24} md={12}>
-            <div className="login-container" style={{ position: 'relative' }}>
-              {!isAdminLogin && (
-                <div className="login-card">
-                  <h2 className="login-title">Login as Researcher</h2>
-                  <input
-                    type="email"
-                    placeholder="Researcher Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="login-input"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="login-input"
-                  />
-                  <button className="login-btn-main" onClick={handleLogin}>Login</button>
-                  <p className="login-text">
-                    Don't have an account?{' '}
-                    <span className="login-link" onClick={() => navigate('/signup')}>
-                      Sign Up
-                    </span>
-                  </p>
-
-                  <Button
-                    type="link"
-                    style={{ marginTop: '10px', color: '#506d94' }}
-                    onClick={() => setIsAdminLogin(true)}
-                  >
-                    Login as Administrator
-                  </Button>
-                </div>
-              )}
-
-              {isAdminLogin && (
-                <div className="login-card">
-                  <h2 className="login-title">Login as Administrator</h2>
-                  <input
-                    type="email"
-                    placeholder="Administrator Email"
-                    value={adminEmail}
-                    onChange={(e) => setAdminEmail(e.target.value)}
-                    className="login-input"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    className="login-input"
-                  />
-                  <button className="login-btn-main" onClick={handleAdminLogin}>Login</button>
-
-                  <Button
-                    type="link"
-                    style={{ marginTop: '10px', color: '#506d94' }}
-                    onClick={() => setIsAdminLogin(false)}
-                  >
-                    Login as Researcher
-                  </Button>
-                </div>
-              )}
+            
+            <div className="signup-prompt">
+              Don't have an account? <a onClick={() => navigate('/signup')}>Sign Up</a>
             </div>
-          </Col>
-        </Row>
-
-        <section id="about" className="about-section" style={{ marginTop: '50px' }}>
-          <Title level={2}>About the Litrix</Title>
-          <Paragraph>
-            Our system facilitates the collection of research data from primary sources like Google Scholar and provides smart analysis tools to simplify research management.
-          </Paragraph>
-
-          <Row gutter={[24, 24]}>
-            <Col xs={24} md={12} lg={8}>
-              <Card className="custom-card" title="Integration of Advanced AI Technologies">
-                <Paragraph>
-                  Current manual data management processes are error-prone, often resulting in data duplication, inaccuracies, and incompleteness.
-                </Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} md={12} lg={8}>
-              <Card className="custom-card" title="Real-Time Citation Tracking and Analysis">
-                <Paragraph>
-                  Implementing real-time citation tracking enables the platform to provide immediate insights into research impact.
-                </Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} md={12} lg={8}>
-              <Card className="custom-card" title="Duplication Detection">
-                <Paragraph>
-                  The system will leverage AI to detect potential duplicates by analyzing patterns and similarities in the data entries.
-                </Paragraph>
-              </Card>
-            </Col>
-          </Row>
+          </div>
+          
+          <div className="scroll-indicator">
+            <div className="mouse">
+              <div className="wheel"></div>
+            </div>
+            <div className="arrow-scroll">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
         </section>
 
-        {showEmail && (
-          <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '18px', fontWeight: 'bold' }}>
-            Contact us at: litrix@gmail.com
+        <section className="about-section" id="about" ref={aboutRef}>
+          <div className={`section-content ${activeSection === 'about' ? 'section-active' : ''}`}>
+            <h2 className="section-title">About Us</h2>
+            <div className="underline"></div>
+            <p className="section-text">
+              Litrix is a cutting-edge platform designed to automate and streamline research data management.
+              Our system helps researchers collect, organize, and analyze their academic publications and citations
+              with unprecedented precision and intelligence.
+            </p>
+            <p className="section-text">
+              Founded by a team of academics and technology experts, Litrix addresses the challenges that researchers
+              face when managing their scholarly output and measuring their academic impact.
+            </p>
           </div>
-        )}
+        </section>
 
-        <footer style={{ textAlign: 'center', padding: '20px 0', backgroundColor: '#001529', color: 'white', marginTop: '50px' }}>
-          <p>© 2024</p>
-        </footer>
+        <section className="features-section" id="features" ref={featuresRef}>
+          <div className={`section-content ${activeSection === 'features' ? 'section-active' : ''}`}>
+            <h2 className="section-title">Features</h2>
+            <div className="underline"></div>
+            <div className="features-grid">
+              <div className="feature-card card-hover">
+                <div className="feature-icon-wrapper">
+                  <i className="feature-icon data-icon"></i>
+                </div>
+                <h3>Automated Data Collection</h3>
+                <p>Our platform automatically collects research data from sources like Google Scholar, ensuring your publication records are always up-to-date.</p>
+              </div>
+              <div className="feature-card card-hover">
+                <div className="feature-icon-wrapper">
+                  <i className="feature-icon analysis-icon"></i>
+                </div>
+                <h3>Citation Analysis</h3>
+                <p>Advanced analytics provide insights into citation patterns, helping you understand your research impact over time.</p>
+              </div>
+              <div className="feature-card card-hover">
+                <div className="feature-icon-wrapper">
+                  <i className="feature-icon duplicate-icon"></i>
+                </div>
+                <h3>Duplicate Detection</h3>
+                <p>AI-powered algorithms identify and merge duplicate entries, maintaining a clean and accurate research profile.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="impact-section" id="impact" ref={impactRef}>
+          <div className={`section-content ${activeSection === 'impact' ? 'section-active' : ''}`}>
+            <h2 className="section-title">Impact</h2>
+            <div className="underline"></div>
+            <p className="section-text">
+              Litrix has helped thousands of researchers worldwide to increase their productivity and visibility
+              in the academic community. By automating tedious data management tasks, our users can focus more
+              on their research and less on administrative work.
+            </p>
+            <div className="stats">
+              <div className="stat-item card-hover">
+                <span className="stat-number counter">1+</span>
+                <span className="stat-label">Active Users</span>
+              </div>
+              <div className="stat-item card-hover">
+                <span className="stat-number counter">1+</span>
+                <span className="stat-label">Publications Managed</span>
+              </div>
+              <div className="stat-item card-hover">
+                <span className="stat-number counter">1+</span>
+                <span className="stat-label">Universities</span>
+              </div>
+            </div>
+          </div>
+        </section>
       </Content>
+
+      {/* Unified Login Modal */}
+      <Modal
+        title="Login"
+        open={isLoginModalVisible}
+        onCancel={() => {
+          setIsLoginModalVisible(false);
+          clearForm();
+          setIsLoggingIn(false);
+        }}
+        footer={null}
+        className="custom-modal"
+        maskStyle={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
+        centered
+        wrapClassName={isDarkMode ? "dark-modal-wrap" : "light-modal-wrap"}
+      >
+        <Form layout="vertical" className="login-form">
+
+          <Form.Item label="Email" name="email">
+            <Input
+              prefix={<UserOutlined />}
+              placeholder="Enter Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={handleLoginKeyDown}
+              autoComplete="username"
+            />
+          </Form.Item>
+          <Form.Item label="Password" name="password">
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Enter Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleLoginKeyDown}
+              autoComplete="current-password"
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button 
+              type="primary" 
+              className="login-button"
+              onClick={handleUnifiedLogin}
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? <Spin size="small" /> : <><LoginOutlined /> Login</>}
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 }
