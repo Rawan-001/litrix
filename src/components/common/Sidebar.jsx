@@ -10,12 +10,14 @@ import { Link, useLocation } from "react-router-dom";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { MdOutlineManageSearch } from "react-icons/md";
 import { BsStars } from "react-icons/bs";
+import { FaChartLine } from "react-icons/fa";
 import logo from "../../assets/FYP.png"; 
 
 const SIDEBAR_ITEMS = [
   { name: "Dashboard", icon: LuLayoutDashboard, href: "/admin-dashboard" },
   { name: "Search", icon: MdOutlineManageSearch, href: "/search" },
   { name: "Litrix Chat", icon: BsStars, href: "/chat" },
+  { name: "Research Analytics", icon: FaChartLine, href: "/research-analytics" },
   { name: "Settings", icon: Settings, href: "/settings" },
 ];
 

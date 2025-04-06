@@ -17,6 +17,7 @@ import SignUpPageAdmin from './pages/SignUpPageAdmin';
 import Collaboration from './pages/collaboration';
 import ControlPanel from './pages/ControlPanel/controlPanel'; 
 import Testtt from './pages/Testtt'; 
+import ResearchAnalytics from './components/search/ResearchAnalytics';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -115,6 +116,9 @@ const App = () => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/chat" element={<LitrixChatPage college={college} department={department} scholarId={scholarId} />} />
         <Route path="/admin-signup" element={<SignUpPageAdmin />} />
+        <Route path="/research-analytics" element={<ResearchAnalytics />} />
+
+        
       </Routes>
     </div>
   );
