@@ -102,17 +102,18 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
+// تغيير الألوان إلى rgb(29, 78, 216)
 const theme = createTheme({
   palette: {
     primary: {
-      main: 'rgb(77, 167, 208)',
-      light: 'rgb(126, 195, 223)',
-      dark: 'rgb(54, 116, 145)',
+      main: 'rgb(29, 78, 216)',
+      light: 'rgb(59, 130, 246)',
+      dark: 'rgb(30, 64, 175)',
     },
     secondary: {
-      main: 'rgb(77, 167, 208)',
-      light: 'rgb(126, 195, 223)',
-      dark: 'rgb(54, 116, 145)',
+      main: 'rgb(29, 78, 216)',
+      light: 'rgb(59, 130, 246)',
+      dark: 'rgb(30, 64, 175)',
     },
   },
 });
@@ -122,21 +123,23 @@ const StyledResearcherCard = styled(Card)(({ theme }) => ({
   boxShadow: "0 8px 24px rgba(0,0,0,0.07)",
   transition: "transform 0.3s, box-shadow 0.3s",
   overflow: "hidden",
-  height: "100%",
+  // تحديد ارتفاع ثابت بدلاً من height: "100%"
+  height: "450px", // ارتفاع ثابت للكاردز
+  width: "100%",   // تأكيد على عرض ثابت
   display: "flex",
   flexDirection: "column",
   "&:hover": {
     transform: "translateY(-5px)",
-    boxShadow: "0 12px 30px rgba(77, 167, 208, 0.15)",
+    boxShadow: "0 12px 30px rgba(29, 78, 216, 0.15)",
   },
 }));
 
 const ResearcherAvatar = styled(Avatar)(({ theme }) => ({
-  width: { xs: 60, sm: 70, md: 80 },
-  height: { xs: 60, sm: 70, md: 80 },
+  width: { xs: 80, sm: 80, md: 80 }, // توحيد الحجم
+  height: { xs: 80, sm: 80, md: 80 }, // توحيد الحجم
   marginBottom: 1,
   border: '3px solid white',
-  boxShadow: '0 8px 16px rgba(77, 167, 208, 0.2)',
+  boxShadow: '0 8px 16px rgba(29, 78, 216, 0.2)',
 }));
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
@@ -156,10 +159,10 @@ const ModernSearchBar = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(3),
   borderRadius: 16,
   backgroundColor: 'white',
-  boxShadow: '0 8px 32px rgba(77, 167, 208, 0.1)',
+  boxShadow: '0 8px 32px rgba(29, 78, 216, 0.1)',
   transition: 'box-shadow 0.3s',
   '&:hover': {
-    boxShadow: '0 8px 32px rgba(77, 167, 208, 0.15)',
+    boxShadow: '0 8px 32px rgba(29, 78, 216, 0.15)',
   },
 }));
 
@@ -167,11 +170,11 @@ const ModernFilterPanel = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3),
   marginBottom: theme.spacing(3),
   borderRadius: 16,
-  boxShadow: "0 8px 32px rgba(77, 167, 208, 0.1)",
+  boxShadow: "0 8px 32px rgba(29, 78, 216, 0.1)",
   backgroundColor: 'white',
   transition: 'box-shadow 0.3s',
   '&:hover': {
-    boxShadow: '0 8px 32px rgba(77, 167, 208, 0.15)',
+    boxShadow: '0 8px 32px rgba(29, 78, 216, 0.15)',
   },
 }));
 
@@ -181,11 +184,11 @@ const FilterChip = styled(Chip)(({ theme }) => ({
   fontSize: { xs: '0.7rem', sm: '0.75rem' },
   height: { xs: 30, sm: 36 },
   transition: 'all 0.2s',
-  backgroundColor: props => props.selected ? "rgb(77, 167, 208)" : "white",
-  boxShadow: props => props.selected ? '0 4px 12px rgba(77, 167, 208, 0.3)' : '0 4px 12px rgba(0,0,0,0.05)',
+  backgroundColor: props => props.selected ? "rgb(29, 78, 216)" : "white",
+  boxShadow: props => props.selected ? '0 4px 12px rgba(29, 78, 216, 0.3)' : '0 4px 12px rgba(0,0,0,0.05)',
   '&:hover': {
     transform: 'translateY(-2px)',
-    boxShadow: props => props.selected ? '0 6px 14px rgba(77, 167, 208, 0.4)' : '0 6px 14px rgba(0,0,0,0.1)',
+    boxShadow: props => props.selected ? '0 6px 14px rgba(29, 78, 216, 0.4)' : '0 6px 14px rgba(0,0,0,0.1)',
   },
   '& .MuiChip-label': {
     padding: { xs: '0 12px', sm: '0 16px' },
@@ -200,7 +203,7 @@ const ActiveFiltersBox = styled(Box)(({ theme }) => ({
   backgroundColor: alpha(theme.palette.background.paper, 0.6),
   borderRadius: 12,
   border: `1px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-  boxShadow: '0 4px 16px rgba(77, 167, 208, 0.05)',
+  boxShadow: '0 4px 16px rgba(29, 78, 216, 0.05)',
 }));
 
 const PublicationGridCard = styled(Card)(({ theme }) => ({
@@ -212,7 +215,7 @@ const PublicationGridCard = styled(Card)(({ theme }) => ({
   transition: "transform 0.3s, box-shadow 0.3s",
   '&:hover': {
     transform: 'translateY(-5px)',
-    boxShadow: "0 12px 30px rgba(77, 167, 208, 0.15)",
+    boxShadow: "0 12px 30px rgba(29, 78, 216, 0.15)",
   }
 }));
 
@@ -252,14 +255,14 @@ const ModernTextField = styled(TextField)(({ theme }) => ({
     borderRadius: 30,
     transition: 'box-shadow 0.3s',
     '&:hover': {
-      boxShadow: '0 4px 12px rgba(77, 167, 208, 0.15)',
+      boxShadow: '0 4px 12px rgba(29, 78, 216, 0.15)',
     },
     '&.Mui-focused': {
-      boxShadow: '0 4px 12px rgba(77, 167, 208, 0.2)',
+      boxShadow: '0 4px 12px rgba(29, 78, 216, 0.2)',
     }
   },
   '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'rgba(77, 167, 208, 0.2)',
+    borderColor: 'rgba(29, 78, 216, 0.2)',
   },
 }));
 
@@ -267,43 +270,43 @@ const ModernSelect = styled(Select)(({ theme }) => ({
   borderRadius: 30,
   transition: 'box-shadow 0.3s',
   '&:hover': {
-    boxShadow: '0 4px 12px rgba(77, 167, 208, 0.15)',
+    boxShadow: '0 4px 12px rgba(29, 78, 216, 0.15)',
   },
   '&.Mui-focused': {
-    boxShadow: '0 4px 12px rgba(77, 167, 208, 0.2)',
+    boxShadow: '0 4px 12px rgba(29, 78, 216, 0.2)',
   },
   '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'rgba(77, 167, 208, 0.2)',
+    borderColor: 'rgba(29, 78, 216, 0.2)',
   },
 }));
 
 const ModernButton = styled(Button)(({ theme }) => ({
   borderRadius: 30,
   padding: '8px 16px',
-  boxShadow: variant => variant === 'contained' ? '0 4px 14px rgba(77, 167, 208, 0.3)' : 'none',
+  boxShadow: variant => variant === 'contained' ? '0 4px 14px rgba(29, 78, 216, 0.3)' : 'none',
   transition: 'transform 0.3s, box-shadow 0.3s',
   textTransform: 'none',
   fontWeight: 600,
   '&:hover': {
     transform: 'translateY(-2px)',
-    boxShadow: variant => variant === 'contained' ? '0 6px 16px rgba(77, 167, 208, 0.4)' : 'none',
+    boxShadow: variant => variant === 'contained' ? '0 6px 16px rgba(29, 78, 216, 0.4)' : 'none',
   },
 }));
 
 const ModernToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
   '& .MuiToggleButtonGroup-grouped': {
     margin: 0,
-    border: '1px solid rgba(77, 167, 208, 0.2)',
+    border: '1px solid rgba(29, 78, 216, 0.2)',
     '&.Mui-selected': {
-      backgroundColor: 'rgb(77, 167, 208)',
+      backgroundColor: 'rgb(29, 78, 216)',
       color: 'white',
-      boxShadow: '0 4px 14px rgba(77, 167, 208, 0.3)',
+      boxShadow: '0 4px 14px rgba(29, 78, 216, 0.3)',
       '&:hover': {
-        backgroundColor: 'rgb(62, 134, 168)',
+        backgroundColor: 'rgb(30, 64, 175)',
       },
     },
     '&:not(:first-of-type)': {
-      borderLeft: '1px solid rgba(77, 167, 208, 0.15)',
+      borderLeft: '1px solid rgba(29, 78, 216, 0.15)',
     },
   },
 }));
@@ -314,32 +317,32 @@ const ModernToggleButton = styled(ToggleButton)(({ theme }) => ({
     transform: 'translateY(-2px)',
   },
   '&.Mui-selected:hover': {
-    boxShadow: '0 6px 16px rgba(77, 167, 208, 0.4)',
+    boxShadow: '0 6px 16px rgba(29, 78, 216, 0.4)',
   },
 }));
 
 const ModernDivider = styled(Divider)(({ theme }) => ({
   margin: theme.spacing(3, 0),
   '&::before, &::after': {
-    borderColor: 'rgba(77, 167, 208, 0.2)',
+    borderColor: 'rgba(29, 78, 216, 0.2)',
   },
 }));
 
 const ModernSlider = styled(Slider)(({ theme }) => ({
-  color: 'rgb(77, 167, 208)',
+  color: 'rgb(29, 78, 216)',
   height: 8,
   '& .MuiSlider-track': {
     border: 'none',
-    boxShadow: '0 2px 8px rgba(77, 167, 208, 0.3)',
+    boxShadow: '0 2px 8px rgba(29, 78, 216, 0.3)',
   },
   '& .MuiSlider-thumb': {
     height: 24,
     width: 24,
     backgroundColor: '#fff',
-    border: '2px solid rgb(77, 167, 208)',
-    boxShadow: '0 3px 8px rgba(77, 167, 208, 0.3)',
+    border: '2px solid rgb(29, 78, 216)',
+    boxShadow: '0 3px 8px rgba(29, 78, 216, 0.3)',
     '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
-      boxShadow: '0 3px 12px rgba(77, 167, 208, 0.4)',
+      boxShadow: '0 3px 12px rgba(29, 78, 216, 0.4)',
     },
     '&:before': {
       display: 'none',
@@ -353,8 +356,8 @@ const ModernSlider = styled(Slider)(({ theme }) => ({
     width: 32,
     height: 32,
     borderRadius: '50% 50% 50% 0',
-    backgroundColor: 'rgb(77, 167, 208)',
-    boxShadow: '0 2px 8px rgba(77, 167, 208, 0.3)',
+    backgroundColor: 'rgb(29, 78, 216)',
+    boxShadow: '0 2px 8px rgba(29, 78, 216, 0.3)',
     transformOrigin: 'bottom left',
     transform: 'translate(50%, -100%) rotate(-45deg) scale(0)',
     '&:before': { display: 'none' },
@@ -678,6 +681,8 @@ function SearchTable() {
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUserData, setCurrentUserData] = useState(null);
   const [currentUserScholarId, setCurrentUserScholarId] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -707,7 +712,6 @@ function SearchTable() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-
   const navigate = useNavigate();
   
   const commonInterests = [
@@ -798,10 +802,28 @@ function SearchTable() {
       try {
         const user = auth.currentUser;
         if (user) {
+          console.log("Current authenticated user:", user.uid);
+          setCurrentUser(user);
+          
+          // Get the complete user document from Firestore
           const userDocRef = doc(db, `users/${user.uid}`);
           const userDoc = await getDoc(userDocRef);
+          
           if (userDoc.exists()) {
-            setCurrentUserScholarId(userDoc.data().scholar_id);
+            const userData = userDoc.data();
+            console.log("Current user data:", userData);
+            setCurrentUserData(userData);
+            
+            // Set scholar_id if it exists
+            if (userData.scholar_id) {
+              console.log("Current user scholar_id:", userData.scholar_id);
+              setCurrentUserScholarId(userData.scholar_id);
+            }
+            
+            // Try to find the user's email to help with filtering
+            if (userData.email) {
+              console.log("Current user email:", userData.email);
+            }
           }
         }
       } catch (error) {
@@ -1020,9 +1042,41 @@ function SearchTable() {
       setError("");
 
       try {
-        let filteredResearchers = cachedResearchers.filter(
-          (researcher) => researcher.scholar_id !== currentUserScholarId
-        );
+        // Get the current user's profile identifiers for filtering
+        const currentUserIds = {
+          uid: auth.currentUser?.uid,
+          email: currentUserData?.email,
+          scholarId: currentUserScholarId,
+          // Add more identifiers if needed
+          firstName: currentUserData?.firstName,
+          lastName: currentUserData?.lastName,
+          fullName: currentUserData ? 
+                  `${currentUserData.firstName || ''} ${currentUserData.lastName || ''}`.trim() : '',
+        };
+        
+        console.log("Filtering out current user with IDs:", currentUserIds);
+        
+        // Filter out the current user from researchers list
+        let filteredResearchers = cachedResearchers.filter(researcher => {
+          // Don't include if UID matches
+          if (researcher.uid === currentUserIds.uid) return false;
+          
+          // Don't include if scholar_id matches
+          if (researcher.scholar_id === currentUserIds.scholarId && currentUserIds.scholarId) return false;
+          
+          // Don't include if email matches
+          if (researcher.email === currentUserIds.email && currentUserIds.email) return false;
+          
+          // Don't include if name matches
+          const researcherName = researcher.name || 
+            `${researcher.firstName || ''} ${researcher.lastName || ''}`.trim();
+          
+          if (researcherName && currentUserIds.fullName && 
+              researcherName.toLowerCase() === currentUserIds.fullName.toLowerCase()) return false;
+          
+          // Include this researcher
+          return true;
+        });
 
         if (selectedDepartment) {
           filteredResearchers = filteredResearchers.filter(
@@ -1398,8 +1452,8 @@ function SearchTable() {
       <Collapse in={showFilters} timeout="auto">
         <ModernFilterPanel>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-            <ScienceOutlinedIcon sx={{ mr: 1.5, color: 'rgb(77, 167, 208)', fontSize: { xs: '1.2rem', sm: '1.3rem' } }} />
-            <Typography variant="h6" sx={{ fontWeight: '600', fontSize: { xs: '1rem', sm: '1.1rem' }, color: 'rgb(54, 116, 145)' }}>
+            <ScienceOutlinedIcon sx={{ mr: 1.5, color: 'rgb(29, 78, 216)', fontSize: { xs: '1.2rem', sm: '1.3rem' } }} />
+            <Typography variant="h6" sx={{ fontWeight: '600', fontSize: { xs: '1rem', sm: '1.1rem' }, color: 'rgb(30, 64, 175)' }}>
               Filter by Research Interests
             </Typography>
           </Box>
@@ -1450,9 +1504,9 @@ function SearchTable() {
                     size="small"
                     sx={{ 
                       borderRadius: 20,
-                      boxShadow: '0 2px 8px rgba(77, 167, 208, 0.15)',
+                      boxShadow: '0 2px 8px rgba(29, 78, 216, 0.15)',
                       '&:hover': {
-                        boxShadow: '0 3px 10px rgba(77, 167, 208, 0.25)',
+                        boxShadow: '0 3px 10px rgba(29, 78, 216, 0.25)',
                       }
                     }}
                   />
@@ -1463,7 +1517,7 @@ function SearchTable() {
           
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ color: 'rgb(54, 116, 145)' }}>
+              <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ color: 'rgb(30, 64, 175)' }}>
                 Publication Year Range
               </Typography>
               <Box sx={{ px: 2, pt: 2 }}>
@@ -1487,7 +1541,7 @@ function SearchTable() {
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ color: 'rgb(54, 116, 145)' }}>
+              <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ color: 'rgb(30, 64, 175)' }}>
                 Citation Count
               </Typography>
               <Box sx={{ px: 2, pt: 2 }}>
@@ -1512,9 +1566,10 @@ function SearchTable() {
             
             <Grid item xs={12} md={6}>
               <FormControl fullWidth variant="outlined" size="small">
-                <InputLabel sx={{ color: 'rgb(77, 167, 208)' }}>Publication Type</InputLabel>
+                <InputLabel sx={{ color: 'rgb(29, 78, 216)' }}>Publication Type</InputLabel>
                 <ModernSelect
                   value={publicationType}
+
                   onChange={(e) => setPublicationType(e.target.value)}
                   label="Publication Type"
                 >
@@ -1527,10 +1582,9 @@ function SearchTable() {
                 </ModernSelect>
               </FormControl>
             </Grid>
-            
             <Grid item xs={12} md={6}>
               <FormControl fullWidth variant="outlined" size="small">
-                <InputLabel sx={{ color: 'rgb(77, 167, 208)' }}>Sort By</InputLabel>
+                <InputLabel sx={{ color: 'rgb(29, 78, 216)' }}>Sort By</InputLabel>
                 <ModernSelect
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -1552,9 +1606,9 @@ function SearchTable() {
                     checked={openAccess} 
                     onChange={(e) => setOpenAccess(e.target.checked)}
                     sx={{ 
-                      color: 'rgb(77, 167, 208)',
+                      color: 'rgb(29, 78, 216)',
                       '&.Mui-checked': {
-                        color: 'rgb(77, 167, 208)',
+                        color: 'rgb(29, 78, 216)',
                       },
                     }}
                   />
@@ -1583,12 +1637,12 @@ function SearchTable() {
                   startIcon={<FilterAltIcon />}
                   sx={{ 
                     borderRadius: 30,
-                    bgcolor: "rgb(77, 167, 208)",
+                    bgcolor: "rgb(29, 78, 216)",
                     fontSize: { xs: '0.8rem', sm: '0.85rem' },
-                    boxShadow: '0 6px 20px rgba(77, 167, 208, 0.25)',
+                    boxShadow: '0 6px 20px rgba(29, 78, 216, 0.25)',
                     "&:hover": {
-                      bgcolor: "rgb(62, 134, 168)",
-                      boxShadow: '0 8px 25px rgba(77, 167, 208, 0.35)',
+                      bgcolor: "rgb(30, 64, 175)",
+                      boxShadow: '0 8px 25px rgba(29, 78, 216, 0.35)',
                     },
                   }}
                 >
@@ -1638,7 +1692,7 @@ function SearchTable() {
         transition: 'transform 0.3s, box-shadow 0.3s',
         '&:hover': {
           transform: 'translateY(-5px)',
-          boxShadow: '0 12px 30px rgba(77, 167, 208, 0.12)',
+          boxShadow: '0 12px 30px rgba(29, 78, 216, 0.12)',
         }
       }}>
         <CardContent>
@@ -1649,7 +1703,7 @@ function SearchTable() {
                 sx={{ 
                   mb: 1.5, 
                   fontWeight: '600', 
-                  color: 'rgb(77, 167, 208)',
+                  color: 'rgb(29, 78, 216)',
                   '&:hover': {
                     textDecoration: 'underline',
                     cursor: 'pointer'
@@ -1681,7 +1735,7 @@ function SearchTable() {
                         '&:hover': {
                           backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
                           transform: 'translateY(-2px)',
-                          boxShadow: '0 4px 12px rgba(77, 167, 208, 0.15)',
+                          boxShadow: '0 4px 12px rgba(29, 78, 216, 0.15)',
                         }
                       }}
                     />
@@ -1719,7 +1773,7 @@ function SearchTable() {
                     sx={{ 
                       borderRadius: 20,
                       height: 26,
-                      boxShadow: '0 2px 8px rgba(77, 167, 208, 0.1)',
+                      boxShadow: '0 2px 8px rgba(29, 78, 216, 0.1)',
                     }}
                   />
                 )}
@@ -1736,7 +1790,7 @@ function SearchTable() {
                     sx={{ 
                       borderRadius: 20,
                       height: 26,
-                      boxShadow: '0 2px 8px rgba(77, 167, 208, 0.1)',
+                      boxShadow: '0 2px 8px rgba(29, 78, 216, 0.1)',
                     }}
                   />
                 )}
@@ -1785,9 +1839,9 @@ function SearchTable() {
                         borderRadius: 20,
                         fontSize: '0.7rem',
                         height: 24,
-                        bgcolor: 'rgba(77, 167, 208, 0.05)',
+                        bgcolor: 'rgba(29, 78, 216, 0.05)',
                         '&:hover': {
-                          bgcolor: 'rgba(77, 167, 208, 0.1)',
+                          bgcolor: 'rgba(29, 78, 216, 0.1)',
                         }
                       }}
                       onClick={() => {
@@ -1809,10 +1863,10 @@ function SearchTable() {
                 onClick={() => toggleSavedPublication(publication.id)}
                 color={isSaved ? "primary" : "default"}
                 sx={{ 
-                  backgroundColor: isSaved ? 'rgba(77, 167, 208, 0.1)' : 'transparent',
+                  backgroundColor: isSaved ? 'rgba(29, 78, 216, 0.1)' : 'transparent',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(77, 167, 208, 0.15)',
+                    backgroundColor: 'rgba(29, 78, 216, 0.15)',
                     transform: 'scale(1.1)',
                   }
                 }}
@@ -1825,10 +1879,10 @@ function SearchTable() {
                 onClick={() => toggleLikedPublication(publication.id)}
                 color={isLiked ? "primary" : "default"}
                 sx={{ 
-                  backgroundColor: isLiked ? 'rgba(77, 167, 208, 0.1)' : 'transparent',
+                  backgroundColor: isLiked ? 'rgba(29, 78, 216, 0.1)' : 'transparent',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(77, 167, 208, 0.15)',
+                    backgroundColor: 'rgba(29, 78, 216, 0.15)',
                     transform: 'scale(1.1)',
                   }
                 }}
@@ -1841,10 +1895,10 @@ function SearchTable() {
                 size="small"
                 onClick={() => setOpen(!open)}
                 sx={{ 
-                  backgroundColor: open ? 'rgba(77, 167, 208, 0.1)' : 'transparent',
+                  backgroundColor: open ? 'rgba(29, 78, 216, 0.1)' : 'transparent',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(77, 167, 208, 0.15)',
+                    backgroundColor: 'rgba(29, 78, 216, 0.15)',
                     transform: 'scale(1.1)',
                   }
                 }}
@@ -1953,7 +2007,7 @@ function SearchTable() {
                       size="small"
                       color="primary"
                       variant="outlined"
-                      sx={{ borderRadius: 20, boxShadow: '0 2px 8px rgba(77, 167, 208, 0.1)' }}
+                      sx={{ borderRadius: 20, boxShadow: '0 2px 8px rgba(29, 78, 216, 0.1)' }}
                     />
                   )}
                 </Box>
@@ -2063,7 +2117,7 @@ function SearchTable() {
                           borderRadius: 20,
                           fontSize: '0.65rem',
                           height: 22,
-                          bgcolor: 'rgba(77, 167, 208, 0.05)',
+                          bgcolor: 'rgba(29, 78, 216, 0.05)',
                         }}
                         onClick={() => {
                           if (!selectedKeywords.includes(keyword)) {
@@ -2133,8 +2187,8 @@ function SearchTable() {
                   borderRadius: 2,
                   transition: 'all 0.3s',
                   '&:hover': {
-                    boxShadow: '0 8px 20px rgba(77, 167, 208, 0.1)',
-                    borderColor: 'rgba(77, 167, 208, 0.2)',
+                    boxShadow: '0 8px 20px rgba(29, 78, 216, 0.1)',
+                    borderColor: 'rgba(29, 78, 216, 0.2)',
                   }
                 }}>
                   <CardContent>
@@ -2183,7 +2237,7 @@ function SearchTable() {
                             transition: 'all 0.2s',
                             '&:hover': {
                               transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 12px rgba(77, 167, 208, 0.15)',
+                              boxShadow: '0 4px 12px rgba(29, 78, 216, 0.15)',
                             }
                           }}
                         />
@@ -2235,7 +2289,7 @@ function SearchTable() {
                             label={publication.num_citations}
                             size="small"
                             variant="outlined"
-                            sx={{ borderRadius: 20, boxShadow: '0 2px 8px rgba(77, 167, 208, 0.1)' }}
+                            sx={{ borderRadius: 20, boxShadow: '0 2px 8px rgba(29, 78, 216, 0.1)' }}
                           />
                         )}
                       </Box>
@@ -2290,7 +2344,7 @@ function SearchTable() {
                       '&:hover': {
                         textDecoration: 'underline',
                         cursor: 'pointer',
-                        color: 'primary. main'
+                        color: 'primary.main'
                       }
                     }}
                     onClick={() => openPublicationDetails(publication)}
@@ -2332,6 +2386,8 @@ function SearchTable() {
                           target="_blank"
                           rel="noopener"
                         >
+                          <LanguageIcon fontSize="small"/>
+                          
                           <LanguageIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -2346,7 +2402,6 @@ function SearchTable() {
                         <GetAppIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    
                     <Tooltip title={savedPublications[publication.id] ? "Remove Bookmark" : "Bookmark"}>
                       <IconButton
                         size="small"
@@ -2391,18 +2446,18 @@ function SearchTable() {
           display: 'flex', 
           flexDirection: 'column',
           alignItems: 'center',
-          backgroundImage: 'linear-gradient(135deg, rgba(77, 167, 208, 0.08) 0%, rgba(77, 167, 208, 0.02) 100%)',
-          borderBottom: '1px solid rgba(77, 167, 208, 0.1)'
+          backgroundImage: 'linear-gradient(135deg, rgba(29, 78, 216, 0.08) 0%, rgba(29, 78, 216, 0.02) 100%)',
+          borderBottom: '1px solid rgba(29, 78, 216, 0.1)'
         }}>
           <ResearcherAvatar
             src={researcher.url_picture || "/default-avatar.png"}
             alt={researcherName || "Researcher"}
             sx={{ 
-              width: { xs: 70, sm: 80, md: 90 }, 
-              height: { xs: 70, sm: 80, md: 90 }, 
+              width: { xs: 80, sm: 80, md: 80 }, 
+              height: { xs: 80, sm: 80, md: 80 }, 
               mb: 1.5,
               border: '3px solid white',
-              boxShadow: '0 8px 20px rgba(77, 167, 208, 0.2)',
+              boxShadow: '0 8px 20px rgba(29, 78, 216, 0.2)',
             }}
           />
           <Typography 
@@ -2412,7 +2467,7 @@ function SearchTable() {
               fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.3rem' },
               textAlign: 'center',
               fontWeight: 'bold',
-              color: 'rgb(54, 116, 145)',
+              color: 'rgb(30, 64, 175)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
@@ -2430,23 +2485,23 @@ function SearchTable() {
             sx={{ 
               mt: 1.5, 
               borderRadius: 20,
-              boxShadow: '0 4px 12px rgba(77, 167, 208, 0.1)',
+              boxShadow: '0 4px 12px rgba(29, 78, 216, 0.1)',
               transition: 'all 0.2s',
               '&:hover': {
                 transform: 'translateY(-2px)',
-                boxShadow: '0 6px 15px rgba(77, 167, 208, 0.2)',
+                boxShadow: '0 6px 15px rgba(29, 78, 216, 0.2)',
               }
             }}
           />
         </Box>
         
         <CardContent sx={{ 
-          flexGrow: 1, 
-          pt: { xs: 2, sm: 2.5 },
-          px: { xs: 2, sm: 2.5 },
+          flexGrow: 0, // تغيير من 1 إلى 0 لمنع التمدد
+          pt: 2,
+          px: 2.5,
           display: 'flex',
           flexDirection: 'column',
-          height: { xs: '180px', sm: '200px' },
+          height: "220px", // ارتفاع ثابت محدد للمحتوى
           overflow: 'hidden'
         }}>
           <Box sx={{ mb: 2 }}>
@@ -2463,7 +2518,7 @@ function SearchTable() {
                 whiteSpace: 'nowrap'
               }}
             >
-              <BusinessIcon fontSize="small" sx={{ mr: 1.5, color: 'rgb(77, 167, 208)', flexShrink: 0 }} />
+              <BusinessIcon fontSize="small" sx={{ mr: 1.5, color: 'rgb(29, 78, 216)', flexShrink: 0 }} />
               {researcher.affiliation || "Not provided"}
             </Typography>
             
@@ -2479,7 +2534,7 @@ function SearchTable() {
                 whiteSpace: 'nowrap'
               }}
             >
-              <EmailIcon fontSize="small" sx={{ mr: 1.5, color: 'rgb(77, 167, 208)', flexShrink: 0 }} />
+              <EmailIcon fontSize="small" sx={{ mr: 1.5, color: 'rgb(29, 78, 216)', flexShrink: 0 }} />
               {researcher.email || "Not provided"}
             </Typography>
           </Box>
@@ -2490,7 +2545,7 @@ function SearchTable() {
               mb: 1, 
               fontWeight: 'bold',
               fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem' },
-              color: 'rgb(54, 116, 145)'
+              color: 'rgb(30, 64, 175)'
             }}
           >
             Research Interests:
@@ -2501,7 +2556,7 @@ function SearchTable() {
             flexWrap: 'wrap', 
             gap: 0.8, 
             mb: 2,
-            maxHeight: { xs: '60px', sm: '70px' },
+            maxHeight: { xs: '80px', sm: '80px', md: '80px' }, // توحيد الحد الأقصى للارتفاع
             overflow: 'hidden'
           }}>
             {researcher.interests ? (
@@ -2515,11 +2570,11 @@ function SearchTable() {
                     fontSize: { xs: '0.7rem', sm: '0.75rem' },
                     height: { xs: 24, sm: 28 },
                     borderRadius: 20,
-                    boxShadow: '0 2px 8px rgba(77, 167, 208, 0.05)',
+                    boxShadow: '0 2px 8px rgba(29, 78, 216, 0.05)',
                     transition: 'all 0.2s',
                     '&:hover': {
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(77, 167, 208, 0.12)',
+                      boxShadow: '0 4px 12px rgba(29, 78, 216, 0.12)',
                     }
                   }}
                   onClick={() => {
@@ -2545,8 +2600,8 @@ function SearchTable() {
                   fontSize: { xs: '0.7rem', sm: '0.75rem' },
                   height: { xs: 24, sm: 28 },
                   borderRadius: 20,
-                  bgcolor: 'rgba(77, 167, 208, 0.1)',
-                  boxShadow: '0 2px 8px rgba(77, 167, 208, 0.05)',
+                  bgcolor: 'rgba(29, 78, 216, 0.1)',
+                  boxShadow: '0 2px 8px rgba(29, 78, 216, 0.05)',
                 }}
               />
             )}
@@ -2569,7 +2624,7 @@ function SearchTable() {
                   fontSize: { xs: '0.7rem', sm: '0.75rem' },
                   height: { xs: 26, sm: 30 },
                   borderRadius: 20,
-                  boxShadow: '0 2px 8px rgba(77, 167, 208, 0.05)',
+                  boxShadow: '0 2px 8px rgba(29, 78, 216, 0.05)',
                 }}
               />
             )}
@@ -2584,7 +2639,7 @@ function SearchTable() {
                   fontSize: { xs: '0.7rem', sm: '0.75rem' },
                   height: { xs: 26, sm: 30 },
                   borderRadius: 20,
-                  boxShadow: '0 2px 8px rgba(77, 167, 208, 0.05)',
+                  boxShadow: '0 2px 8px rgba(29, 78, 216, 0.05)',
                 }}
               />
             )}
@@ -2602,15 +2657,15 @@ function SearchTable() {
             startIcon={<VisibilityIcon sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }} />}
             onClick={() => goToProfile(researcher.scholar_id || researcher.id)}
             sx={{
-              bgcolor: "rgb(77, 167, 208)",
+              bgcolor: "rgb(29, 78, 216)",
               color: "white",
               borderRadius: 30,
               fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem' },
               py: 1,
-              boxShadow: '0 6px 16px rgba(77, 167, 208, 0.25)',
+              boxShadow: '0 6px 16px rgba(29, 78, 216, 0.25)',
               "&:hover": {
-                bgcolor: "rgb(62, 134, 168)",
-                boxShadow: '0 8px 20px rgba(77, 167, 208, 0.35)',
+                bgcolor: "rgb(30, 64, 175)",
+                boxShadow: '0 8px 20px rgba(29, 78, 216, 0.35)',
               },
             }}
           >
@@ -2653,7 +2708,7 @@ function SearchTable() {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <SearchIcon sx={{ color: 'rgb(77, 167, 208)' }} />
+                          <SearchIcon sx={{ color: 'rgb(29, 78, 216)' }} />
                         </InputAdornment>
                       ),
                       endAdornment: (
@@ -2663,9 +2718,9 @@ function SearchTable() {
                             edge="end"
                             sx={{ 
                               color: 'white',
-                              bgcolor: 'rgb(77, 167, 208)',
+                              bgcolor: 'rgb(29, 78, 216)',
                               '&:hover': {
-                                bgcolor: 'rgb(62, 134, 168)',
+                                bgcolor: 'rgb(30, 64, 175)',
                               }
                             }}
                           >
@@ -2680,7 +2735,7 @@ function SearchTable() {
 
                 <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', alignItems: 'center' }}>
                   <FormControl fullWidth variant="outlined" size="small">
-                    <InputLabel sx={{ color: 'rgb(77, 167, 208)' }}>Department</InputLabel>
+                    <InputLabel sx={{ color: 'rgb(29, 78, 216)' }}>Department</InputLabel>
                     <ModernSelect
                       value={selectedDepartment}
                       onChange={handleDepartmentChange}
@@ -2705,11 +2760,11 @@ function SearchTable() {
                     startIcon={<FilterListIcon />}
                     onClick={toggleFilters}
                     sx={{ 
-                      bgcolor: showFilters ? "rgb(77, 167, 208)" : "white",
-                      color: showFilters ? "white" : "rgb(77, 167, 208)",
+                      bgcolor: showFilters ? "rgb(29, 78, 216)" : "white",
+                      color: showFilters ? "white" : "rgb(29, 78, 216)",
                       fontSize: { xs: '0.8rem', sm: '0.85rem' },
                       "&:hover": {
-                        bgcolor: showFilters ? "rgb(62, 134, 168)" : "",
+                        bgcolor: showFilters ? "rgb(30, 64, 175)" : "",
                       },
                     }}
                   >
@@ -2733,8 +2788,8 @@ function SearchTable() {
                           borderTopLeftRadius: 30,
                           borderBottomLeftRadius: 30,
                           width: '25%',
-                          bgcolor: publicationViewMode === "grid" ? "rgb(77, 167, 208)" : "white",
-                          color: publicationViewMode === "grid" ? "white" : "rgb(77, 167, 208)",
+                          bgcolor: publicationViewMode === "grid" ? "rgb(29, 78, 216)" : "white",
+                          color: publicationViewMode === "grid" ? "white" : "rgb(29, 78, 216)",
                         }}
                       >
                         <ViewModuleIcon fontSize="small" />
@@ -2744,8 +2799,8 @@ function SearchTable() {
                         aria-label="list view"
                         sx={{ 
                           width: '25%',
-                          bgcolor: publicationViewMode === "list" ? "rgb(77, 167, 208)" : "white",
-                          color: publicationViewMode === "list" ? "white" : "rgb(77, 167, 208)",
+                          bgcolor: publicationViewMode === "list" ? "rgb(29, 78, 216)" : "white",
+                          color: publicationViewMode === "list" ? "white" : "rgb(29, 78, 216)",
                         }}
                       >
                         <ViewListIcon fontSize="small" />
@@ -2755,8 +2810,8 @@ function SearchTable() {
                         aria-label="timeline view"
                         sx={{ 
                           width: '25%',
-                          bgcolor: publicationViewMode === "timeline" ? "rgb(77, 167, 208)" : "white",
-                          color: publicationViewMode === "timeline" ? "white" : "rgb(77, 167, 208)",
+                          bgcolor: publicationViewMode === "timeline" ? "rgb(29, 78, 216)" : "white",
+                          color: publicationViewMode === "timeline" ? "white" : "rgb(29, 78, 216)",
                         }}
                       >
                         <ViewTimelineIcon fontSize="small" />
@@ -2768,8 +2823,8 @@ function SearchTable() {
                           borderTopRightRadius: 30,
                           borderBottomRightRadius: 30,
                           width: '25%',
-                          bgcolor: publicationViewMode === "table" ? "rgb(77, 167, 208)" : "white",
-                          color: publicationViewMode === "table" ? "white" : "rgb(77, 167, 208)",
+                          bgcolor: publicationViewMode === "table" ? "rgb(29, 78, 216)" : "white",
+                          color: publicationViewMode === "table" ? "white" : "rgb(29, 78, 216)",
                         }}
                       >
                         <TableChartIcon fontSize="small" />
@@ -2834,7 +2889,7 @@ function SearchTable() {
 
             {loading && (
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, my: 4 }}>
-                <GridLoader size={20} color="rgb(77, 167, 208)" />
+                <GridLoader size={20} color="rgb(29, 78, 216)" />
               </Box>
             )}
 
@@ -2857,15 +2912,15 @@ function SearchTable() {
                       mb: 3,
                       pb: 1.5,
                       borderBottom: '1px solid',
-                      borderColor: 'rgba(77, 167, 208, 0.2)'
+                      borderColor: 'rgba(29, 78, 216, 0.2)'
                     }}>
-                      <PersonIcon sx={{ color: 'rgb(77, 167, 208)', fontSize: '1.5rem' }} />
-                      <Typography variant="h5" sx={{ color: 'rgb(54, 116, 145)', fontWeight: 600 }}>Researchers</Typography>
+                      <PersonIcon sx={{ color: 'rgb(29, 78, 216)', fontSize: '1.5rem' }} />
+                      <Typography variant="h5" sx={{ color: 'rgb(30, 64, 175)', fontWeight: 600 }}>Researchers</Typography>
                       <Chip 
                         label={researcherData.length} 
                         size="small" 
                         color="primary" 
-                        sx={{ ml: 1, boxShadow: '0 2px 8px rgba(77, 167, 208, 0.2)', borderRadius: 20 }} 
+                        sx={{ ml: 1, boxShadow: '0 2px 8px rgba(29, 78, 216, 0.2)', borderRadius: 20 }} 
                       />
                     </Box>
                     
@@ -2898,16 +2953,16 @@ function SearchTable() {
                       mb: 3,
                       pb: 1.5,
                       borderBottom: '1px solid',
-                      borderColor: 'rgba(77, 167, 208, 0.2)'
+                      borderColor: 'rgba(29, 78, 216, 0.2)'
                     }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <ArticleIcon sx={{ color: 'rgb(77, 167, 208)', fontSize: '1.5rem' }} />
-                        <Typography variant="h5" sx={{ color: 'rgb(54, 116, 145)', fontWeight: 600 }}>Publications</Typography>
+                        <ArticleIcon sx={{ color: 'rgb(29, 78, 216)', fontSize: '1.5rem' }} />
+                        <Typography variant="h5" sx={{ color: 'rgb(30, 64, 175)', fontWeight: 600 }}>Publications</Typography>
                         <Chip 
                           label={publications.length} 
                           size="small" 
                           color="primary" 
-                          sx={{ ml: 1, boxShadow: '0 2px 8px rgba(77, 167, 208, 0.2)', borderRadius: 20 }} 
+                          sx={{ ml: 1, boxShadow: '0 2px 8px rgba(29, 78, 216, 0.2)', borderRadius: 20 }} 
                         />
                         {lastSearchQuery && (
                           <Typography variant="body2" sx={{ ml: 2, color: 'text.secondary', fontStyle: 'italic' }}>
@@ -2918,11 +2973,9 @@ function SearchTable() {
                     </Box>
                     
                     <Box>
-                      {publicationViewMode === 'list' && (
-                        publicationViewMode === 'list' && paginatedPublications.map((pub, index) => (
-                          <PublicationListItem key={index} publication={pub} />
-                        ))
-                      )}
+                      {publicationViewMode === 'list' && paginatedPublications.map((pub, index) => (
+                        <PublicationListItem key={index} publication={pub} />
+                      ))}
                       
                       {publicationViewMode === 'grid' && (
                         <PublicationGridView publications={paginatedPublications} />
@@ -2952,7 +3005,7 @@ function SearchTable() {
                             '& .MuiPaginationItem-root': {
                               borderRadius: 8,
                               '&.Mui-selected': {
-                                boxShadow: '0 4px 10px rgba(77, 167, 208, 0.2)',
+                                boxShadow: '0 4px 10px rgba(29, 78, 216, 0.2)',
                               }
                             }
                           }}
@@ -2967,12 +3020,12 @@ function SearchTable() {
                     borderRadius: 3, 
                     mb: 4, 
                     bgcolor: (theme) => alpha(theme.palette.info.light, 0.05),
-                    boxShadow: '0 8px 24px rgba(77, 167, 208, 0.05)',
-                    border: '1px dashed rgba(77, 167, 208, 0.2)'
+                    boxShadow: '0 8px 24px rgba(29, 78, 216, 0.05)',
+                    border: '1px dashed rgba(29, 78, 216, 0.2)'
                   }}>
                     <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 6 }}>
-                      <SearchIcon sx={{ fontSize: 70, color: 'rgb(77, 167, 208)', mb: 3, opacity: 0.7 }} />
-                      <Typography variant="h5" sx={{ color: 'rgb(54, 116, 145)', fontWeight: 600, mb: 1.5 }}>
+                      <SearchIcon sx={{ fontSize: 70, color: 'rgb(29, 78, 216)', mb: 3, opacity: 0.7 }} />
+                      <Typography variant="h5" sx={{ color: 'rgb(30, 64, 175)', fontWeight: 600, mb: 1.5 }}>
                         Start Your Search 
                       </Typography>
                       <Typography align="center" color="text.secondary" variant="body1">

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Layout, Button, Modal, Form, Input, notification, Spin, Switch, Tooltip, Select } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { 
   UserOutlined, 
@@ -109,43 +109,91 @@ function HomePage() {
       });
       return;
     }
-
+  
     if (isLoggingIn) {
       return;
     }
-
+  
     setIsLoggingIn(true);
     
     try {
+      // Sign in with Firebase auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
+  
       if (user) {
-        const adminDocRef = doc(db, `admins/${user.uid}`);
+        // Check all possible role collections
+        const adminDocRef = doc(db, "admins", user.uid);
         const adminDoc = await getDoc(adminDocRef);
-
-        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-          setIsLoginModalVisible(false);
-          clearForm();
-          
+        
+        const academicAdminDocRef = doc(db, "academicAdmins", user.uid);
+        const academicAdminDoc = await getDoc(academicAdminDocRef);
+        
+        const departmentAdminDocRef = doc(db, "departmentAdmins", user.uid);
+        const departmentAdminDoc = await getDoc(departmentAdminDocRef);
+        
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        // First close modal and clear form regardless of user type
+        setIsLoginModalVisible(false);
+        clearForm();
+        
+        // Check roles in priority order
+        if (adminDoc.exists()) {
           notification.success({
             message: 'Success',
             description: 'Admin login successful!',
             duration: 2
           });
-          
           navigate('/admin-dashboard');
-        } else {
-          setIsLoginModalVisible(false);
-          clearForm();
-          
+        } else if (academicAdminDoc.exists()) {
+          notification.success({
+            message: 'Success',
+            description: 'Academic Admin login successful!',
+            duration: 2
+          });
+          navigate('/academic-dashboard');
+        } else if (departmentAdminDoc.exists()) {
+          notification.success({
+            message: 'Success',
+            description: 'Department Admin login successful!',
+            duration: 2
+          });
+          navigate('/academic-dashboard'); // Might need a different dashboard path based on your routing
+        } else if (userDoc.exists()) {
           notification.success({
             message: 'Success',
             description: 'Login successful!',
             duration: 2
           });
-          
           navigate('/dashboard');
+        } else {
+          // User exists in Auth but not in any role collection
+          // Create a default user document
+          try {
+            await setDoc(userDocRef, {
+              email: user.email,
+              firstName: user.displayName ? user.displayName.split(' ')[0] : '',
+              lastName: user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '',
+              createdAt: new Date()
+            });
+            
+            notification.success({
+              message: 'Success',
+              description: 'Login successful!',
+              duration: 2
+            });
+            
+            navigate('/dashboard');
+          } catch (error) {
+            console.error("Error creating default user document:", error);
+            notification.error({
+              message: 'Login Error',
+              description: 'Could not complete login process. Please contact support.',
+              duration: 4
+            });
+          }
         }
       }
     } catch (error) {
@@ -429,7 +477,6 @@ function HomePage() {
         wrapClassName={isDarkMode ? "dark-modal-wrap" : "light-modal-wrap"}
       >
         <Form layout="vertical" className="login-form">
-
           <Form.Item label="Email" name="email">
             <Input
               prefix={<UserOutlined />}

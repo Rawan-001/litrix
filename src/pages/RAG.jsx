@@ -39,7 +39,7 @@ const LitrixChatPage = () => {
             return "I'm sorry, I couldn't find any relevant publications.";
         }
 
-        const apiKey = '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'; // Replace with your actual API key
+        const apiKey = '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'; 
         const prompt = `User input: ${input}\nRelevant publications:\n${relevantData.map(pub => `${pub.title}: ${pub.abstract}`).join('\n')}\nGenerate a response:`;
 
         const response = await fetch('https://api.openai.com/v1/engines/davinci-codex/completions', {

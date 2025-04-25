@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, query, where, collectionGroup } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
 import Fuse from 'fuse.js';
 import { useNavigate } from "react-router-dom";
@@ -28,14 +28,6 @@ import {
   Avatar,
   Box,
   Skeleton,
-  IconButton,
-  Badge,
-  Tooltip,
-  Divider,
-  Tab,
-  Tabs,
-  CircularProgress,
-  Alert,
   InputAdornment,
   alpha,
   createTheme,
@@ -53,33 +45,39 @@ import {
   FilterList,
   GridView,
   ViewList,
-  ScienceOutlined,
-  TrendingUp,
   BookOutlined,
-  Public,
+  TrendingUp,
   Groups
 } from "@mui/icons-material";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: 'rgb(77, 167, 208)',
-      light: 'rgb(126, 195, 223)',
-      dark: 'rgb(54, 116, 145)',
+      main: 'rgb(29, 78, 216)',
+      light: 'rgb(96, 128, 228)',
+      dark: 'rgb(20, 54, 151)',
     },
     secondary: {
-      main: 'rgb(77, 167, 208)',
-      light: 'rgb(126, 195, 223)',
-      dark: 'rgb(54, 116, 145)',
+      main: 'rgb(29, 78, 216)',
+      light: 'rgb(96, 128, 228)',
+      dark: 'rgb(20, 54, 151)',
+    },
+    background: {
+      paper: '#fff',
+    },
+    text: {
+      primary: '#000',
+      secondary: '#555',
     },
   },
 });
 
+// Definitions
 const ModernSearchBar = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   marginBottom: theme.spacing(3),
   borderRadius: 16,
-  backgroundColor: 'white',
+  backgroundColor: theme.palette.background.paper,
   boxShadow: '0 8px 32px rgba(77, 167, 208, 0.1)',
   transition: 'box-shadow 0.3s',
   '&:hover': {
@@ -92,7 +90,7 @@ const ModernFilterPanel = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(3),
   borderRadius: 16,
   boxShadow: "0 8px 32px rgba(77, 167, 208, 0.1)",
-  backgroundColor: 'white',
+  backgroundColor: theme.palette.background.paper,
   transition: 'box-shadow 0.3s',
   '&:hover': {
     boxShadow: '0 8px 32px rgba(77, 167, 208, 0.15)',
@@ -104,14 +102,14 @@ const ModernTextField = styled(TextField)(({ theme }) => ({
     borderRadius: 30,
     transition: 'box-shadow 0.3s',
     '&:hover': {
-      boxShadow: '0 4px 12px rgba(77, 167, 208, 0.15)',
+      boxShadow: `0 4px 12px rgba(${theme.palette.primary.main}, 0.15)`,
     },
     '&.Mui-focused': {
-      boxShadow: '0 4px 12px rgba(77, 167, 208, 0.2)',
+      boxShadow: `0 4px 12px rgba(${theme.palette.primary.main}, 0.2)`,
     }
   },
   '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'rgba(77, 167, 208, 0.2)',
+    borderColor: `rgba(${theme.palette.primary.main}, 0.2)`,
   },
 }));
 
@@ -119,44 +117,37 @@ const ModernSelect = styled(Select)(({ theme }) => ({
   borderRadius: 30,
   transition: 'box-shadow 0.3s',
   '&:hover': {
-    boxShadow: '0 4px 12px rgba(77, 167, 208, 0.15)',
+    boxShadow: `0 4px 12px rgba(${theme.palette.primary.main}, 0.15)`,
   },
   '&.Mui-focused': {
-    boxShadow: '0 4px 12px rgba(77, 167, 208, 0.2)',
+    boxShadow: `0 4px 12px rgba(${theme.palette.primary.main}, 0.2)`,
   },
   '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'rgba(77, 167, 208, 0.2)',
+    borderColor: `rgba(${theme.palette.primary.main}, 0.2)`,
   },
 }));
 
 const ModernButton = styled(Button)(({ theme }) => ({
   borderRadius: 30,
   padding: '8px 16px',
-  boxShadow: variant => variant === 'contained' ? '0 4px 14px rgba(77, 167, 208, 0.3)' : 'none',
+  boxShadow: variant => variant === 'contained' ? `0 4px 14px rgba(${theme.palette.primary.main}, 0.3)` : 'none',
   transition: 'transform 0.3s, box-shadow 0.3s',
   textTransform: 'none',
   fontWeight: 600,
   '&:hover': {
     transform: 'translateY(-2px)',
-    boxShadow: variant => variant === 'contained' ? '0 6px 16px rgba(77, 167, 208, 0.4)' : 'none',
+    boxShadow: variant => variant === 'contained' ? `0 6px 16px rgba(${theme.palette.primary.main}, 0.4)` : 'none',
   },
 }));
 
-const ModernFilterChip = styled(Chip)(({ theme }) => ({
-  margin: theme.spacing(0.5),
-  borderRadius: "30px",
-  fontSize: { xs: '0.7rem', sm: '0.75rem' },
-  height: { xs: 30, sm: 36 },
+const ModernChip = styled(Chip)(({ theme }) => ({
+  borderRadius: 20,
+  boxShadow: '0 4px 12px rgba(77, 167, 208, 0.1)',
   transition: 'all 0.2s',
-  backgroundColor: props => props.selected ? "rgb(77, 167, 208)" : "white",
-  boxShadow: props => props.selected ? '0 4px 12px rgba(77, 167, 208, 0.3)' : '0 4px 12px rgba(0,0,0,0.05)',
   '&:hover': {
     transform: 'translateY(-2px)',
-    boxShadow: props => props.selected ? '0 6px 14px rgba(77, 167, 208, 0.4)' : '0 6px 14px rgba(0,0,0,0.1)',
-  },
-  '& .MuiChip-label': {
-    padding: { xs: '0 12px', sm: '0 16px' },
-  },
+    boxShadow: '0 6px 15px rgba(77, 167, 208, 0.2)',
+  }
 }));
 
 const ModernResearcherCard = styled(Card)(({ theme }) => ({
@@ -174,21 +165,8 @@ const ModernResearcherCard = styled(Card)(({ theme }) => ({
 }));
 
 const ModernAvatar = styled(Avatar)(({ theme }) => ({
-  width: { xs: 70, sm: 80, md: 90 }, 
-  height: { xs: 70, sm: 80, md: 90 }, 
-  marginBottom: 1.5,
   border: '3px solid white',
   boxShadow: '0 8px 20px rgba(77, 167, 208, 0.2)',
-}));
-
-const ModernChip = styled(Chip)(({ theme }) => ({
-  borderRadius: 20,
-  boxShadow: '0 4px 12px rgba(77, 167, 208, 0.1)',
-  transition: 'all 0.2s',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 6px 15px rgba(77, 167, 208, 0.2)',
-  }
 }));
 
 const ModernTableContainer = styled(TableContainer)(({ theme }) => ({
@@ -197,7 +175,7 @@ const ModernTableContainer = styled(TableContainer)(({ theme }) => ({
   overflow: 'auto',
   maxWidth: '100%',
   '& .MuiTableHead-root': {
-    background: 'linear-gradient(135deg, rgba(77, 167, 208, 0.08) 0%, rgba(77, 167, 208, 0.03) 100%)',
+    background: `linear-gradient(135deg, rgba(${theme.palette.primary.main}, 0.08) 0%, rgba(${theme.palette.primary.main}, 0.03) 100%)`,
   },
   '& .MuiTableRow-root:nth-of-type(even)': {
     backgroundColor: alpha(theme.palette.primary.light, 0.03),
@@ -417,7 +395,7 @@ const CollaborationDiscovery = () => {
           display: 'flex', 
           flexDirection: 'column',
           alignItems: 'center',
-          backgroundImage: 'linear-gradient(135deg, rgba(77, 167, 208, 0.08) 0%, rgba(77, 167, 208, 0.02) 100%)',
+          backgroundImage: `linear-gradient(135deg, rgba(${theme.palette.primary.main}, 0.08) 0%, rgba(${theme.palette.primary.main}, 0.02) 100%)`,
           borderBottom: '1px solid rgba(77, 167, 208, 0.1)'
         }}>
           <ModernAvatar
@@ -431,7 +409,7 @@ const CollaborationDiscovery = () => {
               fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.3rem' },
               textAlign: 'center',
               fontWeight: 'bold',
-              color: 'rgb(54, 116, 145)',
+              color: theme.palette.primary.light,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
@@ -442,7 +420,7 @@ const CollaborationDiscovery = () => {
             {member.name || "Unknown"}
           </Typography>
           
-          <ModernChip 
+          <Chip 
             icon={<School fontSize="small" />} 
             label={member.departmentName || "Department"} 
             size="small"
@@ -473,7 +451,7 @@ const CollaborationDiscovery = () => {
                 whiteSpace: 'nowrap'
               }}
             >
-              <Business fontSize="small" sx={{ mr: 1.5, color: 'rgb(77, 167, 208)', flexShrink: 0 }} />
+              <Business fontSize="small" sx={{ mr: 1.5, color: theme.palette.primary.main, flexShrink: 0 }} />
               {member.affiliation || "Not provided"}
             </Typography>
             
@@ -489,7 +467,7 @@ const CollaborationDiscovery = () => {
                 whiteSpace: 'nowrap'
               }}
             >
-              <Email fontSize="small" sx={{ mr: 1.5, color: 'rgb(77, 167, 208)', flexShrink: 0 }} />
+              <Email fontSize="small" sx={{ mr: 1.5, color: theme.palette.primary.main, flexShrink: 0 }} />
               {getRegisteredUserEmail(member.id)}
             </Typography>
           </Box>
@@ -500,7 +478,7 @@ const CollaborationDiscovery = () => {
               mb: 1, 
               fontWeight: 'bold',
               fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem' },
-              color: 'rgb(54, 116, 145)'
+              color: theme.palette.primary.light
             }}
           >
             Research Interests:
@@ -608,13 +586,13 @@ const CollaborationDiscovery = () => {
               startIcon={<Visibility sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }} />}
               onClick={() => handleViewProfile(member.id)}
               sx={{
-                bgcolor: "rgb(77, 167, 208)",
+                bgcolor: theme.palette.primary.main,
                 color: "white",
                 py: 1,
-                boxShadow: '0 6px 16px rgba(77, 167, 208, 0.25)',
+                boxShadow: `0 6px 16px rgba(${theme.palette.primary.main}, 0.25)`,
                 "&:hover": {
-                  bgcolor: "rgb(62, 134, 168)",
-                  boxShadow: '0 8px 20px rgba(77, 167, 208, 0.35)',
+                  bgcolor: theme.palette.primary.dark,
+                  boxShadow: `0 8px 20px rgba(${theme.palette.primary.main}, 0.35)`,
                 },
               }}
             >
@@ -632,7 +610,6 @@ const CollaborationDiscovery = () => {
             >
               Not Registered
             </ModernButton>
-            
           )}
         </CardActions>
       </ModernResearcherCard>
@@ -662,7 +639,7 @@ const CollaborationDiscovery = () => {
               sx={{ 
                 fontSize: { xs: '0.75rem', sm: '0.875rem' },
                 fontWeight: 'medium',
-                color: 'rgb(54, 116, 145)',
+                color: theme.palette.primary.light,
               }}
             >
               {member.name || "Unknown"}
@@ -757,13 +734,13 @@ const CollaborationDiscovery = () => {
               startIcon={<Visibility sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }} />}
               onClick={() => handleViewProfile(member.id)}
               sx={{
-                bgcolor: "rgb(77, 167, 208)", 
+                bgcolor: theme.palette.primary.main, 
                 color: "white",
                 fontSize: { xs: '0.7rem', sm: '0.75rem' },
                 py: { xs: 0.5, sm: 0.75 },
                 whiteSpace: 'nowrap',
                 minWidth: '100px',
-                boxShadow: '0 4px 12px rgba(77, 167, 208, 0.2)',
+                boxShadow: `0 4px 12px rgba(${theme.palette.primary.main}, 0.2)`,
               }}
             >
               View Profile
@@ -819,7 +796,7 @@ const CollaborationDiscovery = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Search sx={{ color: 'rgb(77, 167, 208)' }} />
+                          <Search sx={{ color: theme.palette.primary.main }} />
                         </InputAdornment>
                       ),
                     }}
@@ -829,12 +806,12 @@ const CollaborationDiscovery = () => {
 
                 <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', alignItems: 'center' }}>
                   <FormControl fullWidth variant="outlined" size="small">
-                    <InputLabel sx={{ color: 'rgb(77, 167, 208)' }}>Department</InputLabel>
+                    <InputLabel sx={{ color: theme.palette.primary.main }}>Department</InputLabel>
                     <ModernSelect
                       value={selectedDepartment}
                       onChange={(e) => setSelectedDepartment(e.target.value)}
                       label="Department"
-                      sx={{ bgcolor: 'white' }}
+                      sx={{ bgcolor: theme.palette.background.paper }}
                     >
                       {departments.map((dept) => (
                         <MenuItem key={dept.value} value={dept.value}>
@@ -853,8 +830,8 @@ const CollaborationDiscovery = () => {
                     startIcon={<FilterList />}
                     onClick={() => setShowFilters(!showFilters)}
                     sx={{ 
-                      bgcolor: showFilters ? "rgb(77, 167, 208)" : "white",
-                      color: showFilters ? "white" : "rgb(77, 167, 208)",
+                      bgcolor: showFilters ? theme.palette.primary.main : "white",
+                      color: showFilters ? "white" : theme.palette.primary.main,
                       fontSize: { xs: '0.8rem', sm: '0.85rem' },
                     }}
                   >
@@ -871,8 +848,8 @@ const CollaborationDiscovery = () => {
                         borderTopLeftRadius: 30, 
                         borderBottomLeftRadius: 30,
                         width: '50%',
-                        bgcolor: viewMode === "grid" ? "rgb(77, 167, 208)" : "white",
-                        color: viewMode === "grid" ? "white" : "rgb(77, 167, 208)",
+                        bgcolor: viewMode === "grid" ? theme.palette.primary.main : "white",
+                        color: viewMode === "grid" ? "white" : theme.palette.primary.main,
                         '&:hover': {
                           transform: 'none',
                         },
@@ -889,8 +866,8 @@ const CollaborationDiscovery = () => {
                         borderTopRightRadius: 30,
                         borderBottomRightRadius: 30,
                         width: '50%',
-                        bgcolor: viewMode === "list" ? "rgb(77, 167, 208)" : "white",
-                        color: viewMode === "list" ? "white" : "rgb(77, 167, 208)",
+                        bgcolor: viewMode === "list" ? theme.palette.primary.main : "white",
+                        color: viewMode === "list" ? "white" : theme.palette.primary.main,
                         '&:hover': {
                           transform: 'none',
                         },
@@ -908,14 +885,14 @@ const CollaborationDiscovery = () => {
             {showFilters && (
               <ModernFilterPanel>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-                  <ScienceOutlined sx={{ mr: 1.5, color: 'rgb(77, 167, 208)', fontSize: { xs: '1.2rem', sm: '1.3rem' } }} />
-                  <Typography variant="h6" sx={{ fontWeight: '600', fontSize: { xs: '1rem', sm: '1.1rem' }, color: 'rgb(54, 116, 145)' }}>
+                  <Groups sx={{ mr: 1.5, color: theme.palette.primary.main, fontSize: { xs: '1.2rem', sm: '1.3rem' } }} />
+                  <Typography variant="h6" sx={{ fontWeight: '600', fontSize: { xs: '1rem', sm: '1.1rem' }, color: theme.palette.primary.light }}>
                     Filter by Research Interests
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1, sm: 1.5 } }}>
                   {commonInterests.map((interest) => (
-                    <ModernFilterChip
+                    <ModernChip
                       key={interest}
                       label={interest}
                       onClick={() => handleInterestToggle(interest)}
@@ -959,15 +936,15 @@ const CollaborationDiscovery = () => {
                     textAlign: 'center', 
                     py: { xs: 6, sm: 8 }, 
                     px: { xs: 2, sm: 3 },
-                    bgcolor: 'white',
+                    bgcolor: theme.palette.background.paper,
                     borderRadius: 3,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.07)',
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-                    <Groups sx={{ fontSize: { xs: 70, sm: 100 }, color: 'rgb(77, 167, 208)', opacity: 0.5 }} />
+                    <Groups sx={{ fontSize: { xs: 70, sm: 100 }, color: theme.palette.primary.main, opacity: 0.5 }} />
                   </Box>
-                  <Typography variant="h5" color="rgb(54, 116, 145)" gutterBottom sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, fontWeight: 600 }}>
+                  <Typography variant="h5" color={theme.palette.primary.light} gutterBottom sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, fontWeight: 600 }}>
                     No researchers found
                   </Typography>
                   <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' }, mb: 3 }}>
@@ -1022,7 +999,7 @@ const CollaborationDiscovery = () => {
                               fontWeight: 'bold', 
                               fontSize: '0.9rem', 
                               width: '18%',
-                              color: 'rgb(54, 116, 145)',
+                              color: theme.palette.primary.light,
                               borderBottom: '2px solid rgba(77, 167, 208, 0.2)',
                             }}>
                               Researcher
@@ -1031,7 +1008,7 @@ const CollaborationDiscovery = () => {
                               fontWeight: 'bold', 
                               fontSize: '0.9rem', 
                               width: '14%',
-                              color: 'rgb(54, 116, 145)',
+                              color: theme.palette.primary.light,
                               borderBottom: '2px solid rgba(77, 167, 208, 0.2)',
                             }}>
                               Department
@@ -1040,7 +1017,7 @@ const CollaborationDiscovery = () => {
                               fontWeight: 'bold', 
                               fontSize: '0.9rem', 
                               width: '18%',
-                              color: 'rgb(54, 116, 145)',
+                              color: theme.palette.primary.light,
                               borderBottom: '2px solid rgba(77, 167, 208, 0.2)',
                             }}>
                               Affiliation
@@ -1049,7 +1026,7 @@ const CollaborationDiscovery = () => {
                               fontWeight: 'bold', 
                               fontSize: '0.9rem', 
                               width: '20%',
-                              color: 'rgb(54, 116, 145)',
+                              color: theme.palette.primary.light,
                               borderBottom: '2px solid rgba(77, 167, 208, 0.2)',
                             }}>
                               Email
@@ -1058,7 +1035,7 @@ const CollaborationDiscovery = () => {
                               fontWeight: 'bold', 
                               fontSize: '0.9rem', 
                               width: '18%',
-                              color: 'rgb(54, 116, 145)',
+                              color: theme.palette.primary.light,
                               borderBottom: '2px solid rgba(77, 167, 208, 0.2)',
                             }}>
                               Research Interests
@@ -1067,7 +1044,7 @@ const CollaborationDiscovery = () => {
                               fontWeight: 'bold', 
                               fontSize: '0.9rem', 
                               width: '12%',
-                              color: 'rgb(54, 116, 145)',
+                              color: theme.palette.primary.light,
                               borderBottom: '2px solid rgba(77, 167, 208, 0.2)',
                             }}>
                               Actions
@@ -1091,12 +1068,12 @@ const CollaborationDiscovery = () => {
                         variant="contained"
                         color="primary"
                         onClick={handleLoadMore}
-                        startIcon={<Public />}
+                        startIcon={<Groups />}
                         sx={{
                           px: { xs: 4, sm: 5 },
                           py: { xs: 1, sm: 1.25 },
-                          boxShadow: '0 6px 20px rgba(77, 167, 208, 0.2)',
-                          backgroundColor: "rgb(77, 167, 208)",
+                          boxShadow: `0 6px 20px rgba(${theme.palette.primary.main}, 0.2)`,
+                          backgroundColor: theme.palette.primary.main,
                           fontSize: { xs: '0.85rem', sm: '0.9rem' },
                         }}
                       >

@@ -1,30 +1,63 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  Settings,
-} from "lucide-react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
-import { LuLayoutDashboard } from "react-icons/lu";
-import { MdOutlineManageSearch } from "react-icons/md";
-import { BsStars } from "react-icons/bs";
-import { FaChartLine } from "react-icons/fa";
-import logo from "../../assets/FYP.png"; 
+import { auth, db } from "../../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import logo from "../../assets/FYP.png";
 
-const SIDEBAR_ITEMS = [
-  { name: "Dashboard", icon: LuLayoutDashboard, href: "/admin-dashboard" },
-  { name: "Search", icon: MdOutlineManageSearch, href: "/search" },
-  { name: "Litrix Chat", icon: BsStars, href: "/chat" },
-  { name: "Research Analytics", icon: FaChartLine, href: "/research-analytics" },
-  { name: "Settings", icon: Settings, href: "/settings" },
-];
+import { ChevronLeft, ChevronRight, Menu, Settings } from "lucide-react";
+import { LuLayoutDashboard } from "react-icons/lu";
+import { MdOutlineManageSearch, MdSettings } from "react-icons/md";
+import { BsStars } from "react-icons/bs";
+import { FaUserCircle, FaChartLine, FaUserGraduate } from "react-icons/fa";
+import { AiOutlineTeam } from "react-icons/ai";
+
+const MENU_ITEMS = {
+  admin: [
+    { name: "Dashboard", icon: LuLayoutDashboard, href: "/admin-dashboard" },
+    { name: "Control Panel", icon: Menu, href: "/control-panel" },
+    { name: "Search", icon: MdOutlineManageSearch, href: "/search" },
+    { name: "Litrix Chat", icon: BsStars, href: "/chat" },
+    { name: "Research Analytics", icon: FaChartLine, href: "/research-analytics" },
+    { name: "Settings", icon: Settings, href: "/settings" },
+  ],
+  academic_admin: [
+    { name: "Dashboard", icon: LuLayoutDashboard, href: "/academic-dashboard" },
+    { name: "Profile", icon: FaUserCircle, href: "/profile" },
+    { name: "Collaboration", icon: AiOutlineTeam, href: "/collab" },
+    { name: "Search", icon: MdOutlineManageSearch, href: "/search" },
+    { name: "Litrix Chat", icon: BsStars, href: "/chat" },
+    { name: "Research Analytics", icon: FaChartLine, href: "/research-analytics" },
+    { name: "Settings", icon: MdSettings, href: "/settings" },
+  ],
+  department_admin: [
+    { name: "Dashboard", icon: LuLayoutDashboard, href: "/department-dashboard" },
+    { name: "Profile", icon: FaUserCircle, href: "/profile" },
+    { name: "Collaboration", icon: AiOutlineTeam, href: "/collab" },
+    { name: "Search", icon: MdOutlineManageSearch, href: "/search" },
+    { name: "Litrix Chat", icon: BsStars, href: "/chat" },
+    { name: "Research Analytics", icon: FaChartLine, href: "/research-analytics" },
+    { name: "Settings", icon: MdSettings, href: "/settings" },
+  ],
+  researcher: [
+    { name: "Dashboard", icon: LuLayoutDashboard, href: "/dashboard" },
+    { name: "Profile", icon: FaUserCircle, href: "/profile" },
+    { name: "Collaboration", icon: AiOutlineTeam, href: "/collab" },
+    { name: "Search", icon: MdOutlineManageSearch, href: "/search" },
+    { name: "Litrix Chat", icon: BsStars, href: "/chat" },
+    { name: "Settings", icon: MdSettings, href: "/settings" },
+  ]
+};
 
 const Sidebar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [userData, setUserData] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [departmentName, setDepartmentName] = useState("");
   const location = useLocation();
-  
+  const navigate = useNavigate();
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -39,6 +72,77 @@ const Sidebar = () => {
     
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoading(true);
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          console.log("Current user:", user.uid);
+          
+          const [adminDoc, academicAdminDoc, departmentAdminDoc, userDoc] = await Promise.all([
+            getDoc(doc(db, "admins", user.uid)),
+            getDoc(doc(db, "academicAdmins", user.uid)),
+            getDoc(doc(db, "departmentAdmins", user.uid)),
+            getDoc(doc(db, "users", user.uid))
+          ]);
+          
+          if (adminDoc.exists()) {
+            console.log("User found as system admin");
+            setUserData(adminDoc.data());
+            setUserRole("admin");
+          } else if (academicAdminDoc.exists()) {
+            console.log("User found as academic admin");
+            setUserData(academicAdminDoc.data());
+            setUserRole("academic_admin");
+          } else if (departmentAdminDoc.exists()) {
+            console.log("User found as department admin");
+            setUserData(departmentAdminDoc.data());
+            setUserRole("department_admin");
+            
+            if (departmentAdminDoc.data().departmentId) {
+              try {
+                const departmentDoc = await getDoc(doc(db, "departments", departmentAdminDoc.data().departmentId));
+                if (departmentDoc.exists()) {
+                  setDepartmentName(departmentDoc.data().name || "Department");
+                }
+              } catch (error) {
+                console.error("Error fetching department data:", error);
+              }
+            }
+          } else if (userDoc.exists()) {
+            console.log("User found as researcher");
+            setUserData(userDoc.data());
+            setUserRole("researcher");
+          } else {
+            console.warn("User document not found in any collection");
+            setUserData({
+              email: user.email,
+              firstName: user.displayName?.split(' ')[0] || 'User',
+              lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+              url_picture: user.photoURL
+            });
+            setUserRole("researcher"); 
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const getInitials = (firstName, lastName) => {
+    const firstInitial = firstName?.charAt(0) || 'U';
+    const lastInitial = lastName?.charAt(0) || '';
+    return `${firstInitial}${lastInitial}`;
+  };
+
+  const sidebarItems = userRole && MENU_ITEMS[userRole] ? MENU_ITEMS[userRole] : [];
 
   return (
     <motion.div
@@ -63,14 +167,28 @@ const Sidebar = () => {
               whileTap={{ scale: 0.95 }}
             />
             {isSidebarOpen && (
-              <motion.h1 
-                className="font-bold text-xl bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent"
+              <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
+                className="flex flex-col"
               >
-                Litrix
-              </motion.h1>
+                <motion.h1 
+                  className="font-bold text-xl bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent"
+                >
+                  Litrix
+                </motion.h1>
+                {departmentName && userRole === "department_admin" && (
+                  <motion.p 
+                    className="text-xs text-gray-600"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {departmentName}
+                  </motion.p>
+                )}
+              </motion.div>
             )}
           </motion.div>
           
@@ -93,13 +211,14 @@ const Sidebar = () => {
           <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
         </div>
 
-        <nav className="mt-8 flex-grow px-3">
+        <nav className="mt-6 flex-grow px-3">
           <div className="space-y-1.5">
-            {SIDEBAR_ITEMS.map((item) => {
-              const isActive = location.pathname === item.href;
+            {sidebarItems.map((item) => {
+              const isActive = location.pathname === item.href || 
+                              (item.href === '/profile' && location.pathname.includes('/profile'));
               
               return (
-                <Link key={item.href} to={item.href}>
+                <Link key={item.name} to={item.href}>
                   <motion.div 
                     className={`flex items-center p-3 rounded-xl transition-all ${
                       isActive 
@@ -145,54 +264,69 @@ const Sidebar = () => {
           </div>
         </nav>
         
-        <div className="p-4 mt-auto">
-          <AnimatePresence>
-            {isSidebarOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 rounded-xl text-white shadow-md"
-              >
-                <h3 className="font-medium text-sm">Need Help?</h3>
-                <p className="text-xs text-blue-100 mt-1">
-                  Check our documentation or contact support
-                </p>
-                <button className="mt-3 text-xs bg-white text-blue-700 px-3 py-1.5 rounded-lg font-medium hover:shadow-lg transition-all">
-                  View Docs
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center">
-            {isSidebarOpen ? (
-              <motion.div 
-                className="flex items-center gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
-                  A
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Admin User</p>
-                  <p className="text-xs text-gray-500">Version 1.2.0</p>
-                </div>
-              </motion.div>
+        {userData && (
+          <div className="p-4 border-t border-gray-200">
+            {loading ? (
+              <div className="flex items-center justify-center py-2">
+                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
             ) : (
-              <motion.div 
-                className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm mx-auto"
-                whileHover={{ scale: 1.1 }}
-              >
-                A
-              </motion.div>
+              <div className="flex items-center">
+                {isSidebarOpen ? (
+                  <motion.div 
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <div className="relative">
+                      {userData?.url_picture ? (
+                        <img 
+                          src={userData.url_picture} 
+                          alt="Profile" 
+                          className="w-10 h-10 rounded-full object-cover border-2 border-blue-100"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                          {getInitials(userData?.firstName, userData?.lastName)}
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 truncate max-w-[160px]">
+                        {userData?.firstName || 'User'} {userData?.lastName || ''}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate max-w-[160px]">
+                        {userRole === "department_admin" && departmentName ? 
+                          departmentName : userData?.email || auth.currentUser?.email || 'user@example.com'}
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div className="mx-auto relative">
+                    {userData?.url_picture ? (
+                      <motion.img 
+                        src={userData.url_picture} 
+                        alt="Profile" 
+                        className="w-10 h-10 rounded-full object-cover border-2 border-blue-100"
+                        whileHover={{ scale: 1.1 }}
+                      />
+                    ) : (
+                      <motion.div 
+                        className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm"
+                        whileHover={{ scale: 1.1 }}
+                      >
+                        {getInitials(userData?.firstName, userData?.lastName)}
+                      </motion.div>
+                    )}
+                    <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
+                  </motion.div>
+                )}
+              </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </motion.div>
   );
