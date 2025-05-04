@@ -1,17 +1,14 @@
-// src/ControlPanel/NotificationButton.jsx
 import React, { useState } from 'react';
 import { Modal, Input, message } from 'antd';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
 export default function NotificationButton({ recipientId, children }) {
-  // Local state for modal visibility, form fields and loading
   const [visible, setVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Handler to send the notification
   const sendNotification = async () => {
     if (!title || !body) {
       return message.warning('Please enter both a title and a body.');
@@ -19,14 +16,13 @@ export default function NotificationButton({ recipientId, children }) {
     setLoading(true);
     try {
       await addDoc(collection(db, 'notifications'), {
-        recipientId,            // the user ID to receive this notification
-        title,                  // notification title
-        message: body,          // notification body
-        type: 'manual',         // custom/manual notification
-        timestamp: serverTimestamp(), // store server timestamp
+        recipientId,            
+        title,                  
+        message: body,          
+        type: 'manual',        
+        timestamp: serverTimestamp(), 
       });
       message.success('Notification sent successfully');
-      // Reset form & close modal
       setVisible(false);
       setTitle('');
       setBody('');
@@ -40,7 +36,6 @@ export default function NotificationButton({ recipientId, children }) {
 
   return (
     <>
-      {/* Clicking this span will open the modal */}
       <span
         style={{ display: 'inline-block', cursor: 'pointer' }}
         onClick={() => setVisible(true)}
@@ -50,21 +45,19 @@ export default function NotificationButton({ recipientId, children }) {
 
       <Modal
         title="Send Notification"
-        visible={visible}            // use `visible` for AntD v4
+        visible={visible}            
         onCancel={() => setVisible(false)}
         onOk={sendNotification}
         okText="Send"
         cancelText="Cancel"
         confirmLoading={loading}
       >
-        {/* Title input */}
         <Input
           placeholder="Notification Title"
           value={title}
           onChange={e => setTitle(e.target.value)}
           className="mb-2"
         />
-        {/* Body textarea */}
         <Input.TextArea
           placeholder="Notification Body"
           value={body}

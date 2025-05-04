@@ -156,7 +156,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     }
   }, [selectedDepartment, selectedYear, currentYear]);
   
-  // Memoized KPI calculations to improve performance
   const kpiCalculations = useMemo(() => {
     // KPI-I-13: % Faculty Published
     const calculateKPI13 = () => {

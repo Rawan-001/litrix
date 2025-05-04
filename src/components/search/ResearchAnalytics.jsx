@@ -32,26 +32,22 @@ import { collectionGroup, getDocs, collection, query, where } from 'firebase/fir
 import { db } from '../../firebaseConfig';
 
 const CombinedResearchDashboard = () => {
-  // State from both components
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   
-  // Dashboard states
   const [publicationData, setPublicationData] = useState(null);
   const [topProfessors, setTopProfessors] = useState([]);
   const [externalCollaborations, setExternalCollaborations] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedCollaborations, setSelectedCollaborations] = useState([]);
   
-  // Report states
   const [collegeStats, setCollegeStats] = useState([]);
   const [departmentStats, setDepartmentStats] = useState({});
   const [departments, setDepartments] = useState([]);
   const [researchers, setResearchers] = useState({});
   const [expandedDepts, setExpandedDepts] = useState({});
 
-  // Common mapping for both components
   const departmentMapping = {
     dept_se: "Software Engineering",
     dept_cs: "Computer Science",
@@ -60,7 +56,6 @@ const CombinedResearchDashboard = () => {
     dept_ai: "Artificial Intelligence",
   };
 
-  // Colors for charts
   const COLORS = ['#4DA7D0', '#8ACCE6', '#36A2EB', '#9AD0F5', '#5CBAE6', '#4DB6AC', '#81C784'];
 
   useEffect(() => {
@@ -68,7 +63,6 @@ const CombinedResearchDashboard = () => {
       try {
         setLoading(true);
         
-        // Fetch departments
         const departmentsRef = collection(db, 'colleges/faculty_computing/departments');
         const departmentsSnapshot = await getDocs(departmentsRef);
         const departmentsData = departmentsSnapshot.docs.map(doc => ({
@@ -77,11 +71,9 @@ const CombinedResearchDashboard = () => {
           ...doc.data()
         }));
         
-        // Process only the departments that exist in our mapping
         const filteredDepartments = departmentsData.filter(dept => departmentMapping[dept.id]);
         setDepartments(filteredDepartments);
         
-        // Initialize statistics object by year (for report)
         const yearlyStats = {};
         const years = [2020, 2021, 2022, 2023, 2024];
         years.forEach(year => {
@@ -91,11 +83,9 @@ const CombinedResearchDashboard = () => {
           };
         });
         
-        // Initialize department stats and researchers
         const deptStats = {};
         const researchersByDept = {};
         
-        // Fetch all faculty members across all departments
         const facultyRef = collectionGroup(db, "faculty_members");
         const facultySnapshot = await getDocs(facultyRef);
         const allResearchers = facultySnapshot.docs.map((doc) => ({
@@ -104,7 +94,6 @@ const CombinedResearchDashboard = () => {
           ...doc.data(),
         }));
         
-        // Get list of registered author names for external collaboration detection
         const registeredAuthorNames = allResearchers.map(researcher =>
           researcher.name ? researcher.name.trim().toLowerCase() : 
           `${researcher.firstName || ''} ${researcher.lastName || ''}`.trim().toLowerCase()
@@ -115,7 +104,6 @@ const CombinedResearchDashboard = () => {
           return !registeredAuthorNames.includes(normalizedAuthorName);
         };
 
-        // Process researchers by department
         filteredDepartments.forEach(dept => {
           deptStats[dept.id] = {};
           researchersByDept[dept.id] = [];
@@ -127,7 +115,6 @@ const CombinedResearchDashboard = () => {
             };
           });
           
-          // Filter researchers by department
           const deptResearchers = allResearchers.filter(r => r.department === dept.id);
           
           deptResearchers.forEach(researcher => {
@@ -144,7 +131,6 @@ const CombinedResearchDashboard = () => {
           });
         });
         
-        // Fetch all publications
         const publicationsRef = collectionGroup(db, "publications");
         const publicationsSnapshot = await getDocs(publicationsRef);
         const allPublications = publicationsSnapshot.docs.map(doc => ({
@@ -154,13 +140,11 @@ const CombinedResearchDashboard = () => {
           department: doc.ref.parent.parent.parent.parent.id
         }));
         
-        // Filter publications for dashboard (2021-2024)
         const dashboardPublications = allPublications.filter(pub => {
           const pubYear = parseInt(pub.pub_year);
           return pubYear >= 2021 && pubYear <= 2024;
         });
         
-        // Process publications for yearly stats (dashboard)
         const publicationsByYear = [2021, 2022, 2023, 2024].map(year => {
           const pubsForYear = dashboardPublications.filter(pub => parseInt(pub.pub_year) === year);
           const citationsForYear = pubsForYear.reduce((sum, pub) => sum + (parseInt(pub.num_citations) || 0), 0);
@@ -176,7 +160,6 @@ const CombinedResearchDashboard = () => {
           };
         });
         
-        // Calculate totals for dashboard
         const totalPublications = dashboardPublications.length;
         const totalCitations = dashboardPublications.reduce((sum, pub) => sum + (parseInt(pub.num_citations) || 0), 0);
         const pubsWithExternalAuthors = dashboardPublications.filter(pub => {
@@ -186,7 +169,6 @@ const CombinedResearchDashboard = () => {
         const totalExternalCollabs = pubsWithExternalAuthors.length;
         const externalCollabPercentage = ((totalExternalCollabs / totalPublications) * 100).toFixed(1);
         
-        // Calculate h-index and other metrics for researchers
         const researchersWithMetrics = allResearchers.map(researcher => {
           const researcherPublications = dashboardPublications.filter(pub => pub.researcherId === researcher.id);
           const citationCounts = researcherPublications
@@ -219,31 +201,26 @@ const CombinedResearchDashboard = () => {
           .sort((a, b) => b.hIndex - a.hIndex)
           .slice(0, 10);
         
-        // Process department statistics for report (2020-2024)
         allPublications.forEach(publication => {
           const pubYear = parseInt(publication.pub_year);
           const dept = publication.department;
           const citations = parseInt(publication.num_citations) || 0;
           
           if (pubYear >= 2020 && pubYear <= 2024 && deptStats[dept]) {
-            // Update department-level stats
             deptStats[dept][pubYear].publications += 1;
             deptStats[dept][pubYear].citations += citations;
             
-            // Update college-level stats
             yearlyStats[pubYear].publications += 1;
             yearlyStats[pubYear].citations += citations;
           }
         });
         
-        // Convert yearly stats to array format for easier rendering
         const collegeStatsArray = years.map(year => ({
           year,
           publications: yearlyStats[year].publications,
           citations: yearlyStats[year].citations
         }));
         
-        // Add total row
         const totalReportPublications = collegeStatsArray.reduce((sum, stat) => sum + stat.publications, 0);
         const totalReportCitations = collegeStatsArray.reduce((sum, stat) => sum + stat.citations, 0);
         
@@ -253,7 +230,6 @@ const CombinedResearchDashboard = () => {
           citations: totalReportCitations
         });
         
-        // Set all states
         setPublicationData({
           totalPublications,
           totalCitations,
@@ -271,7 +247,6 @@ const CombinedResearchDashboard = () => {
         setDepartmentStats(deptStats);
         setResearchers(researchersByDept);
         
-        // Initialize expanded state for departments
         const expandedState = {};
         filteredDepartments.forEach(dept => {
           expandedState[dept.id] = false;
@@ -288,7 +263,6 @@ const CombinedResearchDashboard = () => {
     fetchAllData();
   }, []);
 
-  // Common Functions
   const createCSVDownload = (data, filename) => {
     const blob = new Blob([data], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -302,7 +276,6 @@ const CombinedResearchDashboard = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Dashboard Functions
   const downloadScopusData = () => {
     fetch('/src/scopus_pub.csv')
       .then(response => response.text())
@@ -338,7 +311,6 @@ const CombinedResearchDashboard = () => {
     createCSVDownload(csvData, "top_researchers_hindex.csv");
   };
 
-  // Report Functions
   const toggleDepartment = (deptId) => {
     setExpandedDepts(prev => ({
       ...prev,
@@ -349,14 +321,12 @@ const CombinedResearchDashboard = () => {
   const exportReportCSV = () => {
     let csvContent = "Level,Year,Publications,Citations\n";
     
-    // Add college level stats
     collegeStats.forEach(stat => {
-      if (stat.year !== 'Total') { // Skip the total row for now
+      if (stat.year !== 'Total') { 
         csvContent += `College,${stat.year},${stat.publications},${stat.citations}\n`;
       }
     });
     
-    // Add department level stats
     departments.forEach(dept => {
       const deptName = departmentMapping[dept.id] || dept.id;
       Object.keys(departmentStats[dept.id] || {}).forEach(year => {
@@ -364,7 +334,6 @@ const CombinedResearchDashboard = () => {
         csvContent += `${deptName},${year},${stats.publications},${stats.citations}\n`;
       });
       
-      // Calculate department totals
       if (departmentStats[dept.id]) {
         const deptTotal = {
           publications: Object.values(departmentStats[dept.id]).reduce((sum, year) => sum + year.publications, 0),
@@ -374,7 +343,6 @@ const CombinedResearchDashboard = () => {
       }
     });
     
-    // Add college total at the end
     const totalRow = collegeStats.find(stat => stat.year === 'Total');
     if (totalRow) {
       csvContent += `College,Total,${totalRow.publications},${totalRow.citations}\n`;
@@ -383,7 +351,6 @@ const CombinedResearchDashboard = () => {
     createCSVDownload(csvContent, `research_report_2020_2024_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
   };
 
-  // UI Components
   const CollaborationsModal = () => {
     if (!showModal) return null;
     return (
@@ -526,7 +493,6 @@ const CombinedResearchDashboard = () => {
     );
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -535,7 +501,6 @@ const CombinedResearchDashboard = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="flex flex-col justify-center items-center h-screen gap-4">
@@ -555,7 +520,6 @@ const CombinedResearchDashboard = () => {
     <div className="bg-gray-50 min-h-screen font-sans">
       <CollaborationsModal />
       
-      {/* Navigation Tabs */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-6">
           <div className="flex space-x-8">
@@ -585,7 +549,6 @@ const CombinedResearchDashboard = () => {
         </div>
       </div>
 
-      {/* Content Area */}
       <div className="container mx-auto px-6 py-8">
         {activeTab === 'dashboard' && (
           <>
@@ -596,7 +559,6 @@ const CombinedResearchDashboard = () => {
               </div>
             </div>
             
-            {/* Metrics Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <MetricCard
                 title="Total Publications"
@@ -647,7 +609,6 @@ const CombinedResearchDashboard = () => {
               />
             </div>
 
-            {/* Publication Trends Chart */}
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 mb-8">
               <div className="p-6">
                 <h2 className="text-xl font-bold text-blue-800 mb-6">Publication Trends (2021-2024)</h2>
@@ -687,7 +648,6 @@ const CombinedResearchDashboard = () => {
               </div>
             </div>
 
-            {/* Department Distribution */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
                 <div className="p-6">
@@ -776,7 +736,6 @@ const CombinedResearchDashboard = () => {
               </div>
             </div>
 
-            {/* Top Researchers Table */}
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 mb-8">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
@@ -855,7 +814,6 @@ const CombinedResearchDashboard = () => {
               </button>
             </div>
 
-            {/* College Level Stats */}
             <div className="bg-white rounded-xl shadow-md mb-8">
               <div className="p-6">
                 <h2 className="text-xl font-bold text-blue-800 mb-4">College-Wide Research Statistics</h2>
@@ -920,7 +878,6 @@ const CombinedResearchDashboard = () => {
               </div>
             </div>
 
-            {/* Department Level Statistics */}
             <div className="bg-white rounded-xl shadow-md">
               <div className="p-6">
                 <h2 className="text-xl font-bold text-blue-800 mb-4">Department Research Statistics</h2>

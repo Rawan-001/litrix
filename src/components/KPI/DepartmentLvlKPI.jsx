@@ -79,7 +79,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     try {
       const basePath = "colleges/faculty_computing/departments";
       
-      // فقط نحضر الباحثين من القسم المحدد
       const facultyRef = collection(db, `${basePath}/${selectedDepartment}/faculty_members`);
       const facultySnapshot = await getDocs(facultyRef);
       
@@ -142,9 +141,7 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     }
   }, [selectedDepartment, selectedYear, currentYear]);
   
-  // Memoized KPI calculations to improve performance
   const kpiCalculations = useMemo(() => {
-    // KPI-I-13: % Faculty Published
     const calculateKPI13 = () => {
       if (!researchers || researchers.length === 0) return 0;
       
@@ -155,14 +152,12 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
       return Math.min((researchersWithPublications / researchers.length) * 100, 100);
     };
     
-    // KPI-I-14: Avg Publications/Faculty
     const calculateKPI14 = () => {
       if (!researchers || researchers.length === 0) return 0;
       return researchers.length > 0 ? 
         researchers.reduce((sum, r) => sum + r.publicationsInSelectedYear, 0) / researchers.length : 0;
     };
     
-    // KPI-I-15: Avg Citations/Publications
     const calculateKPI15 = () => {
       if (!researchers || researchers.length === 0) return 0;
       
@@ -248,7 +243,6 @@ const KPI = ({ statistics, selectedDepartment = "dept_cs" }) => {
     }
   ], [kpiCalculations, selectedYear]);
 
-  // حصول على عدد الباحثين المصفّاة حسب نوع KPI المعروض
   const getFilteredResearchersCount = () => {
     if (viewingKpi === "KPI-I-13") {
       return filteredResearchers.filter(r => r.hasPublishedInSelectedYear).length;

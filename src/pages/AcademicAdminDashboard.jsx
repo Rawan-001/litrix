@@ -166,7 +166,6 @@ const AcademicAdminDashboard = () => {
 
   return (
     <Layout className="w-full bg-gray-50 flex-1 flex flex-col overflow-x-hidden">
-      {/* الهيدر هنا فقط مرة وحدة */}
       <Header 
         title={activeView === 'admin' ? 'Admin Dashboard' : 'Researcher Dashboard'}
         showViewSwitcher={false}
@@ -174,7 +173,6 @@ const AcademicAdminDashboard = () => {
       />
   
       <Content className="p-6 flex-1 overflow-auto">
-        {/* View Switcher Button */}
         <div className="flex justify-end mb-6">
           <ViewSwitcherButton 
             currentView={activeView} 

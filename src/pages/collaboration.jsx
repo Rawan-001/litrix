@@ -72,7 +72,6 @@ const theme = createTheme({
   },
 });
 
-// Definitions
 const ModernSearchBar = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   marginBottom: theme.spacing(3),

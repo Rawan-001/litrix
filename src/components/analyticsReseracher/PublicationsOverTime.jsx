@@ -7,7 +7,7 @@ import { GridLoader } from 'react-spinners';
 
 const PublicationsOverTime = ({ 
   researcher = null, 
-  role = "researcher", // "researcher", "admin", "visitor"
+  role = "researcher", 
   customColor = "#4F46E5",
   showFilters = true
 }) => {
@@ -18,7 +18,6 @@ const PublicationsOverTime = ({
   const [college, setCollege] = useState(null);
   const [department, setDepartment] = useState(null);
 
-  // Definir colores basados en el rol
   const themeColors = useMemo(() => {
     const colors = {
       researcher: {
@@ -66,10 +65,8 @@ const PublicationsOverTime = ({
       const publicationsRef = collection(db, `colleges/${college}/departments/${department}/faculty_members/${scholarId}/publications`);
       const publicationsSnapshot = await getDocs(publicationsRef);
 
-      // Ordenar publicaciones por tiempo
       const publications = publicationsSnapshot.docs.map(doc => doc.data());
       
-      // Calcular datos por diferentes rangos temporales
       const publicationsByRange = processPublicationsByTimeRange(publications, selectedTimeRange);
 
       setData(publicationsByRange);
@@ -86,7 +83,7 @@ const PublicationsOverTime = ({
     publications.forEach(publication => {
       const pubYear = publication.pub_year;
       
-      if (!pubYear) return; // Ignorar publicaciones sin año
+      if (!pubYear) return; 
       
       if (timeRange === "Yearly") {
         if (!publicationsByRange[pubYear]) {
@@ -96,7 +93,6 @@ const PublicationsOverTime = ({
           publicationsByRange[pubYear].citations += (publication.num_citations || 0);
         }
       } else if (timeRange === "Quarterly") {
-        // Divide en trimestres (asumiendo que tenemos datos mensuales)
         const quarter = Math.ceil(publication.pub_month / 3);
         const key = `${pubYear}-Q${quarter}`;
         
@@ -107,7 +103,6 @@ const PublicationsOverTime = ({
           publicationsByRange[key].citations += (publication.num_citations || 0);
         }
       } else if (timeRange === "Monthly") {
-        // Datos mensuales (si están disponibles)
         if (publication.pub_month) {
           const month = publication.pub_month.toString().padStart(2, '0');
           const key = `${pubYear}-${month}`;
@@ -122,7 +117,6 @@ const PublicationsOverTime = ({
       }
     });
 
-    // Formatear los datos para el gráfico
     const formattedData = Object.keys(publicationsByRange)
       .sort()
       .map(key => ({
@@ -135,18 +129,15 @@ const PublicationsOverTime = ({
   };
 
   useEffect(() => {
-    // Si ya tenemos los datos del investigador, usarlos directamente
     if (researcher) {
       setScholarId(researcher.id || researcher.scholar_id);
       setCollege(researcher.college || "faculty_computing");
       setDepartment(researcher.department || "dept_cs");
       
-      // Simular carga inicial para mostrar la animación
       setTimeout(() => {
         setLoading(false);
       }, 800);
       
-      // Si el investigador ya tiene publicaciones procesadas, usarlas
       if (researcher.publications && researcher.publications.length > 0) {
         const publicationsByRange = processPublicationsByTimeRange(
           researcher.publications, 
@@ -154,7 +145,6 @@ const PublicationsOverTime = ({
         );
         setData(publicationsByRange);
       } else if (researcher.id || researcher.scholar_id) {
-        // Si no, buscar las publicaciones
         fetchPublicationsByRange(
           researcher.id || researcher.scholar_id,
           researcher.college || "faculty_computing",
@@ -162,7 +152,6 @@ const PublicationsOverTime = ({
         );
       }
     } else {
-      // Si no hay datos de investigador, intentar obtenerlos del usuario actual
       const unsubscribe = auth.onAuthStateChanged(async (user) => {
         if (user) {
           const userData = await fetchUserData(user.uid);
@@ -186,7 +175,6 @@ const PublicationsOverTime = ({
   const handleTimeRangeChange = (e) => {
     setSelectedTimeRange(e.target.value);
     
-    // Si tenemos datos del investigador, procesar directamente
     if (researcher && researcher.publications) {
       const publicationsByRange = processPublicationsByTimeRange(
         researcher.publications, 
@@ -194,12 +182,10 @@ const PublicationsOverTime = ({
       );
       setData(publicationsByRange);
     } else if (scholarId) {
-      // De lo contrario, hacer una nueva búsqueda
       fetchPublicationsByRange(scholarId, college, department);
     }
   };
 
-  // Personalizar el tooltip para mostrar más información
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (

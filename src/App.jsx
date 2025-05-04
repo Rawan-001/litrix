@@ -1,32 +1,29 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+// src/App.jsx
+import React, { useState, useEffect, useCallback, lazy, Suspense, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc, collection, query, where, onSnapshot, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 import { notification } from 'antd';
-
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
 import HomePage from './pages/HomePage/HomePage';
 
-
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminDashboard         = lazy(() => import('./pages/AdminDashboard'));
 const AcademicAdminDashboard = lazy(() => import('./pages/AcademicAdminDashboard'));
-const DepartmentDashboard = lazy(() => import('./pages/DepartmentAdminDashboard'));
-const SearchPage = lazy(() => import('./pages/SearchPage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const SignUpPage = lazy(() => import('./pages/SignUpPage'));
-const ResearcherProfilePage = lazy(() => import('./pages/ResearcherProfilePage'));
-const ResearcherDashboard = lazy(() => import('./pages/ResearcherDashboard'));
-const LitrixChatPage = lazy(() => import('./pages/LitrixChatPage'));
-const SignUpPageAdmin = lazy(() => import('./pages/SignUpPageAdmin'));
-const Collaboration = lazy(() => import('./pages/collaboration'));
-const ControlPanel = lazy(() => import('./pages/ControlPanel/ControlPanel'));
-const ResearchAnalytics = lazy(() => import('./components/search/ResearchAnalytics'));
-
+const DepartmentDashboard    = lazy(() => import('./pages/DepartmentAdminDashboard'));
+const SearchPage             = lazy(() => import('./pages/SearchPage'));
+const SettingsPage           = lazy(() => import('./pages/SettingsPage'));
+const SignUpPage             = lazy(() => import('./pages/SignUpPage'));
+const SignUpPageAdmin        = lazy(() => import('./pages/SignUpPageAdmin'));
+const ControlPanel           = lazy(() => import('./pages/ControlPanel/ControlPanel'));
+const ResearcherProfilePage  = lazy(() => import('./pages/ResearcherProfilePage'));
+const ResearcherDashboard    = lazy(() => import('./pages/ResearcherDashboard'));
+const LitrixChatPage         = lazy(() => import('./pages/LitrixChatPage'));
+const Collaboration          = lazy(() => import('./pages/collaboration'));
+const ResearchAnalytics      = lazy(() => import('./components/search/ResearchAnalytics'));
 
 const ROUTES_WITHOUT_SIDEBAR = ['/', '/signup', '/admin-signup', '/control-panel'];
-
 const userCache = new Map();
 
 const LoadingSpinner = () => (
@@ -42,226 +39,184 @@ const MinimalLoading = () => (
   <div className="fixed top-0 left-0 w-full h-1 bg-blue-500 animate-pulse z-50"></div>
 );
 
-const App = () => {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState('');
-  const [userData, setUserData] = useState({
-    college: '',
-    department: '',
-    scholarId: '',
-  });
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
+export default function App() {
+  const [user, setUser]           = useState(null);
+  const [role, setRole]           = useState('');
+  const [userData, setUserData]   = useState({ college: '', department: '', scholarId: '' });
+  const [isAuthLoading, setIsAuthLoading]   = useState(true);
   const [isRouteLoading, setIsRouteLoading] = useState(false);
+  const [unreadCount, setUnreadCount]       = useState(0);
+  const [authInitialized, setAuthInitialized] = useState(false);
+
+  const hasRedirected = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const hasValidRole = (role) => {
-    return ['researcher', 'academic_admin', 'department_admin', 'admin'].includes(role);
-  };
+  const hasValidRole = r => ['researcher','academic_admin','department_admin','admin'].includes(r);
 
-  const extractScholarIdFromUrl = useCallback((url) => {
-    try {
-      if (!url) return null;
-      if (url.includes('scholar.google.com')) {
-        const match = url.match(/[?&]user=([^&#]+)/);
-        return match && match[1] ? match[1] : null;
-      }
-      return null;
-    } catch (error) {
-      return null;
-    }
-  }, []);
+  const fetchUserRole = useCallback(async (uid, authUser) => {
+    if (userCache.has(uid)) return userCache.get(uid);
 
-  const fetchUserRole = useCallback(async (uid) => {
-    if (userCache.has(uid)) {
-      return userCache.get(uid);
-    }
-    try {
-      const [adminDoc, academicAdminDoc, departmentAdminDoc, userDoc] = await Promise.all([
-        getDoc(doc(db, "admins", uid)),
-        getDoc(doc(db, "academicAdmins", uid)),
-        getDoc(doc(db, "departmentAdmins", uid)),
-        getDoc(doc(db, "users", uid)),
-      ]);
-      let userData = null;
-      let role = null;
-      if (adminDoc.exists()) {
-        userData = adminDoc.data();
-        role = 'admin';
-      } else if (academicAdminDoc.exists()) {
-        userData = academicAdminDoc.data();
-        role = 'academic_admin';
-      } else if (departmentAdminDoc.exists()) {
-        userData = departmentAdminDoc.data();
-        role = 'department_admin';
-      } else if (userDoc.exists()) {
-        userData = userDoc.data();
-        role = 'researcher';
-      }
-      if (!userData) {
-        return null;
-      }
-      const scholarId = userData.scholarId || userData.scholar_id || uid;
-      const normalizedUserData = {
-        ...userData,
-        role,
-        scholarId,
-        college: userData.college || '',
-        department: userData.department || '',
+    const [adminDoc, acadDoc, deptDoc, usrDoc] = await Promise.all([
+      getDoc(doc(db, "admins", uid)),
+      getDoc(doc(db, "academicAdmins", uid)),
+      getDoc(doc(db, "departmentAdmins", uid)),
+      getDoc(doc(db, "users", uid)),
+    ]);
+
+    let data, r;
+    if (adminDoc.exists()) {
+      data = adminDoc.data(); r = 'admin';
+    } else if (acadDoc.exists()) {
+      data = acadDoc.data(); r = 'academic_admin';
+    } else if (deptDoc.exists()) {
+      data = deptDoc.data(); r = 'department_admin';
+    } else if (usrDoc.exists()) {
+      data = usrDoc.data(); r = 'researcher';
+    } else {
+      const newUserData = {
+        email: authUser.email,
+        firstName: authUser.displayName?.split(' ')[0] || '',
+        lastName: authUser.displayName?.split(' ').slice(1).join(' ') || '',
+        photoURL: authUser.photoURL || '',
+        createdAt: new Date(),
+        isProfileComplete: false
       };
-      userCache.set(uid, normalizedUserData);
-      return normalizedUserData;
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      return null;
+      await setDoc(doc(db, "users", uid), newUserData);
+      data = newUserData; r = 'researcher';
+      localStorage.setItem('isCompletingRegistration', 'true');
     }
+
+    const sid = data.scholarId || data.scholar_id || uid;
+    const norm = {
+      ...data,
+      role: r,
+      scholarId: sid,
+      college: data.college || '',
+      department: data.department || '',
+      isProfileComplete: data.isProfileComplete !== false
+    };
+    userCache.set(uid, norm);
+    return norm;
   }, []);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
-  
-    // بناء الاستعلام بناءً على دور المستخدم
+    if (!user || !role) return;
     let q;
-    if (user.role === 'researcher') {
-      q = query(
-        collection(db, 'notifications'),
-        where('recipientId', '==', user.uid)
-      );
-    } else if (user.role === 'admin') {
-      q = query(
-        collection(db, 'notifications'),
-        where('type', 'in', ['system','manual','new_publication'])
-      );
-    } else if (user.role === 'department_admin') {
-      q = query(
-        collection(db, 'notifications'),
-        where('departmentId', '==', user.department)
-      );
-    } else {
-      return;
-    }
-  
-    let first = true; // نستخدم هذا لتجاهل أول مرة
+    if (role === 'researcher') q = query(collection(db, 'notifications'), where('recipientId','==', user.uid));
+    else if (role === 'admin') q = query(collection(db, 'notifications'), where('type','in',['system','manual','new_publication']));
+    else if (role === 'department_admin') q = query(collection(db, 'notifications'), where('departmentId','==', userData.department));
+    else return;
+
+    let first = true;
     const unsub = onSnapshot(q, snap => {
-      if (first) { first = false; return; }  // تجاهل التنبيهات القديمة
+      if (first) { first = false; return; }
       let added = 0;
-  
-      snap.docChanges().forEach(change => {
-        if (change.type === 'added') {
+      snap.docChanges().forEach(c => {
+        if (c.type === 'added') {
           added++;
-          const data = change.doc.data();
-          // فقط لِـ new_publication نعرض toast
-          if (data.type === 'new_publication') {
-            notification.info({
-              message: data.title,
-              description: data.message
-            });
+          const d = c.doc.data();
+          if (d.type === 'new_publication') {
+            notification.info({ message: d.title, description: d.message });
           }
         }
       });
-  
-      if (added) {
-        setUnreadCount(prev => prev + added); // عداد الجرس
-      }
+      if (added) setUnreadCount(prev => prev + added);
     });
-  
     return () => unsub();
-  }, [user]);
-  
-  
+  }, [user, role, userData.department]);
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
     setIsAuthLoading(true);
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      if (!isMounted) return;
+
+    const unsub = onAuthStateChanged(auth, async authUser => {
+      if (!mounted) return;
+
       if (!authUser) {
         setUser(null);
         setRole('');
-        setUserData({ college: '', department: '', scholarId: '' });
+        setUserData({ college:'', department:'', scholarId:'' });
         setIsAuthLoading(false);
+        setAuthInitialized(true);
         return;
       }
+
+      setIsRouteLoading(true);
+      setUser(authUser);
+
       try {
-        setIsRouteLoading(true);
-        const fetchedData = await fetchUserRole(authUser.uid);
-        if (!isMounted) return;
-        if (!fetchedData) {
-          setUser(null);
-          setRole('');
-          setIsAuthLoading(false);
-          setIsRouteLoading(false);
-          navigate('/');
-          return;
-        }
-        setUser(authUser);
-        setRole(fetchedData.role);
+        const fetched = await fetchUserRole(authUser.uid, authUser);
+        if (!fetched) throw new Error('Role fetch failed');
+
+        setRole(fetched.role);
         setUserData({
-          college: fetchedData.college || '',
-          department: fetchedData.department || '',
-          scholarId: fetchedData.scholarId,
+          college: fetched.college,
+          department: fetched.department,
+          scholarId: fetched.scholarId,
+          isProfileComplete: fetched.isProfileComplete
         });
-      } catch (error) {
-        console.error('Authentication error:', error);
-      } finally {
-        if (isMounted) {
-          setIsAuthLoading(false);
-          setIsRouteLoading(false);
+
+        if (fetched.role === 'researcher' && fetched.isProfileComplete === false) {
+          localStorage.setItem('isCompletingRegistration', 'true');
         }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsAuthLoading(false);
+        setIsRouteLoading(false);
+        setAuthInitialized(true);
       }
     });
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, [fetchUserRole, location.pathname, navigate]);
+
+    return () => { mounted = false; unsub(); };
+  }, [fetchUserRole]);
+
   useEffect(() => {
-    if (!isAuthLoading && user && role) {
-      if (location.pathname === '/' || location.pathname === '/admin-signup') {
+    if (!authInitialized) return;
+
+    // only redirect once when on '/'
+    if (location.pathname === '/' && !hasRedirected.current) {
+      hasRedirected.current = true;
+
+      if (!isAuthLoading && user && role) {
+        // researcher still completing
+        if (role === 'researcher' && localStorage.getItem('isCompletingRegistration') === 'true') {
+          localStorage.removeItem('isCompletingRegistration');
+          navigate('/signup', { replace: true });
+          return;
+        }
         switch (role) {
           case 'admin':
-            navigate('/admin-dashboard');
+            navigate('/admin-dashboard', { replace: true });
             break;
           case 'academic_admin':
-            navigate('/academic-dashboard');
+            navigate('/academic-dashboard', { replace: true });
             break;
           case 'department_admin':
-            navigate('/department-dashboard');
+            navigate('/department-dashboard', { replace: true });
             break;
           case 'researcher':
-            navigate('/dashboard');
-            break;
-          default:
+            navigate('/dashboard', { replace: true });
             break;
         }
       }
     }
-  }, [user, role, isAuthLoading, location.pathname, navigate]);
-  
+  }, [user, role, isAuthLoading, authInitialized, location.pathname, navigate]);
 
-  if (isAuthLoading) {
-    return <LoadingSpinner />;
-  }
+  if (isAuthLoading) return <LoadingSpinner />;
 
   return (
     <div className="flex h-screen bg-white text-gray-800 overflow-hidden">
       {isRouteLoading && <MinimalLoading />}
-      
-      {/* Use the unified sidebar instead of multiple role-specific sidebars */}
-      {user && !ROUTES_WITHOUT_SIDEBAR.includes(location.pathname) && <Sidebar />}
-      
-      
-        
-      <div className="flex-1 overflow-auto">
+      {user && !ROUTES_WITHOUT_SIDEBAR.includes(location.pathname) && <Sidebar unreadCount={unreadCount} />}
 
+      <div className="flex-1 overflow-auto">
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/admin-signup" element={<SignUpPageAdmin />} />
-            
             <Route path="/control-panel" element={<ControlPanel />} />
 
             <Route path="/admin-dashboard" element={
@@ -269,19 +224,16 @@ const App = () => {
                 ? <AdminDashboard />
                 : <Navigate to="/" />
             } />
-
             <Route path="/academic-dashboard" element={
               user && role === 'academic_admin'
                 ? <AcademicAdminDashboard />
                 : <Navigate to="/" />
             } />
-
             <Route path="/department-dashboard" element={
               user && role === 'department_admin'
                 ? <DepartmentDashboard />
                 : <Navigate to="/" />
             } />
-
             <Route path="/dashboard" element={
               user && role === 'researcher'
                 ? <ResearcherDashboard />
@@ -289,63 +241,36 @@ const App = () => {
             } />
 
             <Route path="/researcher-view" element={
-              user && (role === 'department_admin' || role === 'academic_admin')
-                ? (
-                  role === 'department_admin' ? (
-                    <ResearcherDashboard 
-                      departmentAdminAsResearcher={true}
-                      departmentAdminData={{
-                        scholarId: userData.scholarId,
-                        college: userData.college,
-                        department: userData.department
-                      }}
-                    />
-                  ) : (
-                    <ResearcherDashboard 
-                      academicAdminAsResearcher={true}
-                      academicAdminData={{
-                        scholar_id: userData.scholarId,
-                        college: userData.college,
-                        department: userData.department
-                      }}
-                    />
-                  )
-                )
+              user && (role === 'academic_admin' || role === 'department_admin')
+                ? <ResearcherDashboard {...(role === 'department_admin'
+                    ? { departmentAdminAsResearcher: true, departmentAdminData: userData }
+                    : { academicAdminAsResearcher: true, academicAdminData: userData })} />
                 : <Navigate to="/" />
             } />
 
-            <Route
-              path="/profile"
-              element={
-                user && hasValidRole(role)
-                  ? <Navigate to={`/profile/${userData.scholarId}`} replace />
-                  : <Navigate to="/" />
-              }
-            />
-
-            <Route
-              path="/profile/:scholar_id"
-              element={
-                user && hasValidRole(role)
-                  ? <ResearcherProfilePage />
-                  : <Navigate to="/" />
-              }
-            />
+            <Route path="/profile" element={
+              user && hasValidRole(role)
+                ? <Navigate to={`/profile/${userData.scholarId}`} replace />
+                : <Navigate to="/" />
+            } />
+            <Route path="/profile/:scholar_id" element={
+              user && hasValidRole(role)
+                ? <ResearcherProfilePage />
+                : <Navigate to="/" />
+            } />
 
             <Route path="/search" element={<SearchPage />} />
             <Route path="/collab" element={<Collaboration />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/chat" element={
-              user ? (
-                <LitrixChatPage
-                  college={userData.college}
-                  department={userData.department}
-                  scholarId={userData.scholarId}
-                />
-              ) : <Navigate to="/" />
+              user
+                ? <LitrixChatPage {...userData} />
+                : <Navigate to="/" />
             } />
             <Route path="/research-analytics" element={
-              user ? <ResearchAnalytics /> : <Navigate to="/" />
+              user
+                ? <ResearchAnalytics />
+                : <Navigate to="/" />
             } />
 
             <Route path="*" element={
@@ -354,11 +279,8 @@ const App = () => {
               </div>
             } />
           </Routes>
-          
         </Suspense>
       </div>
     </div>
   );
-};
-
-export default App;
+}

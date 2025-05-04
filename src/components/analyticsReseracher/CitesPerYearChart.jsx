@@ -7,7 +7,7 @@ import { GridLoader } from 'react-spinners';
 
 const CitesPerYearChart = ({ 
   researcher = null,
-  role = "researcher", // "researcher", "admin", "visitor"
+  role = "researcher", 
   customColor = "#4F46E5",
   showFilters = true
 }) => {
@@ -19,7 +19,6 @@ const CitesPerYearChart = ({
   const [activeIndex, setActiveIndex] = useState(null);
   const [selectedMetric, setSelectedMetric] = useState("Citations");
 
-  // Definir colores basados en el rol
   const themeColors = useMemo(() => {
     const colors = {
       researcher: {
@@ -75,11 +74,9 @@ const CitesPerYearChart = ({
         const hIndex = researcherData.h_index || 0;
         const i10Index = researcherData.i10_index || 0;
 
-        // Ordenar los años en orden ascendente
         const sortedYears = Object.keys(citesPerYear).sort((a, b) => parseInt(a) - parseInt(b));
         
         const formattedData = sortedYears.map((year, index) => {
-          // Calcular promedio móvil de 3 años si es posible
           let avgCites = citesPerYear[year];
           let count = 1;
           
@@ -96,7 +93,6 @@ const CitesPerYearChart = ({
             year: parseInt(year),
             citations: citesPerYear[year],
             avg: Math.round(avgCites / count),
-            // Valores adicionales para mostrar en el tooltip
             h_index: hIndex,
             i10_index: i10Index
           };
@@ -120,11 +116,9 @@ const CitesPerYearChart = ({
     const hIndex = researcherData.h_index || 0;
     const i10Index = researcherData.i10_index || 0;
 
-    // Ordenar los años en orden ascendente
     const sortedYears = Object.keys(citesPerYear).sort((a, b) => parseInt(a) - parseInt(b));
     
     const formattedData = sortedYears.map((year, index) => {
-      // Calcular promedio móvil de 3 años si es posible
       let avgCites = citesPerYear[year];
       let count = 1;
       
@@ -141,7 +135,6 @@ const CitesPerYearChart = ({
         year: parseInt(year),
         citations: citesPerYear[year],
         avg: Math.round(avgCites / count),
-        // Valores adicionales para mostrar en el tooltip
         h_index: hIndex,
         i10_index: i10Index
       };
@@ -152,21 +145,17 @@ const CitesPerYearChart = ({
   };
 
   useEffect(() => {
-    // Si ya tenemos los datos del investigador, usarlos directamente
     if (researcher) {
       setScholarId(researcher.id || researcher.scholar_id);
       setCollege(researcher.college || "faculty_computing");
       setDepartment(researcher.department || "dept_cs");
       
-      // Simular carga inicial para mostrar la animación
       setTimeout(() => {
         setLoading(false);
       }, 800);
       
-      // Procesar datos del investigador directamente
       processResearcherData(researcher);
     } else {
-      // Si no hay datos de investigador, intentar obtenerlos del usuario actual
       const unsubscribe = auth.onAuthStateChanged(async (user) => {
         if (user) {
           const userData = await fetchScholarId(user.uid);
@@ -193,12 +182,10 @@ const CitesPerYearChart = ({
   };
 
   const getBarFill = (index) => {
-    // Si hay un elemento activo, atenuar los demás
     if (activeIndex !== null && activeIndex !== index) {
-      return `${themeColors.primary}80`; // 50% de opacidad
+      return `${themeColors.primary}80`; 
     }
     
-    // Si usamos un gradiente basado en el año (más reciente = más oscuro)
     const gradientIndex = Math.min(
       Math.floor((index / data.length) * themeColors.gradient.length),
       themeColors.gradient.length - 1
@@ -206,7 +193,6 @@ const CitesPerYearChart = ({
     return themeColors.gradient[gradientIndex];
   };
 
-  // Personalizar el tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (

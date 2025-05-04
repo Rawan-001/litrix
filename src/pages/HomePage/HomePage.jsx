@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Layout, Button, Modal, Form, Input, notification, Spin, Switch, Tooltip, Select } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
+import GoogleLoginButton from './GoogleLoginButton'
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { 
@@ -117,12 +119,10 @@ function HomePage() {
     setIsLoggingIn(true);
     
     try {
-      // Sign in with Firebase auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
   
       if (user) {
-        // Check all possible role collections
         const adminDocRef = doc(db, "admins", user.uid);
         const adminDoc = await getDoc(adminDocRef);
         
@@ -135,11 +135,9 @@ function HomePage() {
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
         
-        // First close modal and clear form regardless of user type
         setIsLoginModalVisible(false);
         clearForm();
         
-        // Check roles in priority order
         if (adminDoc.exists()) {
           notification.success({
             message: 'Success',
@@ -160,7 +158,7 @@ function HomePage() {
             description: 'Department Admin login successful!',
             duration: 2
           });
-          navigate('/academic-dashboard'); // Might need a different dashboard path based on your routing
+          navigate('/academic-dashboard'); 
         } else if (userDoc.exists()) {
           notification.success({
             message: 'Success',
@@ -169,8 +167,6 @@ function HomePage() {
           });
           navigate('/dashboard');
         } else {
-          // User exists in Auth but not in any role collection
-          // Create a default user document
           try {
             await setDoc(userDocRef, {
               email: user.email,
@@ -224,6 +220,79 @@ function HomePage() {
     setEmail('');
     setPassword('');
   };
+
+  const handleGoogleSuccess = async ({ adminSnap, academicSnap, departmentSnap, userSnap, user }) => {
+    setIsLoginModalVisible(false);
+    clearForm();
+  
+    try {
+      // Make sure we have a valid user object from Firebase Auth
+      if (!user || !user.uid) {
+        notification.error({
+          message: 'Login Error',
+          description: 'Unable to authenticate. Please try again.',
+          duration: 3
+        });
+        return;
+      }
+  
+      // Check user status and redirect based on role
+      if (adminSnap?.exists()) {
+        notification.success({
+          message: 'Admin Login',
+          description: 'Welcome to admin dashboard!',
+          duration: 2
+        });
+        navigate('/admin-dashboard');
+      } else if (academicSnap?.exists()) {
+        notification.success({
+          message: 'Academic Admin Login',
+          description: 'Welcome to academic dashboard!',
+          duration: 2
+        });
+        navigate('/academic-dashboard');
+      } else if (departmentSnap?.exists()) {
+        notification.success({
+          message: 'Department Admin Login',
+          description: 'Welcome to department dashboard!',
+          duration: 2
+        });
+        navigate('/academic-dashboard');
+      } else if (userSnap?.exists()) {
+        // Check if user profile is complete
+        const data = userSnap.data();
+        if (data && data.isProfileComplete) {
+         ;
+          navigate('/dashboard');
+        } else {
+          notification.info({
+            message: 'Complete Your Profile',
+            description: 'Please complete your profile information',
+            duration: 3
+          });
+          localStorage.setItem('isCompletingRegistration', 'true');
+          navigate('/signup');
+        }
+      } else {
+        // This should rarely happen since we create user doc in GoogleLoginButton
+        notification.info({
+          message: 'New Account',
+          description: 'Please complete your registration',
+          duration: 3
+        });
+        localStorage.setItem('isCompletingRegistration', 'true');
+        navigate('/signup');
+      }
+    } catch (error) {
+      console.error("Error in handleGoogleSuccess:", error);
+      notification.error({
+        message: 'Login Error',
+        description: 'An unexpected error occurred. Please try again.',
+        duration: 4
+      });
+    }
+  };
+  
 
   const scrollToSection = (sectionId) => {
     const section = document.getElementById(sectionId);
@@ -287,6 +356,15 @@ function HomePage() {
       handleUnifiedLogin();
     }
   };
+
+      const handleSignupNavigation = async () => {
+        console.log('🔀 Sign-up button clicked');
+        // لو في جلسة مستخدم حالية نطّلعها عشان تظهر صفحة التسجيل
+        await signOut(auth);
+        setIsLoginModalVisible(false);
+        navigate('/signup');
+     };
+    
 
   return (
     <Layout className={`gradient-layout ${isDarkMode ? 'dark-mode' : 'light-mode'}`} style={getBackgroundStyle()}>
@@ -362,7 +440,6 @@ function HomePage() {
             </h2>
             
             <div className="action-buttons">
-              {/* Unified login button */}
               <Button 
                 className="animated-button researcher-btn" 
                 onClick={() => setIsLoginModalVisible(true)}
@@ -372,7 +449,7 @@ function HomePage() {
             </div>
             
             <div className="signup-prompt">
-              Don't have an account? <a onClick={() => navigate('/signup')}>Sign Up</a>
+              Don't have an account? <Button type="link" onClick={handleSignupNavigation} style={{ padding: '0', height: 'auto' }}>Sign Up</Button>
             </div>
           </div>
           
@@ -461,7 +538,6 @@ function HomePage() {
         </section>
       </Content>
 
-      {/* Unified Login Modal */}
       <Modal
         title="Login"
         open={isLoginModalVisible}
@@ -477,36 +553,42 @@ function HomePage() {
         wrapClassName={isDarkMode ? "dark-modal-wrap" : "light-modal-wrap"}
       >
         <Form layout="vertical" className="login-form">
-          <Form.Item label="Email" name="email">
+          <Form.Item label="Email">
             <Input
               prefix={<UserOutlined />}
               placeholder="Enter Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               onKeyDown={handleLoginKeyDown}
               autoComplete="username"
             />
           </Form.Item>
-          <Form.Item label="Password" name="password">
+          <Form.Item label="Password">
             <Input.Password
               prefix={<LockOutlined />}
               placeholder="Enter Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               onKeyDown={handleLoginKeyDown}
               autoComplete="current-password"
             />
           </Form.Item>
           <Form.Item>
-            <Button 
-              type="primary" 
-              className="login-button"
+            <Button
+              type="primary"
+              block
               onClick={handleUnifiedLogin}
               disabled={isLoggingIn}
             >
               {isLoggingIn ? <Spin size="small" /> : <><LoginOutlined /> Login</>}
             </Button>
           </Form.Item>
+          <Form.Item>
+            <GoogleLoginButton onSuccess={handleGoogleSuccess} />
+          </Form.Item>
+          <div className="modal-signup-link" style={{ textAlign: 'center', marginTop: '10px' }}>
+            Don't have an account? <Button type="link" onClick={handleSignupNavigation} style={{ padding: '0', height: 'auto' }}>Sign Up</Button>
+          </div>
         </Form>
       </Modal>
     </Layout>

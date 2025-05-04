@@ -102,7 +102,6 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-// تغيير الألوان إلى rgb(29, 78, 216)
 const theme = createTheme({
   palette: {
     primary: {
@@ -123,9 +122,8 @@ const StyledResearcherCard = styled(Card)(({ theme }) => ({
   boxShadow: "0 8px 24px rgba(0,0,0,0.07)",
   transition: "transform 0.3s, box-shadow 0.3s",
   overflow: "hidden",
-  // تحديد ارتفاع ثابت بدلاً من height: "100%"
-  height: "450px", // ارتفاع ثابت للكاردز
-  width: "100%",   // تأكيد على عرض ثابت
+  height: "450px", 
+  width: "100%",   
   display: "flex",
   flexDirection: "column",
   "&:hover": {
@@ -135,8 +133,8 @@ const StyledResearcherCard = styled(Card)(({ theme }) => ({
 }));
 
 const ResearcherAvatar = styled(Avatar)(({ theme }) => ({
-  width: { xs: 80, sm: 80, md: 80 }, // توحيد الحجم
-  height: { xs: 80, sm: 80, md: 80 }, // توحيد الحجم
+  width: { xs: 80, sm: 80, md: 80 }, 
+  height: { xs: 80, sm: 80, md: 80 }, 
   marginBottom: 1,
   border: '3px solid white',
   boxShadow: '0 8px 16px rgba(29, 78, 216, 0.2)',
@@ -805,7 +803,6 @@ function SearchTable() {
           console.log("Current authenticated user:", user.uid);
           setCurrentUser(user);
           
-          // Get the complete user document from Firestore
           const userDocRef = doc(db, `users/${user.uid}`);
           const userDoc = await getDoc(userDocRef);
           
@@ -814,13 +811,11 @@ function SearchTable() {
             console.log("Current user data:", userData);
             setCurrentUserData(userData);
             
-            // Set scholar_id if it exists
             if (userData.scholar_id) {
               console.log("Current user scholar_id:", userData.scholar_id);
               setCurrentUserScholarId(userData.scholar_id);
             }
             
-            // Try to find the user's email to help with filtering
             if (userData.email) {
               console.log("Current user email:", userData.email);
             }
@@ -1042,12 +1037,10 @@ function SearchTable() {
       setError("");
 
       try {
-        // Get the current user's profile identifiers for filtering
         const currentUserIds = {
           uid: auth.currentUser?.uid,
           email: currentUserData?.email,
           scholarId: currentUserScholarId,
-          // Add more identifiers if needed
           firstName: currentUserData?.firstName,
           lastName: currentUserData?.lastName,
           fullName: currentUserData ? 
@@ -1056,25 +1049,22 @@ function SearchTable() {
         
         console.log("Filtering out current user with IDs:", currentUserIds);
         
-        // Filter out the current user from researchers list
         let filteredResearchers = cachedResearchers.filter(researcher => {
-          // Don't include if UID matches
+        
           if (researcher.uid === currentUserIds.uid) return false;
           
-          // Don't include if scholar_id matches
           if (researcher.scholar_id === currentUserIds.scholarId && currentUserIds.scholarId) return false;
           
-          // Don't include if email matches
+          
           if (researcher.email === currentUserIds.email && currentUserIds.email) return false;
           
-          // Don't include if name matches
+          
           const researcherName = researcher.name || 
             `${researcher.firstName || ''} ${researcher.lastName || ''}`.trim();
           
           if (researcherName && currentUserIds.fullName && 
               researcherName.toLowerCase() === currentUserIds.fullName.toLowerCase()) return false;
           
-          // Include this researcher
           return true;
         });
 
@@ -2496,12 +2486,12 @@ function SearchTable() {
         </Box>
         
         <CardContent sx={{ 
-          flexGrow: 0, // تغيير من 1 إلى 0 لمنع التمدد
+          flexGrow: 0, 
           pt: 2,
           px: 2.5,
           display: 'flex',
           flexDirection: 'column',
-          height: "220px", // ارتفاع ثابت محدد للمحتوى
+          height: "220px", 
           overflow: 'hidden'
         }}>
           <Box sx={{ mb: 2 }}>
@@ -2556,7 +2546,7 @@ function SearchTable() {
             flexWrap: 'wrap', 
             gap: 0.8, 
             mb: 2,
-            maxHeight: { xs: '80px', sm: '80px', md: '80px' }, // توحيد الحد الأقصى للارتفاع
+            maxHeight: { xs: '80px', sm: '80px', md: '80px' }, 
             overflow: 'hidden'
           }}>
             {researcher.interests ? (

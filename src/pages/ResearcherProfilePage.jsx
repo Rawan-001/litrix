@@ -64,7 +64,6 @@ import {
   SchoolOutlined,
   BusinessOutlined
 } from "@mui/icons-material";
-// استيراد الهيدر من المسار المطلوب
 import Header from '../components/common/Header';
 
 const theme = createTheme({
@@ -188,8 +187,8 @@ const ResearcherProfilePage = () => {
       try {
         console.log('Fetching data for scholar_id:', scholar_id);
         let userData = null;
-        let collegeId = "faculty_computing";  // قيمة افتراضية
-        let departmentId = "dept_cs";         // قيمة افتراضية
+        let collegeId = "faculty_computing";  
+        let departmentId = "dept_cs";         
         const academicAdminQuerySnapshot = await getDocs(collection(db, 'academicAdmins'));
         for (const adminDoc of academicAdminQuerySnapshot.docs) {
           const admin = adminDoc.data();
@@ -1029,11 +1028,9 @@ const ResearcherProfilePage = () => {
   return (
     <ThemeProvider theme={theme}>
       <div className="flex flex-col h-screen w-full bg-white">
-        {/* Fixed Header */}
         <div className="sticky top-0 z-50 w-full bg-white shadow-md" style={{ position: 'sticky', top: 0 }}>
           <Header title="Researcher Profile" />
         </div>
-        {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="p-4 lg:p-8">
@@ -1090,7 +1087,6 @@ const ResearcherProfilePage = () => {
                               {userData?.firstName && userData?.lastName 
                                 ? `${userData.firstName} ${userData.lastName}` 
                                 : researcherData?.name || "Researcher"}
-                              {/* إضافة شارة للمشرف الأكاديمي */}
                               {userData?.isAcademicAdmin && (
                                 <Chip 
                                   label="Academic Admin" 
@@ -1130,7 +1126,6 @@ const ResearcherProfilePage = () => {
                                   <strong>Scholar ID:</strong> {researcherData?.scholar_id || userData?.scholar_id || "Not provided"}
                                 </Typography>
                               </Box>
-                              {/* إضافة معلومات خاصة بالمشرف الأكاديمي */}
                               {userData?.isAcademicAdmin && userData?.college && (
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                   <SchoolOutlined fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
@@ -1236,7 +1231,6 @@ const ResearcherProfilePage = () => {
                     </ProfileSection>
                   </motion.div>
                 </Grid>
-                {/* إضافة قسم معلومات المشرف الأكاديمي */}
                 {userData?.isAcademicAdmin && (
                   <Grid item xs={12}>
                     <motion.div

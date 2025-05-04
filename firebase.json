@@ -1,20 +1,24 @@
 {
   "functions": {
     "source": "functions",
-    "runtime": "nodejs22"
+    "runtime": "nodejs20"
+  },
+
+  "emulators": {
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 }
   },
   "hosting": {
     "public": "build",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+    "ignore": ["firebase.json","**/.*","**/node_modules/**"],
+    "rewrites": [{ "source": "**","destination": "/index.html" }]
+  },
+  
+    "source": "**/*",
+    "headers": [
+      { "key": "Cross-Origin-Opener-Policy",   "value": "same-origin-allow-popups" },
+      { "key": "Cross-Origin-Embedder-Policy", "value": "unsafe-none" }
     ]
   }
-}
+  
+
